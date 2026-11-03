@@ -3,13 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { IconeModulo } from "@/components/icone-modulo";
 import { Cartao } from "@/components/ui";
-import { MODULOS, moduloPorSlug } from "@/lib/navegacao";
+import { moduloPorSlug } from "@/lib/navegacao";
 
-export function generateStaticParams() {
-  return MODULOS.filter((m) => m.slug).map((m) => ({ modulo: m.slug }));
-}
-
-export const dynamicParams = false;
+// Sem generateStaticParams: páginas protegidas por login são sempre geradas na hora (ADR 0010).
+// Slugs desconhecidos caem no notFound() abaixo.
 
 export async function generateMetadata({ params }: PageProps<"/[modulo]">): Promise<Metadata> {
   const { modulo } = await params;
@@ -20,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<"/[modulo]">): Prom
 export default async function PaginaModulo({ params }: PageProps<"/[modulo]">) {
   const { modulo } = await params;
   const m = moduloPorSlug(modulo);
-  if (!m) notFound();
+  if (!m || !m.slug) notFound();
 
   return (
     <div className="space-y-6">
