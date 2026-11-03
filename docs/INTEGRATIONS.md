@@ -32,19 +32,41 @@ Para cada ferramenta o painel mostra:
 ## Plano por ferramenta
 | Ferramenta | Caminho | Fase | Fonte oficial de |
 |---|---|---|---|
-| Trello | API REST + webhooks (nuvem) | 5 | tarefas operacionais de equipe |
-| Google Agenda | API Calendar v3, `syncToken` incremental (nuvem) | 5 | compromissos/horários |
-| Notion | API REST, polling (nuvem) | 5 | histórico (Central de Gestão congelada) |
+| Trello | API REST, só GET, a cada hora ✅ | 5 | tarefas operacionais de equipe |
+| Google Agenda | endereço secreto **iCal**, a cada hora ✅ (ADR 0012) | 5 | compromissos/horários |
+| Notion | API REST (integração interna, só leitura), a cada hora ✅ | 5 | histórico (Central de Gestão) |
 | MS Project | agente local, COM via pywin32 | 6 | cronograma, linha de base |
 | Excel | agente local, openpyxl, um modelo de importação por tipo de planilha | 7 | carga inicial de medições/orçamentos |
 | Google Drive | API Drive v3, `drive.readonly` (nuvem) | 8 | arquivos (por referência) |
 | GitHub | API REST | 9 | código do próprio sistema |
 | Gmail, Todoist | a decidir | 9+ | — |
 
-## Credenciais necessárias (o proprietário cria; nunca vão para o Git)
-| Ferramenta | O que criar |
-|---|---|
-| Google | projeto no Google Cloud, tela de consentimento em modo teste, OAuth Client (web) |
-| Trello | API key + token (Power-Up admin) |
-| Notion | integração interna, compartilhada com as páginas desejadas |
-| GitHub | já via `gh auth login` / app Vercel |
+## Sincronizador (Fase 5)
+- O código fica em `packages/integrations/src/`: `motor.js` (upsert idempotente e registro das execuções), `trello.js`, `google-ical.js`, `notion.js` e `sincronizar.js`, que é o ponto de entrada.
+- O agendador é `.github/workflows/sincronizar.yml`, que roda a cada hora e também pelo botão **Run workflow**. A tela **Integrações** do sistema leva até ele.
+- **Trello:** cartões abertos de todos os quadros viram tarefas `fonte = trello`.
+  - A situação vem do nome da lista: concluído/feito → `concluida`; andamento/fazendo → `em_andamento`; o resto → `a_fazer`.
+  - Cartões em que você é membro (ou sem membros) ficam sem responsável, ou seja, "minhas". Os de outros membros vão para a pessoa **Equipe (Trello)**.
+  - Cartões arquivados ou excluídos viram `cancelada`, sem serem apagados.
+- **Google Agenda:** cada endereço iCal é lido na janela de −7 a +90 dias.
+  - As recorrências são expandidas, com EXDATE e exceções.
+  - Eventos que somem da origem recebem `cancelado_em` (migration 0015) e saem das telas.
+- **Notion:** só as bases compartilhadas com a integração.
+  - Título com "demanda", "tarefa" ou "pendência" → tarefas `fonte = notion`.
+  - Título com "reunião" → reuniões.
+  - A situação "concluído", "feito" ou "resolvido" → `concluida`.
+- **Tarefas importadas não são editadas no sistema** (RN-47). Altere na ferramenta de origem.
+
+## Segredos (o proprietário cadastra no GitHub; nunca vão para o Git nem para o banco)
+Em **GitHub → repositório → Settings → Secrets and variables → Actions → New repository secret**, ou pelo terminal com `gh secret set NOME`, que pede o valor sem mostrá-lo:
+
+| Segredo | Valor | Onde obter |
+|---|---|---|
+| `SUPABASE_URL` | `https://<ref>.supabase.co` | público |
+| `SUPABASE_SERVICE_ROLE_KEY` | chave **secret** (`sb_secret_…`) | Supabase → Project Settings → API Keys |
+| `TRELLO_API_KEY` | API key | trello.com/power-ups/admin → seu Power-Up → API key |
+| `TRELLO_TOKEN` | token | link "Token" ao lado da API key |
+| `GOOGLE_ICAL_URLS` | um endereço secreto iCal por linha | Google Agenda → Configurações → a agenda → Integrar agenda |
+| `NOTION_TOKEN` | `ntn_…` | notion.so/profile/integrations → integração interna, permissão só de leitura |
+
+Se algum segredo vazar, revogue-o na origem: gere um novo endereço iCal ("Redefinir"), um novo token no Trello ou no Notion, ou uma nova secret key no Supabase. Depois atualize o segredo no GitHub.

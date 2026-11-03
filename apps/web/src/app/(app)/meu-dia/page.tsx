@@ -30,7 +30,7 @@ export default async function PaginaMeuDia() {
       .order("escore", { ascending: false })
       .order("prazo", { ascending: true, nullsFirst: false })
       .limit(300),
-    supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local, obra_id").gte("inicio", inicio).lte("inicio", fim).order("inicio"),
+    supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local, obra_id").is("cancelado_em", null).gte("inicio", inicio).lte("inicio", fim).order("inicio"),
     supabase.from("v_vencimentos").select("tipo, registro_id, obra_id, descricao, data").gt("data", hoje).lte("data", somarDias(hoje, 7)).neq("tipo", "tarefa").order("data").limit(8),
     supabase.from("obras").select("id, codigo").is("arquivado_em", null).order("codigo"),
     supabase.from("pessoas").select("id, nome"),

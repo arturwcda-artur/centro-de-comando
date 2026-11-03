@@ -16,6 +16,7 @@
 | Variáveis de ambiente | Vercel/Supabase; modelo em `.env.example` sem valores |
 | Tokens OAuth de terceiros | Supabase Vault; `conectores.credencial_ref` guarda só o nome do segredo |
 | Agente local | chave em arquivo fora do repositório, protegido por permissão de usuário do Windows |
+| Sincronizador (GitHub Actions) | `SUPABASE_SERVICE_ROLE_KEY` e os tokens/iCal só como *Actions secrets*. O workflow tem `permissions: contents: read`, e o código nunca imprime segredos nem URLs |
 
 ## Auditoria
 - O trigger `app.registrar_auditoria()` grava `INSERT/UPDATE/DELETE` com o antes e o depois, o usuário e o papel em `app.auditoria`. Fica fora da API pública.
