@@ -917,82 +917,82 @@ export type Database = {
       }
       importacao_obras: {
         Row: {
-          id: string
-          fonte: string
-          id_externo: string
-          pasta_local: string
-          nome_sugerido: string
+          atualizado_em: string
           codigo_sugerido: string
-          situacao_sugerida: string
-          pista_contratante: string | null
+          criado_em: string
+          estrutura_padrao: boolean
+          fonte: string
+          id: string
+          id_externo: string
+          importado_em: string
+          nome_sugerido: string
+          obra_id: string | null
           observacao: string | null
+          pasta_local: string
+          pista_contratante: string | null
           provavel_nao_obra: boolean
           qtd_arquivos: number
           qtd_cronogramas: number
-          qtd_planilhas: number
           qtd_pdfs: number
+          qtd_planilhas: number
+          revisado_em: string | null
+          situacao_sugerida: string
+          status: string
+          subpastas: string[]
           tamanho_bytes: number
           ultima_modificacao: string | null
-          estrutura_padrao: boolean
-          subpastas: string[]
-          status: string
-          obra_id: string | null
-          revisado_em: string | null
-          importado_em: string
-          criado_em: string
-          atualizado_em: string
         }
         Insert: {
-          id?: string
-          fonte?: string
-          id_externo: string
-          pasta_local: string
-          nome_sugerido: string
+          atualizado_em?: string
           codigo_sugerido: string
-          situacao_sugerida: string
-          pista_contratante?: string | null
+          criado_em?: string
+          estrutura_padrao?: boolean
+          fonte?: string
+          id?: string
+          id_externo: string
+          importado_em?: string
+          nome_sugerido: string
+          obra_id?: string | null
           observacao?: string | null
+          pasta_local: string
+          pista_contratante?: string | null
           provavel_nao_obra?: boolean
           qtd_arquivos?: number
           qtd_cronogramas?: number
-          qtd_planilhas?: number
           qtd_pdfs?: number
+          qtd_planilhas?: number
+          revisado_em?: string | null
+          situacao_sugerida: string
+          status?: string
+          subpastas?: string[]
           tamanho_bytes?: number
           ultima_modificacao?: string | null
-          estrutura_padrao?: boolean
-          subpastas?: string[]
-          status?: string
-          obra_id?: string | null
-          revisado_em?: string | null
-          importado_em?: string
-          criado_em?: string
-          atualizado_em?: string
         }
         Update: {
-          id?: string
-          fonte?: string
-          id_externo?: string
-          pasta_local?: string
-          nome_sugerido?: string
+          atualizado_em?: string
           codigo_sugerido?: string
-          situacao_sugerida?: string
-          pista_contratante?: string | null
+          criado_em?: string
+          estrutura_padrao?: boolean
+          fonte?: string
+          id?: string
+          id_externo?: string
+          importado_em?: string
+          nome_sugerido?: string
+          obra_id?: string | null
           observacao?: string | null
+          pasta_local?: string
+          pista_contratante?: string | null
           provavel_nao_obra?: boolean
           qtd_arquivos?: number
           qtd_cronogramas?: number
-          qtd_planilhas?: number
           qtd_pdfs?: number
+          qtd_planilhas?: number
+          revisado_em?: string | null
+          situacao_sugerida?: string
+          status?: string
+          subpastas?: string[]
           tamanho_bytes?: number
           ultima_modificacao?: string | null
-          estrutura_padrao?: boolean
-          subpastas?: string[]
-          status?: string
-          obra_id?: string | null
-          revisado_em?: string | null
-          importado_em?: string
-          criado_em?: string
-          atualizado_em?: string
         }
         Relationships: [
           {
@@ -1001,6 +1001,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "obras"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importacao_obras_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
           },
         ]
       }
@@ -2169,14 +2176,14 @@ export type Database = {
     Functions: {
       aprovar_importacao_obra: {
         Args: {
-          p_id: string
+          p_cidade?: string
           p_codigo: string
+          p_contratante_id?: string
+          p_empresa_id?: string
+          p_id: string
           p_nome: string
           p_situacao: string
-          p_empresa_id?: string | null
-          p_contratante_id?: string | null
-          p_cidade?: string | null
-          p_uf?: string | null
+          p_uf?: string
         }
         Returns: string
       }

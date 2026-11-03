@@ -74,10 +74,11 @@ export async function aprovarProposta(_: EstadoFormulario, fd: FormData): Promis
     p_codigo: dados.codigo,
     p_nome: dados.nome,
     p_situacao: dados.situacao,
-    p_empresa_id: empresa.id,
-    p_contratante_id: contratante.id,
-    p_cidade: dados.cidade,
-    p_uf: dados.uf,
+    // Parâmetros opcionais: undefined = usar o padrão da função (null)
+    p_empresa_id: empresa.id ?? undefined,
+    p_contratante_id: contratante.id ?? undefined,
+    p_cidade: dados.cidade ?? undefined,
+    p_uf: dados.uf ?? undefined,
   });
   if (error) return { erro: mensagemDoBanco(error) };
 
