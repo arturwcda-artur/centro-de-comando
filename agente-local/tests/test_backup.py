@@ -19,6 +19,12 @@ def test_interpreta_url_com_senha_codificada():
     assert con.banco == "postgres"
 
 
+def test_senha_separada_dispensa_codificar_simbolos():
+    con = backup.interpretar_url("postgresql://postgres.abc@h:5432/postgres", senha="a@b#c/d:e")
+    assert con.senha == "a@b#c/d:e"
+    assert con.usuario == "postgres.abc"
+
+
 @pytest.mark.parametrize("url", ["mysql://u:s@h/db", "postgresql://u@h/db", "nada"])
 def test_rejeita_url_invalida_ou_sem_senha(url):
     with pytest.raises(ValueError):
@@ -85,5 +91,5 @@ def test_falha_do_pg_dump_nao_deixa_arquivo_nem_apaga_backups(tmp_path):
 
 def test_ler_config_ignora_comentarios(tmp_path):
     arq = tmp_path / "agente.env"
-    arq.write_text("# comentário\nSUPABASE_DB_URL=\"postgresql://a:b@c/d\"\n\nBACKUP_DIR=C:\\b\n", encoding="utf-8")
+    arq.write_text("# comentário\nSUPABASE_DB_URL=\"postgresql://a:b@c/d\"\n\nBACKUP_DIR=C:\\b\n", encoding="utf-8-sig")
     assert backup.ler_config(arq) == {"SUPABASE_DB_URL": "postgresql://a:b@c/d", "BACKUP_DIR": "C:\\b"}

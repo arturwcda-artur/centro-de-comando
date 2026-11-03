@@ -45,15 +45,20 @@ npx.cmd supabase db push --remote
 
 ### D. Backup semanal (agente local)
 1. Instale as ferramentas cliente do PostgreSQL 17 (`pg_dump`).
-2. Crie `%LOCALAPPDATA%\CentroDeComando\agente.env`, **fora do repositório**:
+2. Crie `%USERPROFILE%\.centro-de-comando\agente.env`, **fora do repositório**. Não use `AppData`: aplicativos empacotados, como o Claude desktop, gravam ali numa cópia virtualizada que as outras janelas não enxergam.
    ```
-   SUPABASE_DB_URL=postgresql://postgres.<ref>:<senha>@<host-do-pooler>:5432/postgres
+   SUPABASE_DB_URL=postgresql://postgres.<ref>@<host-do-pooler>:5432/postgres
+   SUPABASE_DB_PASSWORD=<senha exatamente como gerada>
    BACKUP_DIR=C:\Users\<usuário>\Desktop\DESKTOP-EMPRESA\CENTRO_DE_COMANDO_GERENCIAL\BACKUPS
    BACKUP_MANTER=8
    ```
    A URL fica em **Project Settings → Database → Connection string → Session pooler**. Use a porta 5432.
-3. Teste manualmente: `cd agente-local` e depois `py -m cc_agente.backup`.
-4. Agende no **Agendador de Tarefas do Windows**: semanalmente, ação `py -m cc_agente.backup`, com início em `C:\dev\centro-de-comando\agente-local`.
+3. Teste manualmente executando `agente-local\backup.cmd`. Em 03/11/2026 o resultado foi um backup de 146 KB, conferido com `pg_restore --list`: 31 tabelas, 5 views, 29 políticas e 56 triggers.
+4. Agende no Windows. O proprietário roda este comando numa janela própria do PowerShell, porque é uma configuração permanente do PC:
+   ```powershell
+   Register-ScheduledTask -TaskName 'Centro de Comando - Backup semanal' -Action (New-ScheduledTaskAction -Execute 'C:\dev\centro-de-comando\agente-local\backup.cmd') -Trigger (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 08:00) -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries)
+   ```
+   `StartWhenAvailable` faz o backup rodar assim que o PC for ligado, se ele estava desligado na segunda às 08:00. O registro de cada execução fica em `%USERPROFILE%\.centro-de-comando\backup.log`.
 
 ### E. Variáveis de ambiente (Fase 3, Vercel)
 Ver `.env.example`. A `SUPABASE_SERVICE_ROLE_KEY` nunca recebe o prefixo `NEXT_PUBLIC_`.

@@ -2,8 +2,10 @@
 
 Uso:  python -m cc_agente.backup            (executado pelo Agendador de Tarefas do Windows)
 
-Configuração (fora do repositório): %LOCALAPPDATA%\\CentroDeComando\\agente.env
-    SUPABASE_DB_URL=postgresql://postgres.<ref>:<senha>@<host>:5432/postgres
+Configuração (fora do repositório): %USERPROFILE%\\.centro-de-comando\\agente.env
+    (ou o caminho em CC_AGENTE_CONFIG)
+    SUPABASE_DB_URL=postgresql://postgres.<ref>@<host>:5432/postgres
+    SUPABASE_DB_PASSWORD=<senha exatamente como gerada; dispensa codificar símbolos na URL>
     BACKUP_DIR=C:\\...\\pasta sincronizada pelo Google Drive
     BACKUP_MANTER=8            (opcional; quantos backups manter)
     PG_DUMP=C:\\...\\pg_dump.exe (opcional; padrão: pg_dump no PATH)
@@ -42,14 +44,15 @@ class Conexao:
 
 
 def caminho_config() -> Path:
-    base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-    return Path(base) / "CentroDeComando" / "agente.env"
+    # Fora de AppData de propósito: apps empacotados (MSIX) têm AppData virtualizado.
+    explicito = os.environ.get("CC_AGENTE_CONFIG")
+    return Path(explicito) if explicito else Path.home() / ".centro-de-comando" / "agente.env"
 
 
 def ler_config(caminho: Path) -> dict[str, str]:
     """Lê um arquivo CHAVE=valor simples (linhas vazias e # são ignoradas)."""
     config: dict[str, str] = {}
-    for linha in caminho.read_text(encoding="utf-8").splitlines():
+    for linha in caminho.read_text(encoding="utf-8-sig").splitlines():  # -sig: Bloco de Notas/PowerShell gravam BOM
         linha = linha.strip()
         if not linha or linha.startswith("#") or "=" not in linha:
             continue
@@ -58,17 +61,19 @@ def ler_config(caminho: Path) -> dict[str, str]:
     return config
 
 
-def interpretar_url(url: str) -> Conexao:
+def interpretar_url(url: str, senha: str | None = None) -> Conexao:
+    """`senha`, se informada (SUPABASE_DB_PASSWORD), prevalece sobre a da URL."""
     partes = urlsplit(url)
     if partes.scheme not in ("postgres", "postgresql") or not partes.hostname:
-        raise ValueError("SUPABASE_DB_URL inválida: esperado postgresql://usuario:senha@host:porta/banco")
-    if not partes.password:
-        raise ValueError("SUPABASE_DB_URL sem senha")
+        raise ValueError("SUPABASE_DB_URL inválida: esperado postgresql://usuario@host:porta/banco")
+    senha = senha or (unquote(partes.password) if partes.password else None)
+    if not senha:
+        raise ValueError("Senha do banco ausente: preencha SUPABASE_DB_PASSWORD")
     return Conexao(
         host=partes.hostname,
         porta=partes.port or 5432,
         usuario=unquote(partes.username or "postgres"),
-        senha=unquote(partes.password),
+        senha=senha,
         banco=(partes.path.lstrip("/") or "postgres"),
     )
 
@@ -110,7 +115,7 @@ def executar(config: dict[str, str], agora: datetime | None = None, rodar=subpro
     pasta = config.get("BACKUP_DIR")
     if not url or not pasta:
         raise ValueError("Configure SUPABASE_DB_URL e BACKUP_DIR em " + str(caminho_config()))
-    con = interpretar_url(url)
+    con = interpretar_url(url, config.get("SUPABASE_DB_PASSWORD"))
     pasta_backup = Path(pasta)
     pasta_backup.mkdir(parents=True, exist_ok=True)
 

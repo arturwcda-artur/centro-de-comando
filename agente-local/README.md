@@ -11,7 +11,7 @@ Programa Python executado no PC Windows pelo Agendador de Tarefas (ver ADR 0002)
 | `cc_agente.indexador` | índice das pastas das obras, sem cópia | 8 |
 
 ## Configuração
-Arquivo `%LOCALAPPDATA%\CentroDeComando\agente.env`, **fora do repositório**. Veja [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md), seção D.
+Arquivo `%USERPROFILE%\.centro-de-comando\agente.env`, **fora do repositório**. Também é possível indicar outro caminho com a variável `CC_AGENTE_CONFIG`. Veja [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md), seção D.
 
 ## Testes
 ```bash

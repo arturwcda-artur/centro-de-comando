@@ -17,9 +17,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 ### Implantado
 - Projeto Supabase `maocgnsdhozsyrbxvqvr` (sa-east-1) com as migrations 0001 a 0011 aplicadas. O acesso anônimo à API foi verificado como bloqueado.
 
+- Usuário proprietário criado e registrado em `app.proprietario`.
+- Backup testado: `pg_dump` 17.11, dump de 146 KB conferido com `pg_restore --list`.
+- `agente-local/backup.cmd` para o Agendador de Tarefas. A configuração fica em `%USERPROFILE%\.centro-de-comando` (fora de AppData, que é virtualizado para apps MSIX), e a senha vai em campo separado (`SUPABASE_DB_PASSWORD`).
+
 ### Pendente (depende do proprietário)
-- Criar o usuário proprietário e registrá-lo em `app.proprietario`.
-- Instalar o `pg_dump` e agendar o backup.
+- Registrar a tarefa semanal no Agendador de Tarefas (comando em DEPLOYMENT.md, seção D).
 
 ## [0.1.0] — 2026-11-03 — Fase 1: Arquitetura e modelagem
 ### Adicionado
