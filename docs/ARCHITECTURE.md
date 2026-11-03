@@ -63,6 +63,7 @@ Ver [docs/adr](adr). Índice:
 | [0009](adr/0009-valores-calculados-em-views.md) | Valores consolidados calculados em views |
 | [0010](adr/0010-sem-cache-components.md) | Next.js 16 sem `cacheComponents` |
 | [0011](adr/0011-mfa-exigido-no-banco.md) | Segundo fator (MFA) exigido também no banco |
+| [0012](adr/0012-conectores-gratuitos.md) | Conectores de leitura: iCal (Google), API (Trello), integração (Notion), agendados pelo GitHub Actions |
 
 ## Aplicação web (`apps/web`, Fase 3)
 | Peça | Arquivo | Papel |

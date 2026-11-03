@@ -25,6 +25,48 @@ export const STATUS_DECISAO = [
   { valor: "cancelada", rotulo: "Cancelada" },
 ] as const;
 
+export const STATUS_TAREFA = [
+  { valor: "a_fazer", rotulo: "A fazer" },
+  { valor: "em_andamento", rotulo: "Em andamento" },
+  { valor: "aguardando_terceiro", rotulo: "Aguardando terceiro" },
+  { valor: "concluida", rotulo: "Concluída" },
+  { valor: "cancelada", rotulo: "Cancelada" },
+] as const;
+
+export const TIPOS_TAREFA = [
+  { valor: "acao", rotulo: "Ação" },
+  { valor: "cobranca", rotulo: "Cobrança" },
+  { valor: "entrega", rotulo: "Entrega" },
+  { valor: "pendencia", rotulo: "Pendência" },
+] as const;
+
+/** RN-45: visões de tarefas. */
+export const VISOES_TAREFA = [
+  { valor: "minhas", rotulo: "Minhas atribuições" },
+  { valor: "aguardando", rotulo: "Aguardando terceiros" },
+  { valor: "cobrancas", rotulo: "Cobranças" },
+  { valor: "criticas", rotulo: "Críticas" },
+  { valor: "vencimentos", rotulo: "Vencimentos" },
+  { valor: "concluidas", rotulo: "Concluídas" },
+] as const;
+export type VisaoTarefa = (typeof VISOES_TAREFA)[number]["valor"];
+
+/** Escore ≥ 27 conta como crítica mesmo sem a marcação manual (RN-45). */
+export const ESCORE_CRITICO = 27;
+
+/** Motivos legíveis da posição da tarefa na fila (recomendação de prioridade; não altera prazos). */
+export function motivosPrioridade(t: { vencida?: boolean | null; vence_hoje?: boolean | null; dias_para_prazo?: number | null; critica?: boolean | null; impacto?: number | null; importancia?: number | null; tipo?: string | null }): string[] {
+  const m: string[] = [];
+  if (t.vencida) m.push(`vencida há ${Math.abs(t.dias_para_prazo ?? 0)} dia(s)`);
+  else if (t.vence_hoje) m.push("vence hoje");
+  else if (t.dias_para_prazo !== null && t.dias_para_prazo !== undefined && t.dias_para_prazo <= 2) m.push(`vence em ${t.dias_para_prazo} dia(s)`);
+  if (t.critica) m.push("marcada como crítica");
+  if ((t.impacto ?? 0) >= 4) m.push("impacto alto");
+  if ((t.importancia ?? 0) >= 4) m.push("importância alta");
+  if (t.tipo === "cobranca") m.push("cobrança");
+  return m;
+}
+
 export const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"] as const;
 
 export function rotuloSituacao(valor: string | null | undefined) {

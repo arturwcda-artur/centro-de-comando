@@ -2,6 +2,15 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.5.0] — 2026-11-03 — Fase 5, etapa A: Tarefas, Meu dia e Agenda
+### Adicionado
+- **Tarefas**: cadastro, edição, conclusão e reabertura, com as 6 visões da RN-45 (minhas, aguardando terceiros, cobranças, críticas, vencimentos e concluídas), filtro por obra e escore visível.
+- **Meu dia**: captura rápida de tarefa, foco do dia com o motivo da prioridade (RN-46), compromissos de hoje, cobranças, aguardando terceiros e vencimentos dos próximos 7 dias.
+- **Agenda**: próximos 14 dias agrupados por dia, no horário de São Paulo.
+- Cadastro de pessoas com a opção "Sou eu".
+- Migration `0014_tarefas_minhas.sql`, com 2 testes do banco (total: 31). Testes web: 29.
+- ADR 0012: conectores gratuitos (iCal, API do Trello, integração do Notion, GitHub Actions).
+
 ## [0.4.0] — 2026-11-03 — Fase 4: Cadastro e gestão de obras
 ### Adicionado
 - **Obras**: lista com filtro por situação, cadastro, edição e arquivamento. Ambiente individual da obra com as abas Visão geral, Riscos e Decisões; as abas das fases 5 a 8 aparecem marcadas.

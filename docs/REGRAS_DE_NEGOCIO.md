@@ -55,12 +55,15 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 
   | Visão | Critério |
   |---|---|
-  | Minhas atribuições | responsável é a pessoa marcada `eh_usuario` |
+  | Minhas atribuições | responsável é a pessoa marcada `eh_usuario` ("Sou eu" em Cadastros → Pessoas) **ou não há responsável** (migration 0014) |
   | Aguardando terceiros | status `aguardando_terceiro` |
   | Cobranças | tipo `cobranca` |
   | Atividades críticas | `critica = true` ou escore ≥ 27 |
   | Vencimentos | prazo nos próximos 15 dias ou vencido |
   | Concluídas | status `concluida` |
+
+- **RN-46** **Meu dia** mostra em "foco" as minhas tarefas vencidas, de hoje, críticas ou com escore ≥ 27 (até 8), seguidas das 5 próximas por escore. Cada tarefa vem com o motivo da posição (vencida, vence hoje, crítica, impacto alto…). É uma recomendação: nada é reagendado.
+- **RN-47** Tarefas importadas (Trello, Notion) não são editadas no sistema: a fonte oficial é a ferramenta de origem (ADR 0004). Só tarefas manuais podem ser concluídas ou reabertas aqui.
 
 ## 5. Riscos e decisões
 - **RN-50** Severidade = probabilidade × impacto (1 a 25). **Crítico** quando ≥ 15, **alto** de 8 a 14, **moderado** até 7.
