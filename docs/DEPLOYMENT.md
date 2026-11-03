@@ -67,7 +67,7 @@ npx.cmd supabase db push --remote
    - `NEXT_PUBLIC_SUPABASE_URL` = `https://<ref>.supabase.co`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = chave **publishable** (Supabase → Project Settings → API Keys)
    - A `SUPABASE_SERVICE_ROLE_KEY` **não** é usada pela aplicação web e nunca recebe o prefixo `NEXT_PUBLIC_`.
-4. Clique em **Deploy** e anote o endereço `https://<projeto>.vercel.app`.
+4. Clique em **Deploy** e anote o endereço. Produção atual: **https://centro-de-comando-chi.vercel.app**, região `gru1` (São Paulo).
 5. No Supabase, em **Authentication → URL Configuration**: *Site URL* = o endereço da Vercel; em *Redirect URLs*, adicione esse mesmo endereço e `http://localhost:3000`.
 6. Primeiro acesso: e-mail e senha, depois leia o QR code com o app autenticador e digite o código.
 7. Instalar como aplicativo: no Chrome/Edge do PC, use o ícone de instalar na barra de endereço. No celular, use *Adicionar à tela inicial*.

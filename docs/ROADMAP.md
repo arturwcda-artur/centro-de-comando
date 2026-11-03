@@ -6,8 +6,8 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 |---|---|---|
 | 0 — Auditoria | 8 documentos de diagnóstico | ✅ aprovada em 03/11/2026 |
 | 1 — Arquitetura e modelagem | repositório, docs permanentes, ADRs, 10 migrations, 17 testes, dicionário | ✅ aprovada em 03/11/2026 |
-| 2 — Nuvem e segurança | Supabase, Vercel, Auth+MFA, migrations aplicadas, CI, backup semanal | ✅ entregue em 03/11/2026, aguardando aprovação. Vercel fica para a Fase 3 |
-| 3 — Dashboard e navegação | layout, menu lateral, busca global, PWA | 🔶 aplicação pronta; falta publicar na Vercel |
+| 2 — Nuvem e segurança | Supabase, Auth+MFA, migrations aplicadas, CI, backup semanal | ✅ aprovada em 03/11/2026 |
+| 3 — Dashboard e navegação | login + MFA, layout, menu lateral, busca global, painel, PWA | ✅ entregue em 03/11/2026, publicado em https://centro-de-comando-chi.vercel.app; primeiro acesso do proprietário confirmado. Aguardando aprovação |
 | 4 — Obras | cadastros e importação assistida das obras reais | |
 | 5 — Tarefas e agenda | "Meu dia", 6 visões, conectores de leitura Trello, Agenda e Notion — **primeiro uso real** | |
 | 6 — Planejamento | agente local MS Project, versões, Curva S (piloto: PRF-Recanto) | |
@@ -19,4 +19,13 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 
 ## Decisões da Fase 0 assumidas na aprovação de 03/11/2026
 O proprietário aprovou com "Aprovo, seguir". Foram adotadas as recomendações D1–D7. Qualquer uma pode ser revista:
-- D1 pilha aprovada · D2 tarefas pessoais no Centro de Comando, Trello para equipe · D3 Central do Notion importada como histórico · D4 Gmail/Todoist fora até a Fase 9 · D5 obras confirmadas uma a uma na Fase 4 · D6 contas gratuitas agora, Pro na Fase 5 · D7 financeiro da empresa fora do escopo.
+- D1 pilha aprovada · D2 tarefas pessoais no Centro de Comando, Trello para equipe · D3 Central do Notion importada como histórico · D4 Gmail/Todoist fora até a Fase 9 · D5 obras confirmadas uma a uma na Fase 4 · D6 ~~contas gratuitas agora, Pro na Fase 5~~ (substituída abaixo) · D7 financeiro da empresa fora do escopo.
+
+## Decisão de custo zero (03/11/2026)
+O proprietário decidiu que o sistema deve ser **totalmente gratuito**. Isso substitui a D6 e o "Cenário B" de [fase-0/ESTIMATIVA_DE_CUSTOS.md](fase-0/ESTIMATIVA_DE_CUSTOS.md).
+- **Planos:** Supabase Free, Vercel Hobby e GitHub Free, sem previsão de migração para planos pagos.
+- **Pausa do Supabase Free após 7 dias sem uso:** o uso diário evita a pausa. Um "manter ativo" automático pode ser adicionado, e a reativação é feita pelo painel.
+- **Sem backup diário gerenciado:** o backup do agente local cobre esse ponto. Ele é semanal hoje e pode passar a diário.
+- **Limites (500 MB de banco, 1 GB de storage):** os documentos ficam no Google Drive, e o banco guarda só a referência (ADR 0003).
+- **IA (Fase 10):** só entra com opção de custo zero ou como recurso opcional e desligável, decidido com o proprietário antes.
+- **Segundo fator:** o TOTP é gratuito no Supabase. Use apps oficiais gratuitos (Google Authenticator, da Google LLC, ou Microsoft Authenticator) e evite os clones pagos das lojas.
