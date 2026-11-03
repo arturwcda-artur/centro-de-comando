@@ -1,4 +1,4 @@
-﻿# ImplantaÃ§Ã£o
+# ImplantaÃ§Ã£o
 
 ## Ambientes
 | Ambiente | Banco | App | Uso |
