@@ -5,8 +5,8 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | Fase | Entregas | Estado |
 |---|---|---|
 | 0 — Auditoria | 8 documentos de diagnóstico | ✅ aprovada em 03/11/2026 |
-| 1 — Arquitetura e modelagem | repositório, docs permanentes, ADRs, 10 migrations, 17 testes, dicionário | ✅ entregue, aguardando aprovação |
-| 2 — Nuvem e segurança | Supabase, Vercel, Auth+MFA, migrations aplicadas, CI, backup semanal | ⏳ |
+| 1 — Arquitetura e modelagem | repositório, docs permanentes, ADRs, 10 migrations, 17 testes, dicionário | ✅ aprovada em 03/11/2026 |
+| 2 — Nuvem e segurança | Supabase, Vercel, Auth+MFA, migrations aplicadas, CI, backup semanal | 🔶 repositório pronto; falta criar o projeto Supabase |
 | 3 — Dashboard e navegação | layout, menu lateral, busca global, PWA | |
 | 4 — Obras | cadastros e importação assistida das obras reais | |
 | 5 — Tarefas e agenda | "Meu dia", 6 visões, conectores de leitura Trello, Agenda e Notion — **primeiro uso real** | |
