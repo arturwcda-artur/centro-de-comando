@@ -19,16 +19,19 @@
 1. **Supabase**: em https://supabase.com, entrar com o GitHub e criar o projeto `centro-de-comando` na região **South America (São Paulo)**, plano Free. **Guardar a senha do banco num gerenciador de senhas.** Ela não deve ser enviada a ninguém, nem ao assistente.
 2. **Vercel**: em https://vercel.com/signup, entrar com o GitHub, plano Hobby. O projeto é ligado ao repositório na Fase 3, quando existir a aplicação web.
 
-### B. Ligar o repositório ao projeto Supabase (proprietário digita as credenciais)
+### B. Ligar o repositório ao projeto Supabase ✅ feito em 03/11/2026
+Projeto `maocgnsdhozsyrbxvqvr`, região `sa-east-1`.
 ```bash
-npx supabase login
-npx supabase link --project-ref <ref-do-projeto>
-npx supabase db push
+npx.cmd supabase login
+npx.cmd supabase link --project-ref <ref-do-projeto>
+npx.cmd supabase db push --remote --dry-run
+npx.cmd supabase db push --remote
 ```
-- `login` abre o navegador para autorizar.
-- `link` pede a senha do banco. Ela é digitada pelo proprietário e não fica salva no repositório.
+- No Windows PowerShell use `npx.cmd`, porque a política de execução bloqueia o `npx.ps1`.
+- `login` abre o navegador para autorizar. O CLI v3 usa esse login também no `link` e no `db push`, sem pedir a senha do banco.
 - O `<ref>` aparece na URL do painel: `supabase.com/dashboard/project/<ref>`.
-- `db push` aplica as migrations 0001 a 0011.
+- Sem `--remote`, o CLI v3 tenta um banco local (Docker). Sempre simule com `--dry-run` antes de aplicar.
+- Verificação feita depois da aplicação: 29 tabelas, todas com RLS ativo e forçado, e 5 views. Uma requisição anônima à API recebe `permission denied`.
 
 ### C. Usuário proprietário
 1. No painel Supabase, em **Authentication → Users → Add user → Create new user**, informe o seu e-mail e uma senha forte e marque *Auto Confirm User*.

@@ -14,8 +14,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 ### Alterado
 - Migrations movidas de `packages/db/migrations` para `supabase/migrations`, a pasta padrão do Supabase CLI.
 
-### Pendente (depende de contas do proprietário)
-- Criar o projeto Supabase, aplicar as migrations, criar o usuário proprietário e agendar o backup.
+### Implantado
+- Projeto Supabase `maocgnsdhozsyrbxvqvr` (sa-east-1) com as migrations 0001 a 0011 aplicadas. O acesso anônimo à API foi verificado como bloqueado.
+
+### Pendente (depende do proprietário)
+- Criar o usuário proprietário e registrá-lo em `app.proprietario`.
+- Instalar o `pg_dump` e agendar o backup.
 
 ## [0.1.0] — 2026-11-03 — Fase 1: Arquitetura e modelagem
 ### Adicionado
