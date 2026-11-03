@@ -43,6 +43,9 @@ jobs:
   segredos:
     name: Varredura de segredos
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read  # gitleaks lista os commits do PR
     steps:
       - uses: actions/checkout@v4
         with:
