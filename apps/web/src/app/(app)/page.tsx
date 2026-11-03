@@ -72,8 +72,15 @@ export default async function Painel({ searchParams }: PageProps<"/">) {
 
       {semObras && !filtros.obraId && (
         <Aviso tipo="info">
-          Nenhuma obra cadastrada ainda. O cadastro assistido das obras reais chega na Fase 4 — até lá os indicadores
-          ficam zerados.
+          Nenhuma obra cadastrada ainda.{" "}
+          <Link href="/obras/importar" className="font-medium underline">
+            Revise as propostas lidas das suas pastas
+          </Link>{" "}
+          ou{" "}
+          <Link href="/obras/nova" className="font-medium underline">
+            cadastre uma obra
+          </Link>
+          .
         </Aviso>
       )}
 

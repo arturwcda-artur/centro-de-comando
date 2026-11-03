@@ -10,6 +10,7 @@ import {
   Plug,
   ShieldAlert,
   Sun,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import type { Modulo } from "@/lib/navegacao";
@@ -26,6 +27,7 @@ const ICONES: Record<Modulo["icone"], LucideIcon> = {
   riscos: ShieldAlert,
   relatorios: FileText,
   integracoes: Plug,
+  cadastros: Users,
 };
 
 export function IconeModulo({ icone, className = "size-4" }: { icone: Modulo["icone"]; className?: string }) {

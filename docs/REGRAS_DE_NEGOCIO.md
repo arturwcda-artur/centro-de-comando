@@ -7,6 +7,12 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-02** Cada obra pertence a uma **empresa executora** (pela qual o gestor atua) e a um **contratante**. São entidades diferentes.
 - **RN-03** Valores e avanços da obra **não são digitados na obra**. Eles vêm de contratos, aditivos, medições e avanço físico (`v_obra_resumo`).
 - **RN-04** Nenhuma obra é cadastrada a partir de suposições. O cadastro inicial é assistido e confirmado pelo usuário.
+- **RN-05** Importação assistida: o agente local só **lê** as pastas `2.1-EM ANDAMENTO` (sugere `andamento`), `2.2-AGUARDANDO` (`aguardando`) e `2.3-FINALIZADAS` (`concluida`). Cada pasta gera uma **proposta**. A obra só existe depois que o proprietário aprova, e cada proposta pode ser corrigida ou descartada.
+- **RN-06** Pastas agrupadoras (hoje: `LEVORSSE`) geram uma proposta por subpasta, ou seja, por frente de obra. Pastas que provavelmente não são obras (`PEDIDOS GERAIS`) vêm marcadas, mas não são descartadas automaticamente.
+- **RN-07** Reler as pastas atualiza só as evidências da proposta (contagens, tamanho, data). As sugestões e a revisão do proprietário são preservadas.
+- **RN-08** O código da obra é único, em maiúsculas, com letras, números e hífen. Pastas com o mesmo nome recebem a situação como sufixo (ex.: `MIRANTE-CONCLUIDA`).
+- **RN-09** Ao aprovar com empresa ou contratante digitados, o sistema reaproveita um cadastro com o mesmo nome antes de criar outro.
+- **RN-10a** Obras e cadastros não são apagados pela interface, apenas **arquivados** (`arquivado_em`). O histórico e a auditoria permanecem.
 
 ## 2. Contratos e financeiro — separação de valores (`v_contratos_resumo`)
 | Conceito | Regra |

@@ -5,7 +5,7 @@ import { Menu, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IconeModulo } from "@/components/icone-modulo";
 import { Marca } from "@/components/marca";
-import { MODULOS, moduloAtivo, type Modulo } from "@/lib/navegacao";
+import { FASE_ATUAL, MODULOS, moduloAtivo, type Modulo } from "@/lib/navegacao";
 
 const GRUPOS: Modulo["grupo"][] = ["Visão geral", "Gestão", "Controle", "Sistema"];
 
@@ -37,7 +37,7 @@ function Itens({ rodape, aoNavegar }: { rodape: ReactNode; aoNavegar?: () => voi
                     >
                       <IconeModulo icone={m.icone} />
                       <span className="flex-1 truncate">{m.titulo}</span>
-                      {m.fase > 3 && <span className="text-[10px] text-lateral-texto/50">F{m.fase}</span>}
+                      {m.fase > FASE_ATUAL && <span className="text-[10px] text-lateral-texto/50">F{m.fase}</span>}
                     </Link>
                   </li>
                 );

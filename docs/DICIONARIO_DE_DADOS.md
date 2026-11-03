@@ -274,6 +274,37 @@ Empresas pelas quais o gestor atua (executoras). Ex.: construtora contratada.
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `importacao_obras`
+
+Propostas de obras lidas das pastas locais. Só viram obras após aprovação do proprietário.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| fonte | text | sim |  |  |
+| id_externo | text | sim |  |  |
+| pasta_local | text | sim |  |  |
+| nome_sugerido | text | sim |  |  |
+| codigo_sugerido | text | sim |  |  |
+| situacao_sugerida | text | sim |  |  |
+| pista_contratante | text |  |  |  |
+| observacao | text |  |  |  |
+| provavel_nao_obra | boolean | sim |  |  |
+| qtd_arquivos | integer | sim |  |  |
+| qtd_cronogramas | integer | sim |  |  |
+| qtd_planilhas | integer | sim |  |  |
+| qtd_pdfs | integer | sim |  |  |
+| tamanho_bytes | bigint | sim |  |  |
+| ultima_modificacao | timestamp with time zone |  |  |  |
+| estrutura_padrao | boolean | sim |  |  |
+| subpastas | text[] | sim |  |  |
+| status | text | sim |  |  |
+| obra_id | uuid |  | obras |  |
+| revisado_em | timestamp with time zone |  |  |  |
+| importado_em | timestamp with time zone | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `indicadores_snapshot`
 
 Fotografia periódica dos indicadores, para histórico e tendência.

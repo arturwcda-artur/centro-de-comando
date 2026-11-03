@@ -79,6 +79,18 @@ npm run dev
 ```
 Requer `apps/web/.env.local` com as duas variáveis acima. O arquivo é ignorado pelo Git. Depois de mudar o esquema do banco, regenere os tipos com `npx.cmd supabase gen types typescript --project-id <ref> --schema public > apps/web/src/lib/database.types.ts`.
 
+### G. Importação assistida das obras (Fase 4)
+1. Gere as propostas lendo as pastas, o que é somente leitura:
+   ```bash
+   cd C:\dev\centro-de-comando\agente-local
+   py -m cc_agente.inventario_obras "C:\Users\<usuário>\Desktop\DESKTOP-EMPRESA\GESTÃO_DE_OBRAS\2.0-OBRAS" --sql propostas.sql
+   ```
+2. Carregue as propostas no banco. O comando é idempotente: rodar de novo só atualiza as evidências.
+   ```bash
+   npx.cmd supabase db query --remote --file propostas.sql
+   ```
+3. No sistema, abra **Obras → Importação assistida**, confira cada proposta e aprove ou descarte.
+
 ## Fluxo de trabalho no Git
 - `main` está sempre publicável. Cada fase ou recurso fica em `fase-N/<assunto>` e entra por Pull Request com o CI verde.
 - Commits no padrão `tipo(escopo): descrição` (`feat`, `fix`, `docs`, `db`, `test`, `chore`).
