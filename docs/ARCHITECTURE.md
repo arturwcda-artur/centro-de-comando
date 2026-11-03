@@ -61,3 +61,18 @@ Ver [docs/adr](adr). Índice:
 | [0007](adr/0007-rls-proprietario-unico.md) | RLS por proprietário único em vez de owner_id por linha |
 | [0008](adr/0008-check-em-vez-de-enum.md) | `CHECK` em vez de tipos ENUM |
 | [0009](adr/0009-valores-calculados-em-views.md) | Valores consolidados calculados em views |
+| [0010](adr/0010-sem-cache-components.md) | Next.js 16 sem `cacheComponents` |
+| [0011](adr/0011-mfa-exigido-no-banco.md) | Segundo fator (MFA) exigido também no banco |
+
+## Aplicação web (`apps/web`, Fase 3)
+| Peça | Arquivo | Papel |
+|---|---|---|
+| Proxy | `src/proxy.ts` | renova a sessão a cada requisição e redireciona conforme `src/lib/rotas.ts` |
+| Regras de acesso | `src/lib/rotas.ts` | função pura: anônimo → login; sem autenticador → cadastrar; sem código → verificar |
+| Camada de acesso (DAL) | `src/lib/sessao.ts` | `exigirSessaoCompleta()` revalida no servidor antes de renderizar |
+| Clientes Supabase | `src/lib/supabase/*` | servidor (cookies) e navegador (login/MFA); sempre a chave pública + RLS |
+| Painel | `src/lib/painel.ts`, `src/lib/indicadores.ts` | leitura das views; cálculo dos indicadores é função pura testada |
+| Formatação | `src/lib/formato.ts` | R$, datas e "hoje" em America/Sao_Paulo |
+| Navegação | `src/lib/navegacao.ts` | lista única dos módulos e da fase de cada um |
+| PWA | `src/app/manifest.ts`, `src/app/icones/*`, `public/sw.js` | instalável; o service worker não guarda dados em cache |
+| Tipos do banco | `src/lib/database.types.ts` | gerado com `npx supabase gen types typescript --project-id <ref>` |

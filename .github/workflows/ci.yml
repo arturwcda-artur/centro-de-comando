@@ -26,6 +26,28 @@ jobs:
       - name: Dependências sem vulnerabilidade alta
         run: npm audit --audit-level=high
 
+  web:
+    name: Aplicação web (tipos, lint, testes, build)
+    runs-on: ubuntu-latest
+    env:
+      # Valores fictícios só para o build; a aplicação real usa as variáveis da Vercel.
+      NEXT_PUBLIC_SUPABASE_URL: https://exemplo.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: chave-publica-de-exemplo
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx next typegen
+        working-directory: apps/web
+      - run: npm run typecheck -w @cc/web
+      - run: npm run lint -w @cc/web
+      - run: npm run test -w @cc/web
+      - run: npm run build -w @cc/web
+
   agente-local:
     name: Agente local (pytest)
     runs-on: ubuntu-latest

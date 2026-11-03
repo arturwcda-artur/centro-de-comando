@@ -60,8 +60,24 @@ npx.cmd supabase db push --remote
    ```
    `StartWhenAvailable` faz o backup rodar assim que o PC for ligado, se ele estava desligado na segunda às 08:00. O registro de cada execução fica em `%USERPROFILE%\.centro-de-comando\backup.log`.
 
-### E. Variáveis de ambiente (Fase 3, Vercel)
-Ver `.env.example`. A `SUPABASE_SERVICE_ROLE_KEY` nunca recebe o prefixo `NEXT_PUBLIC_`.
+### E. Publicar a aplicação web na Vercel (Fase 3)
+1. Em https://vercel.com/new, importe o repositório `centro-de-comando` do GitHub.
+2. **Root Directory:** `apps/web`. A Vercel detecta Next.js e os workspaces do npm. Mantenha *Include files outside the root directory* ligado.
+3. **Environment Variables** (Production e Preview). Os dois valores são públicos por natureza, porque os dados são protegidos pelo RLS:
+   - `NEXT_PUBLIC_SUPABASE_URL` = `https://<ref>.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = chave **publishable** (Supabase → Project Settings → API Keys)
+   - A `SUPABASE_SERVICE_ROLE_KEY` **não** é usada pela aplicação web e nunca recebe o prefixo `NEXT_PUBLIC_`.
+4. Clique em **Deploy** e anote o endereço `https://<projeto>.vercel.app`.
+5. No Supabase, em **Authentication → URL Configuration**: *Site URL* = o endereço da Vercel; em *Redirect URLs*, adicione esse mesmo endereço e `http://localhost:3000`.
+6. Primeiro acesso: e-mail e senha, depois leia o QR code com o app autenticador e digite o código.
+7. Instalar como aplicativo: no Chrome/Edge do PC, use o ícone de instalar na barra de endereço. No celular, use *Adicionar à tela inicial*.
+
+### F. Desenvolvimento local da aplicação
+```bash
+npm install
+npm run dev
+```
+Requer `apps/web/.env.local` com as duas variáveis acima. O arquivo é ignorado pelo Git. Depois de mudar o esquema do banco, regenere os tipos com `npx.cmd supabase gen types typescript --project-id <ref> --schema public > apps/web/src/lib/database.types.ts`.
 
 ## Fluxo de trabalho no Git
 - `main` está sempre publicável. Cada fase ou recurso fica em `fase-N/<assunto>` e entra por Pull Request com o CI verde.

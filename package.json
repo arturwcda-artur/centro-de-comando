@@ -3,10 +3,13 @@
   "private": true,
   "description": "Centro de Comando Gerencial — plataforma privada de gestão de obras",
   "workspaces": [
+    "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "dev": "npm run dev -w @cc/web",
+    "build": "npm run build -w @cc/web"
   },
   "engines": {
     "node": ">=22"
