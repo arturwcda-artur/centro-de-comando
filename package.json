@@ -10,5 +10,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "supabase": "^3.0.0"
   }
 }

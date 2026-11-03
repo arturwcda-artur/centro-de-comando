@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "URLs de conexão fictícias usadas apenas nos testes unitários"
+paths = ['''agente-local/tests/.*''']

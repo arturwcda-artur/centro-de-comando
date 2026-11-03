@@ -4,7 +4,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const aqui = dirname(fileURLToPath(import.meta.url));
-export const pastaMigrations = join(aqui, '..', 'migrations');
+export const pastaMigrations = join(aqui, '..', '..', '..', 'supabase', 'migrations');
 
 export const PROPRIETARIO = '00000000-0000-4000-8000-000000000001';
 export const INTRUSO = '00000000-0000-4000-8000-000000000002';

@@ -1,0 +1,9 @@
+[project]
+name = "cc-agente"
+version = "0.1.0"
+description = "Agente local do Centro de Comando Gerencial (backup, MS Project, Excel)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

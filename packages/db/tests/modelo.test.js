@@ -75,6 +75,41 @@ describe('segurança (RLS)', () => {
     const r = await como(db, 'authenticated', INTRUSO, (tx) => tx.query('select * from public.v_obra_resumo'));
     expect(r.rows).toHaveLength(0);
   });
+
+  it('nenhum usuário da API consegue se tornar proprietário nem ler a auditoria', async () => {
+    for (const usuario of [PROPRIETARIO, INTRUSO]) {
+      await expect(
+        como(db, 'authenticated', usuario, (tx) =>
+          tx.query(`insert into app.proprietario (user_id) values ($1)`, [INTRUSO]),
+        ),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        como(db, 'authenticated', usuario, (tx) => tx.query('select * from app.auditoria')),
+      ).rejects.toThrow(/permission denied/);
+    }
+  });
+
+  it('a trilha de auditoria não pode ser alterada nem apagada', async () => {
+    await expect(db.query(`update app.auditoria set tabela = 'x'`)).rejects.toThrow(/somente acréscimo/);
+    await expect(db.query(`delete from app.auditoria`)).rejects.toThrow(/somente acréscimo/);
+    await expect(db.query(`truncate app.auditoria`)).rejects.toThrow(/somente acréscimo/);
+  });
+
+  it('funções internas têm search_path fixo', async () => {
+    const { rows } = await db.query(`
+      select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'app' and not exists (
+        select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')`);
+    expect(rows).toEqual([]);
+  });
+
+  it('sessões da API usam o fuso America/Sao_Paulo', async () => {
+    const { rows } = await db.query(`
+      select r.rolname, s.setconfig from pg_db_role_setting s join pg_roles r on r.oid = s.setrole
+      where r.rolname in ('authenticated','service_role')`);
+    expect(rows).toHaveLength(2);
+    for (const r of rows) expect(r.setconfig).toContain('TimeZone=America/Sao_Paulo');
+  });
 });
 
 describe('sincronização idempotente', () => {

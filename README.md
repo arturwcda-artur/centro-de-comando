@@ -6,15 +6,16 @@ Plataforma privada para gestão de obras e da rotina gerencial. Um único usuár
 | Fase | Estado |
 |---|---|
 | 0 — Auditoria e diagnóstico | ✅ concluída ([docs/fase-0](docs/fase-0)) |
-| 1 — Arquitetura e modelagem de dados | ✅ entregue, aguardando aprovação |
-| 2 — Infraestrutura na nuvem e segurança | ⏳ próxima |
+| 1 — Arquitetura e modelagem de dados | ✅ aprovada |
+| 2 — Infraestrutura na nuvem e segurança | ✅ entregue, aguardando aprovação |
 
 Roteiro completo em [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Estrutura
 ```
 apps/web/              Next.js (Fase 3)
-packages/db/           migrations SQL, testes do modelo, gerador do dicionário
+supabase/              config do Supabase CLI e migrations SQL
+packages/db/           testes do modelo e gerador do dicionário
 packages/integrations/ conectores, um por ferramenta (Fase 5 em diante)
 agente-local/          agente Python para MS Project, Excel e pastas (Fase 6)
 docs/                  documentação permanente e ADRs

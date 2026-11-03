@@ -1,6 +1,6 @@
 # Banco de dados
 
-PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas em `packages/db/migrations`.
+PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas em `supabase/migrations`, a pasta que o Supabase CLI aplica com `supabase db push`. Os testes ficam em `packages/db/tests` e leem as migrations dessa mesma pasta.
 
 ## Migrations
 | Arquivo | Conteúdo |
@@ -15,6 +15,7 @@ PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas
 | `0008_integracoes_indicadores.sql` | conectores, execuções, itens, conflitos, fotografias de indicadores |
 | `0009_seguranca.sql` | RLS, políticas, triggers de `atualizado_em` e auditoria em **todas** as tabelas |
 | `0010_views.sql` | `v_contratos_resumo`, `v_obra_resumo`, `v_tarefas_priorizadas`, `v_vencimentos`, `v_riscos_criticos` |
+| `0011_endurecimento.sql` | fuso das sessões da API, `search_path` fixo nas funções, auditoria imutável, `app` inacessível pela API |
 
 **Regras para novas migrations**
 1. Nunca editar uma migration já aplicada em produção. Toda mudança entra numa migration nova.
@@ -57,7 +58,7 @@ As tabelas que recebem dados de outras ferramentas (`tarefas`, `eventos`, `reuni
 [DICIONARIO_DE_DADOS.md](DICIONARIO_DE_DADOS.md), gerado automaticamente.
 
 ## Testes
-`packages/db/tests/modelo.test.js` (17 testes) cobre:
+`packages/db/tests/modelo.test.js` (21 testes) cobre os itens abaixo e também a proteção do proprietário, a imutabilidade da auditoria, o `search_path` fixo e o fuso das sessões:
 - RLS em todas as tabelas, inclusive para anônimo, proprietário e outro usuário.
 - Views respeitando o RLS.
 - Idempotência da sincronização.
