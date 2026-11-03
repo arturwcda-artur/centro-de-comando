@@ -16,6 +16,7 @@ PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas
 | `0009_seguranca.sql` | RLS, políticas, triggers de `atualizado_em` e auditoria em **todas** as tabelas |
 | `0010_views.sql` | `v_contratos_resumo`, `v_obra_resumo`, `v_tarefas_priorizadas`, `v_vencimentos`, `v_riscos_criticos` |
 | `0011_endurecimento.sql` | fuso das sessões da API, `search_path` fixo nas funções, auditoria imutável, `app` inacessível pela API |
+| `0013_importacao_obras.sql` | propostas de obras lidas das pastas (`importacao_obras`) e `aprovar_importacao_obra()`, que cria a obra e marca a proposta numa só transação |
 | `0012_exigir_mfa.sql` | `app.is_proprietario()` exige o nível `aal2` (senha + código do autenticador), conforme o ADR 0011 |
 
 **Regras para novas migrations**

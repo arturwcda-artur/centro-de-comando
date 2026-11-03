@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -914,6 +914,95 @@ export type Database = {
           razao_social?: string
         }
         Relationships: []
+      }
+      importacao_obras: {
+        Row: {
+          id: string
+          fonte: string
+          id_externo: string
+          pasta_local: string
+          nome_sugerido: string
+          codigo_sugerido: string
+          situacao_sugerida: string
+          pista_contratante: string | null
+          observacao: string | null
+          provavel_nao_obra: boolean
+          qtd_arquivos: number
+          qtd_cronogramas: number
+          qtd_planilhas: number
+          qtd_pdfs: number
+          tamanho_bytes: number
+          ultima_modificacao: string | null
+          estrutura_padrao: boolean
+          subpastas: string[]
+          status: string
+          obra_id: string | null
+          revisado_em: string | null
+          importado_em: string
+          criado_em: string
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          fonte?: string
+          id_externo: string
+          pasta_local: string
+          nome_sugerido: string
+          codigo_sugerido: string
+          situacao_sugerida: string
+          pista_contratante?: string | null
+          observacao?: string | null
+          provavel_nao_obra?: boolean
+          qtd_arquivos?: number
+          qtd_cronogramas?: number
+          qtd_planilhas?: number
+          qtd_pdfs?: number
+          tamanho_bytes?: number
+          ultima_modificacao?: string | null
+          estrutura_padrao?: boolean
+          subpastas?: string[]
+          status?: string
+          obra_id?: string | null
+          revisado_em?: string | null
+          importado_em?: string
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          fonte?: string
+          id_externo?: string
+          pasta_local?: string
+          nome_sugerido?: string
+          codigo_sugerido?: string
+          situacao_sugerida?: string
+          pista_contratante?: string | null
+          observacao?: string | null
+          provavel_nao_obra?: boolean
+          qtd_arquivos?: number
+          qtd_cronogramas?: number
+          qtd_planilhas?: number
+          qtd_pdfs?: number
+          tamanho_bytes?: number
+          ultima_modificacao?: string | null
+          estrutura_padrao?: boolean
+          subpastas?: string[]
+          status?: string
+          obra_id?: string | null
+          revisado_em?: string | null
+          importado_em?: string
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "importacao_obras_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       indicadores_snapshot: {
         Row: {
@@ -2078,7 +2167,19 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      aprovar_importacao_obra: {
+        Args: {
+          p_id: string
+          p_codigo: string
+          p_nome: string
+          p_situacao: string
+          p_empresa_id?: string | null
+          p_contratante_id?: string | null
+          p_cidade?: string | null
+          p_uf?: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

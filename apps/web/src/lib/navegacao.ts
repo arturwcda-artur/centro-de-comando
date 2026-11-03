@@ -15,7 +15,8 @@ export type Modulo = {
     | "documentos"
     | "riscos"
     | "relatorios"
-    | "integracoes";
+    | "integracoes"
+    | "cadastros";
   fase: number;
   grupo: "Visão geral" | "Gestão" | "Controle" | "Sistema";
 };
@@ -31,8 +32,12 @@ export const MODULOS: Modulo[] = [
   { slug: "documentos", href: "/documentos", titulo: "Documentos", descricao: "Biblioteca documental por obra", icone: "documentos", fase: 8, grupo: "Controle" },
   { slug: "riscos", href: "/riscos", titulo: "Riscos e decisões", descricao: "Matriz de riscos e registro de decisões", icone: "riscos", fase: 4, grupo: "Controle" },
   { slug: "relatorios", href: "/relatorios", titulo: "Relatórios", descricao: "Relatórios executivos em Excel e PDF", icone: "relatorios", fase: 8, grupo: "Controle" },
+  { slug: "cadastros", href: "/cadastros", titulo: "Cadastros", descricao: "Empresas, contratantes, pessoas e fornecedores", icone: "cadastros", fase: 4, grupo: "Sistema" },
   { slug: "integracoes", href: "/integracoes", titulo: "Integrações", descricao: "Trello, Google, Notion, MS Project, Excel", icone: "integracoes", fase: 9, grupo: "Sistema" },
 ];
+
+/** Última fase entregue: módulos de fases posteriores aparecem marcados como "em breve". */
+export const FASE_ATUAL = 4;
 
 export function moduloPorSlug(slug: string): Modulo | undefined {
   return MODULOS.find((m) => m.slug === slug);

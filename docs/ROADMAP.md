@@ -8,7 +8,7 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 1 — Arquitetura e modelagem | repositório, docs permanentes, ADRs, 10 migrations, 17 testes, dicionário | ✅ aprovada em 03/11/2026 |
 | 2 — Nuvem e segurança | Supabase, Auth+MFA, migrations aplicadas, CI, backup semanal | ✅ aprovada em 03/11/2026 |
 | 3 — Dashboard e navegação | login + MFA, layout, menu lateral, busca global, painel, PWA | ✅ entregue em 03/11/2026, publicado em https://centro-de-comando-chi.vercel.app; primeiro acesso do proprietário confirmado. Aguardando aprovação |
-| 4 — Obras | cadastros e importação assistida das obras reais | |
+| 4 — Obras | cadastros, importação assistida, ambiente da obra, riscos e decisões | 🔶 em revisão (PR) |
 | 5 — Tarefas e agenda | "Meu dia", 6 visões, conectores de leitura Trello, Agenda e Notion — **primeiro uso real** | |
 | 6 — Planejamento | agente local MS Project, versões, Curva S (piloto: PRF-Recanto) | |
 | 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | |

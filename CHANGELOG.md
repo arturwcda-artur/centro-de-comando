@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.4.0] — 2026-11-03 — Fase 4: Cadastro e gestão de obras
+### Adicionado
+- **Obras**: lista com filtro por situação, cadastro, edição e arquivamento. Ambiente individual da obra com as abas Visão geral, Riscos e Decisões; as abas das fases 5 a 8 aparecem marcadas.
+- **Importação assistida** (RN-05 a RN-09): o agente lê as pastas e gera propostas, que o proprietário aprova, corrige ou descarta. A aprovação é atômica (`aprovar_importacao_obra`).
+- **Cadastros**: empresas, contratantes, pessoas e fornecedores, com arquivamento.
+- **Riscos e decisões**: registro por obra, troca rápida de situação, matriz 5×5 consolidada e lista de decisões pendentes.
+- Validação de todos os formulários no servidor (zod), com mensagens por campo e tradução dos erros do banco.
+- Migration `0013_importacao_obras.sql` e 7 testes do banco (total: 29).
+- `cc_agente.inventario_obras` e 7 testes (total do agente: 18). Testes web: 24.
+- Módulo **Cadastros** no menu; o selo "F" agora só aparece em módulos de fases futuras.
+
 ## [0.3.0] — 2026-11-03 — Fase 3: Dashboard e navegação
 ### Adicionado
 - Aplicação Next.js 16 em `apps/web` (React 19, TypeScript, Tailwind 4), em português e no fuso de São Paulo.
