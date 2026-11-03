@@ -21,8 +21,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Backup testado: `pg_dump` 17.11, dump de 146 KB conferido com `pg_restore --list`.
 - `agente-local/backup.cmd` para o Agendador de Tarefas. A configuração fica em `%USERPROFILE%\.centro-de-comando` (fora de AppData, que é virtualizado para apps MSIX), e a senha vai em campo separado (`SUPABASE_DB_PASSWORD`).
 
-### Pendente (depende do proprietário)
-- Registrar a tarefa semanal no Agendador de Tarefas (comando em DEPLOYMENT.md, seção D).
+- Tarefa "Centro de Comando - Backup semanal" registrada no Agendador de Tarefas: segundas às 08:00, com execução assim que possível se o horário foi perdido.
 
 ## [0.1.0] — 2026-11-03 — Fase 1: Arquitetura e modelagem
 ### Adicionado
