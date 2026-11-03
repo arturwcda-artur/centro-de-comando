@@ -1,0 +1,69 @@
+# Banco de dados
+
+PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas em `packages/db/migrations`.
+
+## Migrations
+| Arquivo | Conteúdo |
+|---|---|
+| `0001_fundacao.sql` | schema `app`, proprietário único, `app.is_proprietario()`, `app.hoje()`, auditoria |
+| `0002_cadastros.sql` | empresas, contratantes, pessoas, fornecedores |
+| `0003_obras.sql` | obras, obra_participantes |
+| `0004_contratos_financeiro.sql` | contratos, aditivos, medições, lançamentos financeiros |
+| `0005_planejamento.sql` | versões de cronograma, atividades, dependências, marcos, avanço físico |
+| `0006_gestao.sql` | tarefas, dependências de tarefas, eventos, reuniões, riscos, decisões |
+| `0007_documentos.sql` | documentos (índice + busca), versões, anexos |
+| `0008_integracoes_indicadores.sql` | conectores, execuções, itens, conflitos, fotografias de indicadores |
+| `0009_seguranca.sql` | RLS, políticas, triggers de `atualizado_em` e auditoria em **todas** as tabelas |
+| `0010_views.sql` | `v_contratos_resumo`, `v_obra_resumo`, `v_tarefas_priorizadas`, `v_vencimentos`, `v_riscos_criticos` |
+
+**Regras para novas migrations**
+1. Nunca editar uma migration já aplicada em produção. Toda mudança entra numa migration nova.
+2. Toda tabela nova em `public` chama `select app.aplicar_padroes('public.<tabela>');` (RLS, política, auditoria, `atualizado_em`). O teste `todas as tabelas de public têm RLS` falha se isso for esquecido.
+3. Toda view nova usa `with (security_invoker = on)`. Isso também é testado.
+4. Depois de mudar o esquema, rode `npm run dicionario -w @cc/db`.
+
+## Convenções
+| Tema | Regra |
+|---|---|
+| Nomes | português, `snake_case`, tabelas no plural |
+| Chave primária | `id uuid default gen_random_uuid()` (exceto logs volumosos: `bigint identity`) |
+| Datas | `date` para datas civis; `timestamptz` para instantes; "hoje" = `app.hoje()` (America/Sao_Paulo) |
+| Dinheiro | `numeric(14,2)` em R$; nunca `float` |
+| Percentuais | `numeric(5,2)` de 0 a 100 |
+| Domínios | `text` + `CHECK` (ver ADR 0008) |
+| Exclusão | lógica (`arquivado_em`) nas entidades principais; FKs com `restrict` onde apagar perderia histórico |
+| Auditoria | trigger `app.registrar_auditoria()` grava antes/depois em `app.auditoria` |
+
+## Bloco de origem (dados importados)
+As tabelas que recebem dados de outras ferramentas (`tarefas`, `eventos`, `reunioes`, `decisoes`, `documentos`, `medicoes`, `cronograma_versoes`) têm:
+
+| Coluna | Uso |
+|---|---|
+| `fonte` | `manual`, `trello`, `google_agenda`, `notion`, `msproject`, `excel`, `google_drive`... |
+| `id_externo` | identificador do registro na ferramenta de origem |
+| `importado_em` | primeira importação |
+| `atualizado_em_origem` | última alteração na origem |
+| `hash_conteudo` | hash dos campos sincronizados (detecta mudança real) |
+| `status_sync` | `local`, `sincronizado`, `pendente`, `conflito`, `erro` |
+
+`unique (fonte, id_externo)` garante idempotência: reimportar faz *upsert* e nunca duplica. Registros manuais têm `id_externo` nulo e não colidem entre si.
+
+## Diferença em relação ao modelo da Fase 0
+- `owner_id` em cada linha foi trocado por **proprietário único** em `app.proprietario` (ADR 0007).
+- `tarefa_dependencias` e `avanco_fisico` explicitados como tabelas.
+- `conectores.escrita_autorizada_em` torna a autorização de gravação externa verificável pelo próprio banco.
+
+## Dicionário
+[DICIONARIO_DE_DADOS.md](DICIONARIO_DE_DADOS.md), gerado automaticamente.
+
+## Testes
+`packages/db/tests/modelo.test.js` (17 testes) cobre:
+- RLS em todas as tabelas, inclusive para anônimo, proprietário e outro usuário.
+- Views respeitando o RLS.
+- Idempotência da sincronização.
+- Auditoria.
+- Separação contratado/medido/faturado/recebido.
+- Restrições de aditivos e medições.
+- Priorização de tarefas.
+- Autorização de escrita dos conectores.
+- Busca em português.

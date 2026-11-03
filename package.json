@@ -1,0 +1,14 @@
+{
+  "name": "centro-de-comando",
+  "private": true,
+  "description": "Centro de Comando Gerencial — plataforma privada de gestão de obras",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

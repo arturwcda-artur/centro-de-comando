@@ -1,0 +1,14 @@
+{
+  "name": "@cc/db",
+  "private": true,
+  "type": "module",
+  "description": "Esquema do banco (migrations SQL) e testes do modelo de dados",
+  "scripts": {
+    "test": "vitest run",
+    "dicionario": "node scripts/gerar-dicionario.js"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
+    "vitest": "^5.1.0"
+  }
+}

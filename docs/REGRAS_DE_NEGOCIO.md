@@ -1,0 +1,78 @@
+# Regras de Negócio
+
+Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADRs. Onde a regra é calculada em SQL, a view correspondente está indicada.
+
+## 1. Obras
+- **RN-01** Situações possíveis: `planejamento`, `andamento`, `paralisada`, `aguardando`, `concluida`, `cancelada`.
+- **RN-02** Cada obra pertence a uma **empresa executora** (pela qual o gestor atua) e a um **contratante**. São entidades diferentes.
+- **RN-03** Valores e avanços da obra **não são digitados na obra**. Eles vêm de contratos, aditivos, medições e avanço físico (`v_obra_resumo`).
+- **RN-04** Nenhuma obra é cadastrada a partir de suposições. O cadastro inicial é assistido e confirmado pelo usuário.
+
+## 2. Contratos e financeiro — separação de valores (`v_contratos_resumo`)
+| Conceito | Regra |
+|---|---|
+| **RN-10 Valor contratado** | valor original + Σ `valor_delta` dos aditivos **aprovados** |
+| **RN-11 Prazo vigente** | data de término original + Σ `dias_delta` dos aditivos **aprovados** |
+| **RN-12 Valor medido** | Σ (valor medido − glosa) das medições **aprovadas** (ou aprovadas com glosa) |
+| **RN-13 Valor faturado** | Σ lançamentos `faturamento` com data efetiva |
+| **RN-14 Valor recebido** | Σ lançamentos `recebimento` com data efetiva |
+| **RN-15 Saldo a medir** | contratado − medido |
+| **RN-16 Saldo a receber** | faturado − recebido |
+| **RN-17 Executado** | % físico realizado × valor contratado (indicador; não substitui medição) |
+
+- **RN-18** Supressão tem `valor_delta` ≤ 0. Acréscimo e reajuste têm valor ≥ 0. Aditivo só de prazo tem valor = 0.
+- **RN-19** Aditivos `em_analise` ou `rejeitado` não alteram valor nem prazo.
+- **RN-20** O número da medição é único por contrato. A glosa nunca supera o valor medido.
+- **RN-21** Moeda única: R$, com 2 casas decimais.
+
+## 3. Prazos e atrasos (`v_obra_resumo`)
+- **RN-30** *Dias além do prazo* = max(0, hoje − prazo vigente), só para obras não concluídas e não canceladas.
+- **RN-31** *Desvio físico* = % realizado − % previsto da última medição de avanço.
+- **RN-32** "Hoje" é sempre a data em America/Sao_Paulo (`app.hoje()`).
+
+## 4. Tarefas e "Meu dia" (`v_tarefas_priorizadas`)
+- **RN-40** O sistema **nunca altera prazos automaticamente**. A priorização só ordena as tarefas.
+- **RN-41** Urgência, derivada do prazo:
+
+  | Situação do prazo | Urgência |
+  |---|---|
+  | vencido ou vence hoje | 5 |
+  | vence em até 2 dias | 4 |
+  | vence em até 7 dias | 3 |
+  | vence em até 15 dias | 2 |
+  | mais de 15 dias ou sem prazo | 1 |
+
+- **RN-42** Importância e impacto: 1 a 5, padrão 3, definidos pelo usuário.
+- **RN-43** **Escore = 3·urgência + 2·importância + 2·impacto** (de 7 a 35). Ordenação decrescente.
+- **RN-44** Status `aguardando_terceiro` exige indicar de quem se aguarda.
+- **RN-45** Visões:
+
+  | Visão | Critério |
+  |---|---|
+  | Minhas atribuições | responsável é a pessoa marcada `eh_usuario` |
+  | Aguardando terceiros | status `aguardando_terceiro` |
+  | Cobranças | tipo `cobranca` |
+  | Atividades críticas | `critica = true` ou escore ≥ 27 |
+  | Vencimentos | prazo nos próximos 15 dias ou vencido |
+  | Concluídas | status `concluida` |
+
+## 5. Riscos e decisões
+- **RN-50** Severidade = probabilidade × impacto (1 a 25). **Crítico** quando ≥ 15, **alto** de 8 a 14, **moderado** até 7.
+- **RN-51** Uma decisão com status `tomada` precisa ter o texto da decisão registrado.
+
+## 6. Integrações
+- **RN-60** Cada tipo de informação tem **uma fonte oficial** (ADR 0004). As demais ferramentas são espelhos.
+- **RN-61** Reimportar o mesmo registro (mesma fonte e mesmo id externo) atualiza, nunca duplica.
+- **RN-62** Se o hash não mudou, nada é gravado.
+- **RN-63** Se houve alteração nos dois lados desde a última sincronização, gera-se um **conflito** para decisão do usuário. Nada é sobrescrito sozinho.
+- **RN-64** A gravação em ferramenta externa exige `modo = leitura_escrita` **e** `escrita_autorizada_em` preenchido pelo proprietário.
+- **RN-65** O MS Project é a fonte oficial do cronograma. O sistema só lê os arquivos `.mpp`.
+
+## 7. Documentos
+- **RN-70** O arquivo original não é copiado nem alterado. O sistema guarda índice, referência (Drive/caminho) e texto extraído.
+- **RN-71** A categoria vem da pasta de origem (01–15/99 da estrutura-padrão das obras).
+
+## 8. IA (Fase 10)
+- **RN-80** A IA responde só com base nas views de leitura, indicando fonte e data de atualização.
+- **RN-81** Cada resposta separa **confirmado**, **estimado** e **recomendação**.
+- **RN-82** A IA não executa alteração externa sem autorização.
