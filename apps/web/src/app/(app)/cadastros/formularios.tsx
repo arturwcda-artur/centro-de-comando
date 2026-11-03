@@ -40,6 +40,10 @@ export function FormularioCadastro({ tabela, empresas }: { tabela: TabelaCadastr
           <CampoSelecao nome="empresa_id" rotulo="Empresa" opcoes={empresas} vazio="—" erro={e.empresa_id} />
           <CampoTexto nome="email" rotulo="E-mail" type="email" erro={e.email} />
           <CampoTexto nome="telefone" rotulo="Telefone" erro={e.telefone} />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="eh_usuario" className="size-4 accent-[var(--marca)]" />
+            Sou eu (as tarefas desta pessoa aparecem em “Minhas atribuições”)
+          </label>
         </>
       )}
       {tabela === "fornecedores" && (

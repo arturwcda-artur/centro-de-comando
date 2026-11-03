@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { STATUS_DECISAO, STATUS_RISCO, SITUACOES_OBRA, UFS } from "@/lib/dominio";
+import { STATUS_DECISAO, STATUS_RISCO, STATUS_TAREFA, SITUACOES_OBRA, TIPOS_TAREFA, UFS } from "@/lib/dominio";
 
 /** Valida os formulários no servidor (nunca confiar no navegador). Campos vazios viram null. */
 
@@ -78,6 +78,10 @@ export const pessoaSchema = z.object({
   empresa_id: uuidOpcional,
   email: z.string().trim().optional().transform((v) => (v ? v : null)).pipe(z.email("E-mail inválido.").nullable()),
   telefone: textoOpcional(40),
+  eh_usuario: z
+    .string()
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
 });
 
 export const fornecedorSchema = z.object({
@@ -113,6 +117,35 @@ export const decisaoSchema = z
     resultado: textoOpcional(),
   })
   .refine((d) => d.status !== "tomada" || !!d.decisao, { message: "Registre o texto da decisão (RN-51).", path: ["decisao"] });
+
+export const tarefaSchema = z
+  .object({
+    titulo: texto("Título", 300),
+    descricao: textoOpcional(4000),
+    obra_id: uuidOpcional,
+    responsavel_id: uuidOpcional,
+    aguardando_pessoa_id: uuidOpcional,
+    tipo: z.enum(TIPOS_TAREFA.map((s) => s.valor) as [string, ...string[]], "Tipo inválido.").default("acao"),
+    categoria: textoOpcional(100),
+    prazo: dataOpcional,
+    importancia: nota15("Importância").default(3),
+    impacto: nota15("Impacto").default(3),
+    critica: z
+      .string()
+      .optional()
+      .transform((v) => v === "on" || v === "true"),
+    status: z.enum(STATUS_TAREFA.map((s) => s.valor) as [string, ...string[]], "Situação inválida.").default("a_fazer"),
+  })
+  .refine((t) => t.status !== "aguardando_terceiro" || !!t.aguardando_pessoa_id, {
+    message: "Informe de quem a tarefa está aguardando (RN-44).",
+    path: ["aguardando_pessoa_id"],
+  });
+
+export const tarefaRapidaSchema = z.object({
+  titulo: texto("Título", 300),
+  prazo: dataOpcional,
+  obra_id: uuidOpcional,
+});
 
 export const aprovacaoSchema = z.object({
   proposta_id: z.uuid(),
