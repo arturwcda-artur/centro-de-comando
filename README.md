@@ -8,7 +8,7 @@ Plataforma privada para gestão de obras e da rotina gerencial. Um único usuár
 | 0 — Auditoria e diagnóstico | ✅ concluída ([docs/fase-0](docs/fase-0)) |
 | 1 — Arquitetura e modelagem de dados | ✅ aprovada |
 | 2 — Infraestrutura na nuvem e segurança | ✅ aprovada |
-| 3 — Dashboard e navegação | 🔶 em andamento |
+| 3 — Dashboard e navegação | ✅ entregue, aguardando aprovação · https://centro-de-comando-chi.vercel.app |
 
 Roteiro completo em [docs/ROADMAP.md](docs/ROADMAP.md).
 
