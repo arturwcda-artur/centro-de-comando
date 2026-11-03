@@ -783,6 +783,7 @@ export type Database = {
           atualizado_em: string
           atualizado_em_origem: string | null
           calendario_externo_id: string | null
+          cancelado_em: string | null
           criado_em: string
           descricao: string | null
           dia_inteiro: boolean
@@ -804,6 +805,7 @@ export type Database = {
           atualizado_em?: string
           atualizado_em_origem?: string | null
           calendario_externo_id?: string | null
+          cancelado_em?: string | null
           criado_em?: string
           descricao?: string | null
           dia_inteiro?: boolean
@@ -825,6 +827,7 @@ export type Database = {
           atualizado_em?: string
           atualizado_em_origem?: string | null
           calendario_externo_id?: string | null
+          cancelado_em?: string | null
           criado_em?: string
           descricao?: string | null
           dia_inteiro?: boolean

@@ -2,6 +2,14 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.6.0] — 2026-11-03 — Fase 5, etapa B: conectores somente leitura
+### Adicionado
+- `packages/integrations`: motor de sincronização idempotente (hash + upsert por fonte e id externo, execuções registradas) e conectores **Trello** (API), **Google Agenda** (iCal, com recorrências) e **Notion** (Central de Gestão).
+- Workflow `sincronizar.yml` no GitHub Actions: a cada hora, mais o botão "Run workflow" para sincronizar na hora.
+- Tela **Integrações**: estado de cada conector, última e próxima sincronização e as últimas execuções com contagens e erros.
+- Migration `0015_eventos_cancelados.sql`: eventos cancelados na origem saem das telas sem ser apagados.
+- 13 testes dos conectores (recorrência com EXDATE e exceção, fuso, dia inteiro, mapeamentos, idempotência).
+
 ## [0.5.0] — 2026-11-03 — Fase 5, etapa A: Tarefas, Meu dia e Agenda
 ### Adicionado
 - **Tarefas**: cadastro, edição, conclusão e reabertura, com as 6 visões da RN-45 (minhas, aguardando terceiros, cobranças, críticas, vencimentos e concluídas), filtro por obra e escore visível.

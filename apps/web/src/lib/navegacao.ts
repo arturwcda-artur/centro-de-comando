@@ -33,7 +33,7 @@ export const MODULOS: Modulo[] = [
   { slug: "riscos", href: "/riscos", titulo: "Riscos e decisões", descricao: "Matriz de riscos e registro de decisões", icone: "riscos", fase: 4, grupo: "Controle" },
   { slug: "relatorios", href: "/relatorios", titulo: "Relatórios", descricao: "Relatórios executivos em Excel e PDF", icone: "relatorios", fase: 8, grupo: "Controle" },
   { slug: "cadastros", href: "/cadastros", titulo: "Cadastros", descricao: "Empresas, contratantes, pessoas e fornecedores", icone: "cadastros", fase: 4, grupo: "Sistema" },
-  { slug: "integracoes", href: "/integracoes", titulo: "Integrações", descricao: "Trello, Google, Notion, MS Project, Excel", icone: "integracoes", fase: 9, grupo: "Sistema" },
+  { slug: "integracoes", href: "/integracoes", titulo: "Integrações", descricao: "Trello, Google, Notion, MS Project, Excel", icone: "integracoes", fase: 5, grupo: "Sistema" },
 ];
 
 /** Última fase entregue: módulos de fases posteriores aparecem marcados como "em breve". */

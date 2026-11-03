@@ -1,0 +1,17 @@
+{
+  "name": "@cc/integrations",
+  "private": true,
+  "type": "module",
+  "description": "Conectores somente leitura (Trello, Google Agenda via iCal, Notion) e motor de sincronização",
+  "scripts": {
+    "test": "vitest run",
+    "sincronizar": "node src/sincronizar.js"
+  },
+  "devDependencies": {
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "ical.js": "^2.2.1"
+  }
+}

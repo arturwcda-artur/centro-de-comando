@@ -257,6 +257,7 @@ Empresas pelas quais o gestor atua (executoras). Ex.: construtora contratada.
 | status_sync | text | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| cancelado_em | timestamp with time zone |  |  | Preenchido quando o evento foi cancelado ou removido na ferramenta de origem. |
 
 ## Tabela `fornecedores`
 

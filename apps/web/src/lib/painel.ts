@@ -47,8 +47,8 @@ export async function carregarPainel(supabase: Cliente, filtros: Filtros) {
     porObra(
       supabase.from("decisoes").select("id, problema, prazo, obra_id").eq("status", "pendente").order("prazo", { ascending: true, nullsFirst: false }).limit(5),
     ),
-    porObra(supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local").gte("inicio", inicioHoje).lte("inicio", fimHoje).order("inicio")),
-    porObra(supabase.from("eventos").select("id", { count: "exact", head: true }).gte("inicio", inicioHoje).lte("inicio", fimSemana)),
+    porObra(supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local").is("cancelado_em", null).gte("inicio", inicioHoje).lte("inicio", fimHoje).order("inicio")),
+    porObra(supabase.from("eventos").select("id", { count: "exact", head: true }).is("cancelado_em", null).gte("inicio", inicioHoje).lte("inicio", fimSemana)),
   ]);
 
   const erro = [obras, listaObras, tarefas, vencimentos, riscos, decisoes, eventosHoje, eventosSemana].find((r) => r.error)?.error;

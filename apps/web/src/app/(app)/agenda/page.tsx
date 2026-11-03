@@ -12,7 +12,7 @@ export default async function PaginaAgenda() {
   const hoje = hojeSP();
   const ate = somarDias(hoje, 13);
   const [eventos, obras, conector] = await Promise.all([
-    supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local, obra_id, fonte").gte("inicio", limitesDoDiaSP(hoje).inicio).lte("inicio", limitesDoDiaSP(ate).fim).order("inicio"),
+    supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local, obra_id, fonte").is("cancelado_em", null).gte("inicio", limitesDoDiaSP(hoje).inicio).lte("inicio", limitesDoDiaSP(ate).fim).order("inicio"),
     supabase.from("obras").select("id, codigo"),
     supabase.from("conectores").select("ultima_sync_em, ativo").eq("ferramenta", "google_agenda").maybeSingle(),
   ]);

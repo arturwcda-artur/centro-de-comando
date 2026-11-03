@@ -1,0 +1,37 @@
+name: Sincronizar conectores
+
+# Lê Trello, Google Agenda (iCal) e Notion e grava espelhos no banco (ADR 0012).
+# Somente leitura nas ferramentas de origem. Os segredos são cadastrados pelo proprietário
+# em Settings → Secrets and variables → Actions e nunca aparecem nos logs.
+on:
+  schedule:
+    - cron: "17 * * * *" # a cada hora, no minuto 17 (UTC)
+  workflow_dispatch: # botão "Run workflow" = sincronizar agora
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sincronizar
+  cancel-in-progress: false
+
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --workspace @cc/integrations --include-workspace-root=false
+      - name: Sincronizar
+        run: npm run sincronizar -w @cc/integrations
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TRELLO_API_KEY: ${{ secrets.TRELLO_API_KEY }}
+          TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
+          GOOGLE_ICAL_URLS: ${{ secrets.GOOGLE_ICAL_URLS }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
