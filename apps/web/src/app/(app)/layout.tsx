@@ -18,7 +18,9 @@ export default async function LayoutAplicacao({ children }: { children: ReactNod
 
   return (
     <div className="min-h-dvh lg:pl-64">
-      <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-borda bg-superficie/90 px-4 backdrop-blur sm:px-6">
+      {/* Sem backdrop-blur/transform aqui: esses efeitos fazem os menus "fixed" (lateral e gaveta)
+          se posicionarem em relação ao cabeçalho e não à tela. */}
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-borda bg-superficie px-4 sm:px-6">
         <MenuLateral rodape={rodape} />
         <Suspense>
           <BuscaGlobal />
