@@ -71,6 +71,16 @@ describe('segurança (RLS)', () => {
     ).rejects.toThrow(/row-level security/);
   });
 
+  it('proprietário só com senha (sem segundo fator) não vê nem grava nada', async () => {
+    const r = await como(db, 'authenticated', PROPRIETARIO, (tx) => tx.query('select * from public.obras'), {
+      aal: 'aal1',
+    });
+    expect(r.rows).toHaveLength(0);
+    await expect(
+      como(db, 'authenticated', PROPRIETARIO, (tx) => criarObraTeste(tx, 'T-AAL1'), { aal: 'aal1' }),
+    ).rejects.toThrow(/row-level security/);
+  });
+
   it('views respeitam o RLS de quem consulta', async () => {
     const r = await como(db, 'authenticated', INTRUSO, (tx) => tx.query('select * from public.v_obra_resumo'));
     expect(r.rows).toHaveLength(0);

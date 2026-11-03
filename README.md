@@ -7,13 +7,14 @@ Plataforma privada para gestão de obras e da rotina gerencial. Um único usuár
 |---|---|
 | 0 — Auditoria e diagnóstico | ✅ concluída ([docs/fase-0](docs/fase-0)) |
 | 1 — Arquitetura e modelagem de dados | ✅ aprovada |
-| 2 — Infraestrutura na nuvem e segurança | ✅ entregue, aguardando aprovação |
+| 2 — Infraestrutura na nuvem e segurança | ✅ aprovada |
+| 3 — Dashboard e navegação | 🔶 em andamento |
 
 Roteiro completo em [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Estrutura
 ```
-apps/web/              Next.js (Fase 3)
+apps/web/              aplicação Next.js 16 (login + MFA, painel, navegação, PWA)
 supabase/              config do Supabase CLI e migrations SQL
 packages/db/           testes do modelo e gerador do dicionário
 packages/integrations/ conectores, um por ferramenta (Fase 5 em diante)

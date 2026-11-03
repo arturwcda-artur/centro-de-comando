@@ -2,6 +2,19 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.3.0] — 2026-11-03 — Fase 3: Dashboard e navegação
+### Adicionado
+- Aplicação Next.js 16 em `apps/web` (React 19, TypeScript, Tailwind 4), em português e no fuso de São Paulo.
+- Login com e-mail e senha e **segundo fator obrigatório** (TOTP): cadastro com QR code e verificação a cada login.
+- `proxy.ts` com as regras de acesso numa função pura testada, mais revalidação no servidor (`exigirSessaoCompleta`).
+- Migration `0012_exigir_mfa.sql`: o banco só libera dados para sessões `aal2` (ADR 0011).
+- Layout com menu lateral agrupado (gaveta no celular), busca global (Ctrl+K) em obras, tarefas e documentos, e páginas de cada módulo indicando a fase de entrega.
+- Painel executivo sobre as views: obras (total, andamento, planejamento, próximas da conclusão, com atraso), atividades vencidas, riscos críticos, carteira financeira, prioridades, compromissos de hoje, vencimentos, decisões pendentes e obras com atraso. Filtros por obra e período.
+- PWA instalável: manifest, ícones e service worker que não guarda dados em cache.
+- Cabeçalhos de segurança: CSP, HSTS, `X-Frame-Options`, `noindex`.
+- 14 testes da aplicação web e 22 do banco. Novo job de CI: tipos, lint, testes e build.
+- ADRs 0010 (sem `cacheComponents`) e 0011 (MFA no banco).
+
 ## [0.2.0] — 2026-11-03 — Fase 2: Infraestrutura e segurança (preparação)
 ### Adicionado
 - Projeto Supabase CLI (`supabase/config.toml`): cadastro público desligado, política de senha forte, MFA TOTP, seed desligado.
