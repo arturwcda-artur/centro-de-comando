@@ -62,7 +62,7 @@ npx.cmd supabase db push --remote
 
 ### E. Publicar a aplicação web na Vercel (Fase 3)
 1. Em https://vercel.com/new, importe o repositório `centro-de-comando` do GitHub.
-2. **Root Directory:** `apps/web`. A Vercel detecta Next.js e os workspaces do npm. Mantenha *Include files outside the root directory* ligado.
+2. **Root Directory:** `apps/web`. Mantenha *Include files outside the root directory* ligado. O tipo de projeto fica fixado em Next.js por `apps/web/vercel.json`. Sem esse arquivo, a Vercel pode detectar Python por causa do `agente-local/pyproject.toml`, e o build falha com `PYTHON_ENTRYPOINT_NOT_FOUND`.
 3. **Environment Variables** (Production e Preview). Os dois valores são públicos por natureza, porque os dados são protegidos pelo RLS:
    - `NEXT_PUBLIC_SUPABASE_URL` = `https://<ref>.supabase.co`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = chave **publishable** (Supabase → Project Settings → API Keys)
