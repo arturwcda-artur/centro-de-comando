@@ -414,6 +414,25 @@ Fotografia periódica dos indicadores, para histórico e tendência.
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `operacoes_externas`
+
+Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual resultado.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| ferramenta | text | sim |  |  |
+| operacao | text | sim |  |  |
+| entidade | text | sim |  |  |
+| registro_id | uuid | sim |  |  |
+| id_externo | text | sim |  |  |
+| status | text | sim |  |  |
+| detalhe | text |  |  |  |
+| erro | text |  |  |  |
+| executado_em | timestamp with time zone |  |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `pessoas`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |

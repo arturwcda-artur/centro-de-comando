@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Check, RotateCcw } from "lucide-react";
-import { concluirTarefa, reabrirTarefa } from "@/app/(app)/tarefas/acoes";
+import { RotateCcw } from "lucide-react";
+import { reabrirTarefa } from "@/app/(app)/tarefas/acoes";
+import { BotaoConcluir } from "@/components/botao-concluir";
 import { Etiqueta } from "@/components/ui";
-import { motivosPrioridade, rotuloDe, STATUS_TAREFA, TIPOS_TAREFA } from "@/lib/dominio";
+import { motivosPrioridade, podeConcluir, rotuloDe, STATUS_TAREFA, TIPOS_TAREFA } from "@/lib/dominio";
 import { dataCivil } from "@/lib/formato";
 
 export type LinhaTarefaDados = {
@@ -19,6 +20,7 @@ export type LinhaTarefaDados = {
   tipo: string | null;
   status: string | null;
   fonte: string | null;
+  responsavel_id?: string | null;
   obra_id: string | null;
   concluida_em?: string | null;
 };
@@ -31,21 +33,21 @@ export function LinhaTarefa({ t, nomeObra, mostrarMotivos = true }: { t: LinhaTa
   const motivos = mostrarMotivos && !concluida ? motivosPrioridade(t) : [];
   return (
     <li className="flex items-center gap-3 py-2.5">
-      {manual ? (
-        <form action={(concluida ? reabrirTarefa : concluirTarefa).bind(null, t.id)}>
+      {concluida && manual ? (
+        <form action={reabrirTarefa.bind(null, t.id)}>
           <button
             type="submit"
-            title={concluida ? "Reabrir" : "Concluir"}
-            aria-label={concluida ? `Reabrir: ${t.titulo}` : `Concluir: ${t.titulo}`}
-            className={`inline-flex size-7 items-center justify-center rounded-full border transition ${
-              concluida ? "border-ok bg-ok-suave text-ok" : "border-borda text-transparent hover:border-ok hover:text-ok"
-            }`}
+            title="Reabrir"
+            aria-label={`Reabrir: ${t.titulo}`}
+            className="inline-flex size-7 items-center justify-center rounded-full border border-ok bg-ok-suave text-ok transition"
           >
-            {concluida ? <RotateCcw className="size-3.5" /> : <Check className="size-3.5" />}
+            <RotateCcw className="size-3.5" />
           </button>
         </form>
+      ) : podeConcluir(t) ? (
+        <BotaoConcluir id={t.id} titulo={t.titulo} />
       ) : (
-        <span className="inline-flex size-7 items-center justify-center text-[10px] text-suave" title={`Importada do ${t.fonte}`}>
+        <span className="inline-flex size-7 items-center justify-center text-[10px] text-suave" title={concluida ? `Concluída no ${t.fonte}` : "Tarefa de terceiros: só leitura"}>
           {t.fonte?.slice(0, 2).toUpperCase()}
         </span>
       )}

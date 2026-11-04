@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { motivosPrioridade } from "./dominio";
+import { motivosPrioridade, podeConcluir } from "./dominio";
 import { tarefaRapidaSchema, tarefaSchema, validar } from "./validacao";
 
 describe("validação de tarefas", () => {
@@ -19,6 +19,23 @@ describe("validação de tarefas", () => {
   it("captura rápida exige só o título", () => {
     expect(validar(tarefaRapidaSchema, { titulo: "" }).erros?.titulo).toBeDefined();
     expect(validar(tarefaRapidaSchema, { titulo: "Ligar fiscal", prazo: "2026-11-04", obra_id: "" }).dados).toEqual({ titulo: "Ligar fiscal", prazo: "2026-11-04", obra_id: null });
+  });
+});
+
+describe("quem pode concluir pelo sistema (RN-48)", () => {
+  it("tarefas manuais, do Notion e cartões do proprietário podem", () => {
+    expect(podeConcluir({ fonte: "manual", status: "a_fazer" })).toBe(true);
+    expect(podeConcluir({ fonte: "notion", status: "a_fazer" })).toBe(true);
+    expect(podeConcluir({ fonte: "trello", responsavel_id: null, status: "a_fazer" })).toBe(true);
+  });
+
+  it("cartão de terceiros no Trello não pode", () => {
+    expect(podeConcluir({ fonte: "trello", responsavel_id: "equipe", status: "a_fazer" })).toBe(false);
+  });
+
+  it("tarefa já encerrada não pode", () => {
+    expect(podeConcluir({ fonte: "manual", status: "concluida" })).toBe(false);
+    expect(podeConcluir({ fonte: "trello", status: "cancelada" })).toBe(false);
   });
 });
 

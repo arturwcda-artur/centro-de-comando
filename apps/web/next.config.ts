@@ -22,6 +22,7 @@ const csp = [
 const nextConfig: NextConfig = {
   // ADR 0010: sem cacheComponents — painel privado, cada tela lê sempre o dado atual.
   poweredByHeader: false,
+  transpilePackages: ["@cc/integrations"],
   turbopack: {
     rules: {
       "*.css": {
