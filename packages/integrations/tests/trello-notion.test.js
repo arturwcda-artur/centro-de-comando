@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { listaSensivel, mapearCartao, statusDaLista } from '../src/trello.js';
-import { classificarBase, mapearDemanda, mapearReuniao } from '../src/notion.js';
+import { BASES_CENTRAL, classificarBase, lerNotion, mapearDemanda, mapearReuniao } from '../src/notion.js';
 
 // Dados de TESTE no formato das APIs — não são cartões ou páginas reais.
 describe('Trello', () => {
@@ -52,6 +52,35 @@ describe('Notion', () => {
       Status: { type: 'status', status: { name: 'Concluído' } },
     },
   };
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('lê pelos data sources (API 2025-09-03) e só faz consultas', async () => {
+    const chamadas = [];
+    vi.stubGlobal('fetch', async (url, opcoes) => {
+      chamadas.push({ url, versao: opcoes.headers['Notion-Version'], corpo: JSON.parse(opcoes.body) });
+      const results = url.endsWith('/search')
+        ? [
+            { id: 'ds1', title: [{ plain_text: '📋 Demandas Ativas' }] },
+            { id: 'ds2', title: [{ plain_text: 'Plano de Leitura' }] },
+          ]
+        : [pagina, { ...pagina, id: 'p2', in_trash: true }];
+      return new Response(JSON.stringify({ results, has_more: false }), { status: 200 });
+    });
+
+    const r = await lerNotion('token-de-teste');
+
+    const consultadas = chamadas.map((c) => c.url.replace('https://api.notion.com/v1', ''));
+    expect(consultadas[0]).toBe('/search');
+    expect(consultadas).toContain('/data_sources/ds1/query');
+    expect(consultadas).not.toContain('/data_sources/ds2/query'); // "Plano de Leitura" não é usada
+    for (const b of BASES_CENTRAL) expect(consultadas).toContain(`/data_sources/${b.id}/query`); // sem depender da busca
+    expect(chamadas[0].corpo.filter).toEqual({ property: 'object', value: 'data_source' });
+    expect(chamadas[0].versao).toBe('2025-09-03');
+    expect(r.bases).toEqual(['Demandas Ativas', 'Histórico de Reuniões', '📋 Demandas Ativas']);
+    expect(r.reunioes.map((x) => x.id_externo)).toEqual(['p1']);
+    expect(r.tarefas.every((t) => t.id_externo === 'p1')).toBe(true); // a da lixeira fica de fora
+  });
 
   it('classifica as bases pelo título', () => {
     expect(classificarBase('📋 Demandas Ativas')).toBe('tarefas');

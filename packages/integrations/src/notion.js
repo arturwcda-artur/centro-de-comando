@@ -1,12 +1,14 @@
 /**
- * Conector Notion — SOMENTE LEITURA (integração interna com permissão só de leitura; ADR 0012).
+ * Conector Notion — este código só LÊ (ADR 0012), embora o token tenha permissão de escrita
+ * por decisão do proprietário, para uso futuro com autorização (RN-64).
  * A "Central de Gestão — Artur" entra como histórico (decisão D3): demandas → tarefas, reuniões → reuniões.
- * Só enxerga as páginas que o proprietário compartilhou com a integração.
+ * Só enxerga as páginas que o proprietário compartilhou com a conexão.
+ * API 2025-09-03: as bases são lidas pelos seus data sources (/search e /data_sources/{id}/query).
  */
 import { buscar, cortar, dataSP } from './util.js';
 
 const API = 'https://api.notion.com/v1';
-const VERSAO = '2022-06-28';
+const VERSAO = '2025-09-03';
 
 function cabecalhos(token) {
   return { Authorization: `Bearer ${token}`, 'Notion-Version': VERSAO, 'Content-Type': 'application/json' };
@@ -78,9 +80,19 @@ export function mapearReuniao(pagina) {
   };
 }
 
-/** Lê as bases compartilhadas com a integração e classifica por título. */
+/**
+ * Bases da Central de Gestão, consultadas diretamente: a busca do Notion nem sempre lista
+ * bases internas de uma página compartilhada. Os ids não são segredo; sem acesso, o Notion responde 404.
+ */
+export const BASES_CENTRAL = [
+  { id: 'eaa80b95-7806-4a12-810b-f18195743cc0', title: [{ plain_text: 'Demandas Ativas' }] },
+  { id: '0d449df1-0031-4751-806f-4fb1dbbe396d', title: [{ plain_text: 'Histórico de Reuniões' }] },
+];
+
+/** Lê as bases da Central de Gestão mais as que a busca encontrar, sem repetir. */
 export async function lerNotion(token) {
-  const bases = await paginar('/search', token, { filter: { property: 'object', value: 'database' } });
+  const encontradas = await paginar('/search', token, { filter: { property: 'object', value: 'data_source' } });
+  const bases = [...BASES_CENTRAL, ...encontradas.filter((b) => !BASES_CENTRAL.some((c) => c.id === b.id))];
   const tarefas = [];
   const reunioes = [];
   const lidas = [];
@@ -89,9 +101,9 @@ export async function lerNotion(token) {
     const tipo = classificarBase(titulo);
     if (!tipo) continue;
     lidas.push(titulo);
-    const paginas = (await paginar(`/databases/${b.id}/query`, token, {})).filter((p) => !p.archived && !p.in_trash);
+    const paginas = (await paginar(`/data_sources/${b.id}/query`, token, {})).filter((p) => !p.archived && !p.in_trash);
     if (tipo === 'tarefas') tarefas.push(...paginas.map((p) => mapearDemanda(p, titulo)));
     else reunioes.push(...paginas.map(mapearReuniao));
   }
-  return { tarefas, reunioes, bases: lidas };
+  return { tarefas, reunioes, bases: lidas, visiveis: bases.length };
 }

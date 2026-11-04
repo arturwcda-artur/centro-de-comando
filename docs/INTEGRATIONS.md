@@ -67,6 +67,6 @@ Em **GitHub → repositório → Settings → Secrets and variables → Actions 
 | `TRELLO_API_KEY` | API key | trello.com/power-ups/admin → seu Power-Up → API key |
 | `TRELLO_TOKEN` | token | link "Token" ao lado da API key |
 | `GOOGLE_ICAL_URLS` | um endereço secreto iCal por linha | Google Agenda → Configurações → a agenda → Integrar agenda |
-| `NOTION_TOKEN` | `ntn_…` | notion.so/profile/integrations → integração interna, permissão só de leitura |
+| `NOTION_TOKEN` | `ntn_…` | notion.so/profile/integrations → Conexões → Token de API. Por decisão do proprietário a conexão tem ler, atualizar e inserir (uso futuro com autorização, RN-64); o sincronizador só lê |
 
 Se algum segredo vazar, revogue-o na origem: gere um novo endereço iCal ("Redefinir"), um novo token no Trello ou no Notion, ou uma nova secret key no Supabase. Depois atualize o segredo no GitHub.
