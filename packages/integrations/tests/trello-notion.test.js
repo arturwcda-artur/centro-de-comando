@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { listaSensivel, mapearCartao, statusDaLista } from '../src/trello.js';
-import { classificarBase, lerNotion, mapearDemanda, mapearReuniao } from '../src/notion.js';
+import { BASES_CENTRAL, classificarBase, lerNotion, mapearDemanda, mapearReuniao } from '../src/notion.js';
 
 // Dados de TESTE no formato das APIs — não são cartões ou páginas reais.
 describe('Trello', () => {
@@ -70,11 +70,16 @@ describe('Notion', () => {
 
     const r = await lerNotion('token-de-teste');
 
-    expect(chamadas.map((c) => c.url)).toEqual(['https://api.notion.com/v1/search', 'https://api.notion.com/v1/data_sources/ds1/query']);
+    const consultadas = chamadas.map((c) => c.url.replace('https://api.notion.com/v1', ''));
+    expect(consultadas[0]).toBe('/search');
+    expect(consultadas).toContain('/data_sources/ds1/query');
+    expect(consultadas).not.toContain('/data_sources/ds2/query'); // "Plano de Leitura" não é usada
+    for (const b of BASES_CENTRAL) expect(consultadas).toContain(`/data_sources/${b.id}/query`); // sem depender da busca
     expect(chamadas[0].corpo.filter).toEqual({ property: 'object', value: 'data_source' });
     expect(chamadas[0].versao).toBe('2025-09-03');
-    expect(r).toMatchObject({ visiveis: 2, bases: ['📋 Demandas Ativas'], reunioes: [] });
-    expect(r.tarefas.map((t) => t.id_externo)).toEqual(['p1']); // a da lixeira fica de fora
+    expect(r.bases).toEqual(['Demandas Ativas', 'Histórico de Reuniões', '📋 Demandas Ativas']);
+    expect(r.reunioes.map((x) => x.id_externo)).toEqual(['p1']);
+    expect(r.tarefas.every((t) => t.id_externo === 'p1')).toBe(true); // a da lixeira fica de fora
   });
 
   it('classifica as bases pelo título', () => {

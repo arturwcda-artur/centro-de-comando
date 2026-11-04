@@ -80,9 +80,19 @@ export function mapearReuniao(pagina) {
   };
 }
 
-/** Lê as bases (data sources) compartilhadas com a conexão e classifica por título. */
+/**
+ * Bases da Central de Gestão, consultadas diretamente: a busca do Notion nem sempre lista
+ * bases internas de uma página compartilhada. Os ids não são segredo; sem acesso, o Notion responde 404.
+ */
+export const BASES_CENTRAL = [
+  { id: 'eaa80b95-7806-4a12-810b-f18195743cc0', title: [{ plain_text: 'Demandas Ativas' }] },
+  { id: '0d449df1-0031-4751-806f-4fb1dbbe396d', title: [{ plain_text: 'Histórico de Reuniões' }] },
+];
+
+/** Lê as bases da Central de Gestão mais as que a busca encontrar, sem repetir. */
 export async function lerNotion(token) {
-  const bases = await paginar('/search', token, { filter: { property: 'object', value: 'data_source' } });
+  const encontradas = await paginar('/search', token, { filter: { property: 'object', value: 'data_source' } });
+  const bases = [...BASES_CENTRAL, ...encontradas.filter((b) => !BASES_CENTRAL.some((c) => c.id === b.id))];
   const tarefas = [];
   const reunioes = [];
   const lidas = [];
