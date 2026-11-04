@@ -55,7 +55,8 @@ Para cada ferramenta o painel mostra:
   - Título com "demanda", "tarefa" ou "pendência" → tarefas `fonte = notion`.
   - Título com "reunião" → reuniões.
   - A situação "concluído", "feito" ou "resolvido" → `concluida`.
-- **Tarefas importadas não são editadas no sistema** (RN-47). Altere na ferramenta de origem.
+- **Tarefas importadas não são editadas no sistema** (RN-47), exceto a conclusão.
+- **Concluir na origem (ADR 0013):** `packages/integrations/src/escrita.js`, chamado pela aplicação. Cada gravação fica em `operacoes_externas`. Cartões de terceiros são só leitura (RN-48).
 
 ## Segredos (o proprietário cadastra no GitHub; nunca vão para o Git nem para o banco)
 Em **GitHub → repositório → Settings → Secrets and variables → Actions → New repository secret**, ou pelo terminal com `gh secret set NOME`, que pede o valor sem mostrá-lo:

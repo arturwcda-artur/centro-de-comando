@@ -51,6 +51,16 @@ export const VISOES_TAREFA = [
 ] as const;
 export type VisaoTarefa = (typeof VISOES_TAREFA)[number]["valor"];
 
+/**
+ * RN-48: o que pode ser concluído pelo sistema. Tarefas manuais e do Notion, e cartões do Trello que
+ * são do proprietário (sem responsável aqui). Cartões de terceiros continuam só leitura.
+ */
+export function podeConcluir(t: { fonte: string | null; responsavel_id?: string | null; status?: string | null }): boolean {
+  if (t.status === "concluida" || t.status === "cancelada") return false;
+  if (t.fonte === "manual" || t.fonte === "notion") return true;
+  return t.fonte === "trello" && !t.responsavel_id;
+}
+
 /** Escore ≥ 27 conta como crítica mesmo sem a marcação manual (RN-45). */
 export const ESCORE_CRITICO = 27;
 

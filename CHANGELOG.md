@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.7.0] — 2026-11-04 — Fase 5: concluir tarefas na origem
+### Adicionado
+- Concluir tarefas próprias do Trello e do Notion pelo sistema, em Meu dia, Tarefas e no detalhe da tarefa (ADR 0013, RN-48). Cartões de terceiros seguem só leitura; nada é excluído na origem.
+- Migration `0017_operacoes_externas.sql`: registro de cada gravação externa e autorização de escrita.
+- Sincronização não altera mais o modo do conector.
+- Decisão de hospedagem registrada: fica na Vercel, após teste da Cloudflare.
+
 ## [0.6.1] — 2026-11-04 — Listas de credenciais fora do sistema
 ### Segurança
 - O sincronizador deixa de importar listas do Trello ligadas a credenciais (RN-66).

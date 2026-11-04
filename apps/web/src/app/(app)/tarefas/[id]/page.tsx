@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotaoConcluir } from "@/components/botao-concluir";
 import { Aviso, Cartao } from "@/components/ui";
-import { rotuloDe, STATUS_TAREFA } from "@/lib/dominio";
+import { podeConcluir, rotuloDe, STATUS_TAREFA } from "@/lib/dominio";
 import { dataCivil, dataHora } from "@/lib/formato";
 import { carregarOpcoes, UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -41,9 +42,18 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
       {t.fonte !== "manual" ? (
         <Cartao>
           <Aviso tipo="info">
-            Tarefa importada do <strong>{t.fonte}</strong>. A fonte oficial é a ferramenta de origem: altere-a lá e ela é
-            atualizada aqui na próxima sincronização.
+            Tarefa importada do <strong>{t.fonte}</strong>.{" "}
+            {podeConcluir(t)
+              ? "Ao concluir aqui, ela é concluída também na origem. Outras alterações são feitas na ferramenta de origem."
+              : t.status === "concluida" || t.status === "cancelada"
+                ? "Já encerrada."
+                : "É uma tarefa de terceiros: só leitura, controlada na ferramenta de origem."}
           </Aviso>
+          {podeConcluir(t) && (
+            <div className="mt-3 flex items-center gap-2 text-sm">
+              <BotaoConcluir id={t.id} titulo={t.titulo} /> Concluir tarefa
+            </div>
+          )}
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div>
               <dt className="text-xs text-suave">Prazo</dt>

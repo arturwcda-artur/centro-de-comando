@@ -1407,6 +1407,51 @@ export type Database = {
           },
         ]
       }
+      operacoes_externas: {
+        Row: {
+          id: string
+          ferramenta: string
+          operacao: string
+          entidade: string
+          registro_id: string
+          id_externo: string
+          status: string
+          detalhe: string | null
+          erro: string | null
+          executado_em: string | null
+          criado_em: string
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          ferramenta: string
+          operacao: string
+          entidade?: string
+          registro_id: string
+          id_externo: string
+          status?: string
+          detalhe?: string | null
+          erro?: string | null
+          executado_em?: string | null
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          ferramenta?: string
+          operacao?: string
+          entidade?: string
+          registro_id?: string
+          id_externo?: string
+          status?: string
+          detalhe?: string | null
+          erro?: string | null
+          executado_em?: string | null
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Relationships: []
+      }
       pessoas: {
         Row: {
           arquivado_em: string | null

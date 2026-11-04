@@ -56,7 +56,8 @@ export async function aplicar(supabase, { tabela, fonte, registros, agora = new 
 export async function executarConector(supabase, { ferramenta, nome, gatilho = 'agendado', intervaloMin = 60 }, fn) {
   const { data: conector, error: e1 } = await supabase
     .from('conectores')
-    .upsert({ ferramenta, nome_exibicao: nome, ativo: true, modo: 'leitura', intervalo_minutos: intervaloMin }, { onConflict: 'ferramenta' })
+    // Sem "modo": a autorização de escrita é do proprietário e a sincronização nunca a altera
+    .upsert({ ferramenta, nome_exibicao: nome, ativo: true, intervalo_minutos: intervaloMin }, { onConflict: 'ferramenta' })
     .select('id')
     .single();
   if (e1) throw new Error(`registro do conector ${ferramenta}: ${e1.message}`);
