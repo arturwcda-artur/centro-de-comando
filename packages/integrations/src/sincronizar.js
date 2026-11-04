@@ -62,12 +62,12 @@ async function principal() {
   if (env.NOTION_TOKEN) {
     resultados.push(
       await executarConector(supabase, { ferramenta: 'notion', nome: 'Notion', gatilho }, async () => {
-        const { tarefas, reunioes, bases } = await lerNotion(env.NOTION_TOKEN);
+        const { tarefas, reunioes, bases, visiveis } = await lerNotion(env.NOTION_TOKEN);
         const r = somar(
           await aplicar(supabase, { tabela: 'tarefas', fonte: 'notion', registros: tarefas }),
           await aplicar(supabase, { tabela: 'reunioes', fonte: 'notion', registros: reunioes }),
         );
-        return { ...r, mensagem: bases.length ? `bases: ${bases.join(', ')}` : 'nenhuma base compartilhada com a integração' };
+        return { ...r, mensagem: `${visiveis} base(s) visível(is); usadas: ${bases.join(', ') || 'nenhuma'}` };
       }),
     );
   } else console.log('Notion: sem token, ignorado.');

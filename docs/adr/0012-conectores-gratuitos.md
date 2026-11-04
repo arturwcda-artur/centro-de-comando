@@ -12,7 +12,7 @@ No plano gratuito da Vercel (Hobby), os jobs agendados rodam no máximo uma vez 
 ## Decisão
 1. **Google Agenda via endereço secreto iCal** de cada agenda. É somente leitura, por natureza, e dispensa app OAuth e verificação do Google. Cada endereço é tratado como segredo.
 2. **Trello via API oficial**, com chave e token gerados pelo proprietário, usados só em chamadas de leitura (GET).
-3. **Notion via integração interna**, com token e compartilhamento explícito apenas da página "Central de Gestão".
+3. **Notion via conexão com Token de API** (API 2025-09-03, data sources), com compartilhamento explícito apenas da página "Central de Gestão". O sincronizador só lê; o token também permite escrita por decisão do proprietário, para uso futuro com autorização (RN-64).
 4. **Agendador: GitHub Actions** (`schedule`) a cada hora. Ele roda o sincronizador, que lê as fontes e faz *upsert* no Supabase. É gratuito no repositório privado (cerca de 720 min/mês, dentro da franquia de 2.000).
 5. **Segredos:** os tokens, os endereços iCal e a chave de serviço ficam só como *GitHub Actions secrets*, cadastrados pelo proprietário. Não ficam no código, no banco nem na Vercel.
 
