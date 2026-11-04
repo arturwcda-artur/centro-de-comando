@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { STATUS_DECISAO, STATUS_RISCO, STATUS_TAREFA, SITUACOES_OBRA, TIPOS_TAREFA, UFS } from "@/lib/dominio";
+import { SITUACOES_ADITIVO, SITUACOES_MEDICAO, STATUS_DECISAO, STATUS_RISCO, TIPOS_ADITIVO, TIPOS_LANCAMENTO, STATUS_TAREFA, SITUACOES_OBRA, TIPOS_TAREFA, UFS } from "@/lib/dominio";
 
 /** Valida os formulários no servidor (nunca confiar no navegador). Campos vazios viram null. */
 
@@ -179,6 +179,73 @@ export const executadoAnteriorSchema = z.object({
   valor: z.coerce.number({ error: "Valor inválido." }).min(0, "O valor não pode ser negativo."),
   data: z.iso.date("Informe a data de referência."),
 });
+
+const valores = (lista: readonly { valor: string }[]) => lista.map((x) => x.valor) as [string, ...string[]];
+const dinheiro = (rotulo: string) => z.coerce.number({ error: `${rotulo} inválido.` }).min(0, `${rotulo} não pode ser negativo.`);
+const inteiroOpcional = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? Number(v) : null))
+  .refine((v) => v === null || (Number.isInteger(v) && v > 0), "Informe um número inteiro maior que zero.");
+
+export const contratoSchema = z
+  .object({
+    obra_id: z.uuid("Selecione a obra."),
+    contratante_id: uuidOpcional,
+    numero: texto("Número", 60),
+    objeto: textoOpcional(1000),
+    modalidade: textoOpcional(100),
+    regime: textoOpcional(100),
+    data_assinatura: dataOpcional,
+    data_inicio: dataOpcional,
+    prazo_original_dias: inteiroOpcional,
+    data_termino_original: dataOpcional,
+    valor_original: dinheiro("Valor"),
+    indice_reajuste: textoOpcional(100),
+    data_base: dataOpcional,
+    planilha: textoOpcional(500),
+  })
+  .refine((c) => !c.data_inicio || !c.data_termino_original || c.data_termino_original >= c.data_inicio, {
+    message: "O término não pode ser antes do início.",
+    path: ["data_termino_original"],
+  });
+
+export const aditivoSchema = z
+  .object({
+    numero: texto("Número", 60),
+    tipo: z.enum(valores(TIPOS_ADITIVO), "Tipo inválido."),
+    valor_delta: z.coerce.number({ error: "Valor inválido." }),
+    dias_delta: z.coerce.number({ error: "Dias inválidos." }).int("Use um número inteiro de dias."),
+    data_assinatura: dataOpcional,
+    justificativa: textoOpcional(2000),
+    situacao: z.enum(valores(SITUACOES_ADITIVO), "Situação inválida."),
+  })
+  .superRefine((a, ctx) => {
+    const erro = (message: string) => ctx.addIssue({ code: "custom", path: ["valor_delta"], message });
+    if (a.tipo === "supressao" && a.valor_delta > 0) erro("Supressão tem valor negativo ou zero (RN-18).");
+    if ((a.tipo === "acrescimo" || a.tipo === "reajuste") && a.valor_delta < 0) erro("Acréscimo e reajuste não têm valor negativo (RN-18).");
+    if (a.tipo === "prazo" && a.valor_delta !== 0) erro("Aditivo só de prazo tem valor zero (RN-18).");
+  });
+
+export const medicaoSituacaoSchema = z.object({
+  situacao: z.enum(valores(SITUACOES_MEDICAO), "Situação inválida."),
+  data_envio: dataOpcional,
+  data_aprovacao: dataOpcional,
+  valor_glosado: dinheiro("Glosa"),
+});
+
+export const lancamentoSchema = z
+  .object({
+    tipo: z.enum(valores(TIPOS_LANCAMENTO), "Tipo inválido."),
+    valor: dinheiro("Valor"),
+    data_prevista: dataOpcional,
+    data_efetiva: dataOpcional,
+    nota_fiscal: textoOpcional(60),
+    medicao_id: uuidOpcional,
+    observacoes: textoOpcional(1000),
+  })
+  .refine((l) => l.data_prevista || l.data_efetiva, { message: "Informe a data prevista ou a efetiva.", path: ["data_prevista"] });
 
 export const aprovacaoSchema = z.object({
   proposta_id: z.uuid(),

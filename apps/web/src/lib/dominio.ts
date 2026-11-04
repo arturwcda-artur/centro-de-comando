@@ -93,3 +93,33 @@ export function nivelSeveridade(severidade: number): { rotulo: string; tom: "ale
   if (severidade >= 8) return { rotulo: "Alto", tom: "atencao" };
   return { rotulo: "Moderado", tom: "ok" };
 }
+
+export const TIPOS_ADITIVO = [
+  { valor: "prazo", rotulo: "Prazo" },
+  { valor: "acrescimo", rotulo: "Acréscimo" },
+  { valor: "supressao", rotulo: "Supressão" },
+  { valor: "reajuste", rotulo: "Reajuste" },
+  { valor: "reequilibrio", rotulo: "Reequilíbrio" },
+  { valor: "misto", rotulo: "Misto" },
+] as const;
+
+export const SITUACOES_ADITIVO = [
+  { valor: "em_analise", rotulo: "Em análise" },
+  { valor: "aprovado", rotulo: "Aprovado" },
+  { valor: "rejeitado", rotulo: "Rejeitado" },
+] as const;
+
+export const SITUACOES_MEDICAO = [
+  { valor: "elaborada", rotulo: "Elaborada" },
+  { valor: "enviada", rotulo: "Enviada" },
+  { valor: "aprovada", rotulo: "Aprovada" },
+  { valor: "glosada", rotulo: "Aprovada com glosa" },
+  { valor: "cancelada", rotulo: "Cancelada" },
+] as const;
+
+export const TIPOS_LANCAMENTO = [
+  { valor: "faturamento", rotulo: "Faturamento" },
+  { valor: "recebimento", rotulo: "Recebimento" },
+  { valor: "previsao_recebimento", rotulo: "Previsão de recebimento" },
+  { valor: "retencao", rotulo: "Retenção" },
+] as const;

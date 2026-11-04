@@ -2,6 +2,16 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.10.0] — 2026-11-04 — Fase 7: contratos e financeiro
+### Adicionado
+- Tela **Contratos e financeiro**: contrato, aditivos, medições, saldo por serviço e lançamentos (ADR 0016).
+- Agente lê as medições item por item da planilha, em modo somente leitura. O atalho atualiza cronogramas e medições.
+- Migration `0020_medicoes_itens.sql`: serviços do contrato, itens das medições, saldo por serviço e importação em uma transação.
+
+### Alterado
+- O valor anterior da Curva S passa a vir das medições aprovadas, quando houver.
+- O aviso de total do Planejamento compara com o valor contratado, incluindo aditivos aprovados.
+
 ## [0.9.0] — 2026-11-04 — Fase 6: planejamento
 ### Adicionado
 - Agente local lê os cronogramas do MS Project em modo somente leitura, com o atalho **Atualizar cronogramas** (ADR 0015).

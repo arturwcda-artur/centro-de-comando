@@ -47,7 +47,7 @@ Tabelas novas, todas com `app.aplicar_padroes`:
 
 Só entram linhas com quantidade diferente de zero.
 
-**Alteração em `medicoes`:** coluna `diferenca_planilha numeric(14,2)`. Fica preenchida quando a planilha muda depois da aprovação.
+**Alteração em `medicoes`:** colunas `data_medicao date` e `diferenca_planilha numeric(14,2)`. A segunda fica preenchida quando a planilha muda depois do envio.
 
 **View `v_contrato_itens_saldo`** (`security_invoker = on`): por item, quantidade e valor do contrato, medido acumulado, saldo e `acima_do_contrato`. Considera as medições que não estão canceladas, porque o saldo serve para preparar a próxima medição.
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GraficoCurvaS, type SerieCurva } from "@/components/grafico-curva-s";
 import { Aviso, Cartao, EstadoVazio, Etiqueta } from "@/components/ui";
+import { valorAnterior } from "@/lib/contratos";
 import { atrasada, diferencaEmDias, serieSemanal, terminoPrevisto, type PontoCurva } from "@/lib/curva-s";
 import { brl, dataCivil, dataHora, hojeSP, pct } from "@/lib/formato";
 import { UUID } from "@/lib/obras";
@@ -39,13 +40,14 @@ export default async function PaginaPlanejamentoObra({ params, searchParams }: P
   if (!UUID.test(id)) notFound();
 
   const { supabase } = await exigirSessaoCompleta();
-  const [obra, arquivosR, versoesR, realizadoR, marcosR, contratosR] = await Promise.all([
+  const [obra, arquivosR, versoesR, realizadoR, marcosR, contratosR, medicoesR] = await Promise.all([
     supabase.from("obras").select("id, codigo, nome").eq("id", id).maybeSingle(),
     supabase.from("cronograma_arquivos").select("*").eq("obra_id", id).order("papel"),
     supabase.from("cronograma_versoes").select("id, nome, tipo, importado_em, arquivo_id").eq("obra_id", id).order("importado_em", { ascending: false }),
     supabase.from("cronograma_realizado").select("*").eq("obra_id", id).order("data_leitura"),
     supabase.from("marcos").select("nome, data_contratual").eq("obra_id", id).eq("contratual", true),
-    supabase.from("contratos").select("valor_original").eq("obra_id", id).is("arquivado_em", null),
+    supabase.from("v_contratos_resumo").select("valor_contratado").eq("obra_id", id),
+    supabase.from("medicoes").select("situacao, periodo_fim, valor_medido, valor_glosado, contratos!inner(obra_id)").eq("contratos.obra_id", id),
   ]);
   if (!obra.data) notFound();
 
@@ -64,7 +66,9 @@ export default async function PaginaPlanejamentoObra({ params, searchParams }: P
   const listaBase = atividadesBase?.data ?? [];
 
   const hoje = hojeSP();
-  const anterior = arquivoVigente?.valor_executado_anterior ?? 0;
+  const inicio = listaVigente.map((a) => a.inicio_previsto).filter((d): d is string => !!d).sort()[0] ?? null;
+  const partida = valorAnterior(medicoesR.data ?? [], inicio, { valor: arquivoVigente?.valor_executado_anterior ?? null, data: arquivoVigente?.data_executado_anterior ?? null });
+  const anterior = partida.valor;
   const realizados = (realizadoR.data ?? []).filter((r) => r.arquivo_id === arquivoVigente?.id);
   const atual = realizados.find((r) => r.versao_id === vigente?.id);
   const totalVigente = atual?.total ?? 0;
@@ -74,10 +78,9 @@ export default async function PaginaPlanejamentoObra({ params, searchParams }: P
   const termino = terminoPrevisto(listaVigente);
   const terminoBase = terminoPrevisto(listaBase);
   const limite = (marcosR.data ?? []).find((m) => m.data_contratual)?.data_contratual ?? null;
-  const inicio = listaVigente.map((a) => a.inicio_previsto).filter((d): d is string => !!d).sort()[0] ?? null;
 
   const pontosRealizado: PontoCurva[] = [
-    ...(arquivoVigente?.data_executado_anterior ? [{ data: arquivoVigente.data_executado_anterior, valor: anterior }] : []),
+    ...(partida.data ? [{ data: partida.data, valor: anterior }] : []),
     ...realizados.map((r) => ({ data: r.data_leitura as string, valor: anterior + (r.realizado ?? 0) })),
   ];
   const series: SerieCurva[] = [
@@ -89,12 +92,12 @@ export default async function PaginaPlanejamentoObra({ params, searchParams }: P
   const folhas = listaVigente.filter((a) => !a.resumo);
   const semCusto = folhas.filter((a) => !a.marco && !a.custo).length;
   const totalBase = listaBase.filter((a) => !a.resumo).reduce((s, a) => s + (a.custo ?? 0), 0);
-  const totalContrato = (contratosR.data ?? []).reduce((s, c) => s + c.valor_original, 0);
+  const totalContrato = (contratosR.data ?? []).reduce((s, c) => s + (c.valor_contratado ?? 0), 0);
   const antigos = arquivos.filter((a) => a.ultima_leitura_em && diferencaEmDias(a.ultima_leitura_em.slice(0, 10), hoje) > DIAS_LEITURA_ANTIGA);
 
   const avisos = [
     ...arquivos.filter((a) => a.ultimo_erro).map((a) => `${a.caminho.split("\\").at(-1)}: ${a.ultimo_erro}`),
-    ...(vigente && !arquivoVigente?.valor_executado_anterior ? ["Informe o valor executado antes da retomada: sem ele, a curva vigente começa em zero."] : []),
+    ...(vigente && partida.origem === "digitado" && !arquivoVigente?.valor_executado_anterior ? ["Informe o valor executado antes da retomada: sem ele, a curva vigente começa em zero."] : []),
     ...(semCusto > 0 ? [`${semCusto} atividades do cronograma vigente estão sem custo e não pesam na Curva S.`] : []),
     ...(versoes.some((v) => v.tipo === "reprogramacao") ? ["O arquivo da linha de base mudou. A linha de base só troca se você confirmar, em Versões."] : []),
     ...(totalContrato > 0 && Math.abs(totalContrato - (totalVigente + anterior)) > 1 ? [`Vigente mais executado soma ${brl(totalVigente + anterior)}, e o contrato, ${brl(totalContrato)}.`] : []),
@@ -139,7 +142,13 @@ export default async function PaginaPlanejamentoObra({ params, searchParams }: P
         </>
       )}
 
-      {arquivoVigente && (
+      {partida.origem === "medicoes" && (
+        <Aviso tipo="info">
+          O valor executado antes da retomada ({brl(anterior)}) vem das medições aprovadas. O valor digitado fica como reserva.
+        </Aviso>
+      )}
+
+      {arquivoVigente && partida.origem === "digitado" && (
         <Cartao titulo="Valor executado antes da retomada">
           <FormularioExecutado
             acao={salvarExecutadoAnterior.bind(null, arquivoVigente.id, id)}

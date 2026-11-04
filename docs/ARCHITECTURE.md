@@ -67,6 +67,7 @@ Ver [docs/adr](adr). Índice:
 | [0013](adr/0013-controle-pelo-sistema.md) | O sistema comanda tarefas e agenda do proprietário; hospedagem segue na Vercel |
 | [0014](adr/0014-agenda-pela-api-do-google.md) | Agenda lida e gravada pela API do Google, com token no cofre do Supabase |
 | [0015](adr/0015-leitura-do-ms-project.md) | Leitura do MS Project com papel restrito e Curva S em reais |
+| [0016](adr/0016-medicoes-item-por-item.md) | Medições item por item, lidas da planilha, com a situação decidida pelo proprietário |
 
 ## Aplicação web (`apps/web`, Fase 3)
 | Peça | Arquivo | Papel |
