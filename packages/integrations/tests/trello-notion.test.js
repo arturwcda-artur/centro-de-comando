@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapearCartao, statusDaLista } from '../src/trello.js';
+import { listaSensivel, mapearCartao, statusDaLista } from '../src/trello.js';
 import { classificarBase, mapearDemanda, mapearReuniao } from '../src/notion.js';
 
 // Dados de TESTE no formato das APIs — não são cartões ou páginas reais.
@@ -9,6 +9,15 @@ describe('Trello', () => {
     expect(statusDaLista('Em andamento')).toBe('em_andamento');
     expect(statusDaLista('A fazer')).toBe('a_fazer');
     expect(statusDaLista(undefined)).toBe('a_fazer');
+  });
+
+  it('nunca importa listas de credenciais (RN-66)', () => {
+    for (const nome of ['Senhas apps', 'SENHAS', 'Senhás', 'Passwords', 'Credenciais', 'Logins', 'tokens api']) {
+      expect(listaSensivel(nome)).toBe(true);
+    }
+    for (const nome of ['ANP', 'PRF', 'concluidos', 'Cozinha', 'SENADO-PISO ELEVADO', undefined]) {
+      expect(listaSensivel(nome)).toBe(false);
+    }
   });
 
   const base = { id: 'c1', name: 'Cotar aço', desc: 'CA-50', due: '2026-11-05T02:00:00.000Z', dueComplete: false, idMembers: ['eu'], url: 'https://trello.com/c/x', dateLastActivity: '2026-11-01T10:00:00.000Z' };
