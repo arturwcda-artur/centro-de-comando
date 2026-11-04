@@ -30,6 +30,9 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-19** Aditivos `em_analise` ou `rejeitado` não alteram valor nem prazo.
 - **RN-20** O número da medição é único por contrato. A glosa nunca supera o valor medido.
 - **RN-21** Moeda única: R$, com 2 casas decimais.
+- **RN-22** Medição importada entra como elaborada. Só o proprietário muda a situação.
+- **RN-23** A planilha só atualiza medições elaboradas. Depois do envio, a diferença é registrada e mostrada, sem alterar a medição.
+- **RN-24** O saldo por serviço conta toda medição não cancelada. O valor medido do contrato conta só as aprovadas (RN-12).
 
 ## 3. Prazos e atrasos (`v_obra_resumo`)
 - **RN-30** *Dias além do prazo* = max(0, hoje − prazo vigente), só para obras não concluídas e não canceladas.

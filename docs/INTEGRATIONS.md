@@ -36,7 +36,7 @@ Para cada ferramenta o painel mostra:
 | Google Agenda | **API oficial**, leitura e gravação (ADR 0014); iCal enquanto não conectar | 5 | compromissos/horários |
 | Notion | API REST (integração interna, só leitura), a cada hora ✅ | 5 | histórico (Central de Gestão) |
 | MS Project | agente local, COM via pywin32, somente leitura ✅ (ADR 0015) | 6 | cronograma, linha de base |
-| Excel | agente local, openpyxl, um modelo de importação por tipo de planilha | 7 | carga inicial de medições/orçamentos |
+| Excel | agente local, openpyxl, somente leitura, um modelo por tipo de planilha ✅ (ADR 0016) | 7 | itens e quantidades das medições |
 | Google Drive | API Drive v3, `drive.readonly` (nuvem) | 8 | arquivos (por referência) |
 | GitHub | API REST | 9 | código do próprio sistema |
 | Gmail, Todoist | a decidir | 9+ | — |
@@ -65,6 +65,11 @@ Para cada ferramenta o painel mostra:
 - Se o Project estiver aberto, nada é lido: feche-o e rode de novo.
 - Cada arquivo tem um papel: `vigente`, `linha_base` ou `historico`.
 - Para incluir outra obra, cadastre os arquivos em `cronograma_arquivos`. Não é preciso programar.
+
+## Medições em Excel (Fase 7)
+- O agente `cc_agente.medicoes` lê a planilha cadastrada em cada contrato e só relê a que mudou.
+- A planilha só atualiza medições **elaboradas**. A partir do envio, a diferença aparece na tela.
+- Para incluir um novo modelo, crie a função em `cc_agente/medicoes.py`, registre em `MODELOS` e libere o nome em `medicao_arquivos.modelo`.
 
 ## Segredos (o proprietário cadastra no GitHub; nunca vão para o Git nem para o banco)
 Em **GitHub → repositório → Settings → Secrets and variables → Actions → New repository secret**, ou pelo terminal com `gh secret set NOME`, que pede o valor sem mostrá-lo:

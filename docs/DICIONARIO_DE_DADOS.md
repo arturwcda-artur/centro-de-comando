@@ -103,6 +103,23 @@ Clientes/órgãos que contratam as obras.
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `contrato_itens`
+
+Serviços do contrato, vindos da planilha de medição. Item que some da planilha não é apagado.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| contrato_id | uuid | sim | contratos |  |
+| item | text | sim |  |  |
+| descricao | text | sim |  |  |
+| unidade | text |  |  |  |
+| quantidade | numeric(14,4) | sim |  |  |
+| preco_unitario | numeric(18,6) | sim |  |  |
+| valor_total | numeric(14,2) | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `contratos`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -374,6 +391,34 @@ Fotografia periódica dos indicadores, para histórico e tendência.
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `medicao_arquivos`
+
+Planilha de medições acompanhada pelo agente local, uma por contrato.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| contrato_id | uuid | sim | contratos |  |
+| modelo | text | sim |  |  |
+| caminho | text | sim |  |  |
+| ultimo_hash | text |  |  |  |
+| ultima_leitura_em | timestamp with time zone |  |  |  |
+| ultimo_erro | text |  |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
+## Tabela `medicao_itens`
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| medicao_id | uuid | sim | medicoes |  |
+| item_id | uuid | sim | contrato_itens |  |
+| quantidade | numeric(14,4) | sim |  |  |
+| valor | numeric(14,2) | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `medicoes`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -397,6 +442,8 @@ Fotografia periódica dos indicadores, para histórico e tendência.
 | status_sync | text | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| data_medicao | date |  |  |  |
+| diferenca_planilha | numeric(14,2) |  |  | Valor da planilha menos o valor gravado, quando a planilha mudou depois do envio da medição. |
 
 ## Tabela `obra_participantes`
 
@@ -607,6 +654,24 @@ Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual r
 | data_leitura | date |  |  |  |
 | total | numeric |  |  |  |
 | realizado | numeric |  |  |  |
+
+## View `v_contrato_itens_saldo`
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| item_id | uuid |  |  |  |
+| contrato_id | uuid |  |  |  |
+| item | text |  |  |  |
+| descricao | text |  |  |  |
+| unidade | text |  |  |  |
+| quantidade | numeric(14,4) |  |  |  |
+| preco_unitario | numeric(18,6) |  |  |  |
+| valor_total | numeric(14,2) |  |  |  |
+| quantidade_medida | numeric |  |  |  |
+| valor_medido | numeric |  |  |  |
+| quantidade_saldo | numeric |  |  |  |
+| valor_saldo | numeric |  |  |  |
+| acima_do_contrato | boolean |  |  |  |
 
 ## View `v_contratos_resumo`
 

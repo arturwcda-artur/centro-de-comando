@@ -17,7 +17,7 @@
 | Tokens OAuth de terceiros | Supabase Vault; `conectores.credencial_ref` guarda só o nome do segredo. A leitura exige proprietário com segundo fator ou a chave de serviço (ADR 0014) |
 | Conexão com o Google | Só com sessão completa. Um valor aleatório em cookie protegido, conferido no retorno, impede que outro site conclua a conexão |
 | Agente local | chave em arquivo fora do repositório, protegido por permissão de usuário do Windows |
-| Agente de cronogramas | Papel `agente_cronograma`, que só executa três funções e não lê nenhuma tabela. A senha fica em `agente.env`, fora do repositório |
+| Agente de cronogramas e medições | Papel `agente_cronograma`, que só executa seis funções e não lê nenhuma tabela. A senha fica em `agente.env`, fora do repositório |
 | Sincronizador (GitHub Actions) | `SUPABASE_SERVICE_ROLE_KEY` e os tokens/iCal só como *Actions secrets*. O workflow tem `permissions: contents: read`, e o código nunca imprime segredos nem URLs |
 
 ## Auditoria

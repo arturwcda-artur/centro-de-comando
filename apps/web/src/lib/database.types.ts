@@ -315,6 +315,142 @@ export type Database = {
         }
         Relationships: []
       }
+      contrato_itens: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          contrato_id: string
+          descricao: string
+          item: string
+          preco_unitario: number
+          quantidade: number
+          unidade: string | null
+          valor_total: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          contrato_id: string
+          descricao: string
+          item: string
+          preco_unitario?: number
+          quantidade?: number
+          unidade?: string | null
+          valor_total?: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          contrato_id?: string
+          descricao?: string
+          item?: string
+          preco_unitario?: number
+          quantidade?: number
+          unidade?: string | null
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_itens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicao_arquivos: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          caminho: string
+          contrato_id: string
+          modelo: string
+          ultima_leitura_em: string | null
+          ultimo_erro: string | null
+          ultimo_hash: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          caminho: string
+          contrato_id: string
+          modelo?: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          caminho?: string
+          contrato_id?: string
+          modelo?: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicao_arquivos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicao_itens: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          item_id: string
+          medicao_id: string
+          quantidade: number
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          item_id: string
+          medicao_id: string
+          quantidade: number
+          valor: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          item_id?: string
+          medicao_id?: string
+          quantidade?: number
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicao_itens_medicao_id_fkey"
+            columns: ["medicao_id"]
+            isOneToOne: false
+            referencedRelation: "medicoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicao_itens_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "contrato_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contratos: {
         Row: {
           arquivado_em: string | null
@@ -1248,6 +1384,8 @@ export type Database = {
           atualizado_em_origem: string | null
           contrato_id: string
           criado_em: string
+          data_medicao: string | null
+          diferenca_planilha: number | null
           data_aprovacao: string | null
           data_envio: string | null
           fonte: string
@@ -1269,6 +1407,8 @@ export type Database = {
           atualizado_em_origem?: string | null
           contrato_id: string
           criado_em?: string
+          data_medicao?: string | null
+          diferenca_planilha?: number | null
           data_aprovacao?: string | null
           data_envio?: string | null
           fonte?: string
@@ -1290,6 +1430,8 @@ export type Database = {
           atualizado_em_origem?: string | null
           contrato_id?: string
           criado_em?: string
+          data_medicao?: string | null
+          diferenca_planilha?: number | null
           data_aprovacao?: string | null
           data_envio?: string | null
           fonte?: string
@@ -2042,6 +2184,24 @@ export type Database = {
       }
     }
     Views: {
+      v_contrato_itens_saldo: {
+        Row: {
+          acima_do_contrato: boolean | null
+          contrato_id: string | null
+          descricao: string | null
+          item: string | null
+          item_id: string | null
+          preco_unitario: number | null
+          quantidade: number | null
+          quantidade_medida: number | null
+          quantidade_saldo: number | null
+          unidade: string | null
+          valor_medido: number | null
+          valor_saldo: number | null
+          valor_total: number | null
+        }
+        Relationships: []
+      }
       cronograma_realizado: {
         Row: {
           arquivo_id: string | null
