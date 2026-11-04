@@ -1,0 +1,22 @@
+export type DadosEvento = { titulo: string; local?: string; descricao?: string; data: string; dataFim?: string; inicio?: string; fim?: string; diaInteiro: boolean };
+export type EventoEspelho = {
+  id_externo: string;
+  titulo: string;
+  descricao: string | null;
+  inicio: string;
+  fim: string | null;
+  dia_inteiro: boolean;
+  local: string | null;
+  calendario_externo_id: string;
+  ical_uid: string | null;
+  atualizado_em_origem: string | null;
+  cancelado_em: null;
+};
+export const ESCOPO: string;
+export const AGENDA: string;
+export function urlAutorizacao(p: { clienteId: string; retorno: string; estado: string }): string;
+export function trocarCodigo(p: { clienteId: string; segredo: string; retorno: string; codigo: string }): Promise<string>;
+export function tokenDeAcesso(p: { clienteId: string; segredo: string; tokenLongo: string }): Promise<string>;
+export function criarEvento(acesso: string, dados: DadosEvento): Promise<EventoEspelho>;
+export function alterarEvento(acesso: string, idExterno: string, dados: DadosEvento): Promise<EventoEspelho>;
+export function excluirEvento(acesso: string, idExterno: string): Promise<void>;

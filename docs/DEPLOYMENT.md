@@ -76,6 +76,13 @@ npx.cmd supabase db push --remote
 Em **Vercel → projeto → Settings → Environment Variables**, para **Production**, com os mesmos valores dos segredos do GitHub:
 `TRELLO_API_KEY`, `TRELLO_TOKEN` e `NOTION_TOKEN`. Marque como *Sensitive*. Nunca use o prefixo `NEXT_PUBLIC_`. Depois, faça um **Redeploy**.
 
+### E3. Conexão com o Google Agenda (ADR 0014)
+1. No Google Cloud, crie um projeto gratuito e ative a **Google Calendar API**.
+2. Configure a tela de consentimento como **Externo**, com o escopo `calendar.events`, e **publique o app**. Em modo de teste a autorização cai a cada 7 dias.
+3. Crie um **ID do cliente OAuth** do tipo **Aplicativo da Web**, com o URI de redirecionamento `https://centro-de-comando-chi.vercel.app/api/google/retorno`.
+4. Cadastre `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` na Vercel, como variáveis de produção, e nos Secrets do GitHub. Faça um novo deploy.
+5. No sistema, use **Integrações → Conectar Google** e rode a sincronização.
+
 ### F. Desenvolvimento local da aplicação
 ```bash
 npm install

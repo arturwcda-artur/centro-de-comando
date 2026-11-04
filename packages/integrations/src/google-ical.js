@@ -99,3 +99,19 @@ export async function cancelarAusentes(supabase, { calendario, inicioISO, fimISO
   }
   return ausentes.length;
 }
+
+/**
+ * Com a API oficial ativa, as cópias lidas pelo iCal saem de cena (cancelado_em; nada é apagado).
+ * Sem isso, cada compromisso apareceria duas vezes.
+ */
+export async function cancelarLeituraIcal(supabase, agendaApi) {
+  const { data, error } = await supabase
+    .from('eventos')
+    .update({ cancelado_em: new Date().toISOString(), hash_conteudo: null })
+    .eq('fonte', 'google_agenda')
+    .neq('calendario_externo_id', agendaApi)
+    .is('cancelado_em', null)
+    .select('id');
+  if (error) throw new Error(`substituição do iCal: ${error.message}`);
+  return data.length;
+}

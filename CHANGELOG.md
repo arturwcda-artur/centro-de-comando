@@ -2,6 +2,15 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.8.0] — 2026-11-04 — Fase 5: controle da agenda
+### Adicionado
+- **Novo compromisso**, edição e exclusão na tela Agenda, gravando no Google Agenda (ADR 0014, RN-67). Em evento recorrente, vale só para a data escolhida.
+- Botão **Conectar Google** em Integrações, com autorização pelo Google.
+- Migration `0018_google_agenda.sql`: token do Google no cofre do Supabase e registro de criar, alterar e excluir.
+
+### Alterado
+- Depois de conectado, a agenda é lida pela API oficial do Google. As cópias do iCal saem das telas sem ser apagadas.
+
 ## [0.7.1] — 2026-11-04 — Origem das tarefas
 ### Adicionado
 - Etiqueta **Trello** ou **Notion** em cada tarefa importada, com quadro e lista, e filtro por origem na tela Tarefas.

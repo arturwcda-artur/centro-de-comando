@@ -17,6 +17,13 @@ const PREVISTAS = [
   { ferramenta: "google_drive", nome: "Google Drive", oque: "índice de documentos (Fase 8)" },
 ];
 
+const RETORNO_GOOGLE: Record<string, { tipo: "info" | "alerta"; texto: string }> = {
+  conectado: { tipo: "info", texto: "Google conectado. A agenda passa a vir da API oficial na próxima sincronização." },
+  cancelado: { tipo: "alerta", texto: "Conexão com o Google cancelada. Nada foi alterado." },
+  "sem-configuracao": { tipo: "alerta", texto: "Faltam as chaves do Google no servidor." },
+  erro: { tipo: "alerta", texto: "Não foi possível conectar ao Google. Tente de novo." },
+};
+
 const ESTADO: Record<string, { rotulo: string; tom: "ok" | "alerta" | "atencao" | "neutro" }> = {
   conectado: { rotulo: "Conectado", tom: "ok" },
   erro_autenticacao: { rotulo: "Erro de autorização", tom: "alerta" },
@@ -25,7 +32,9 @@ const ESTADO: Record<string, { rotulo: string; tom: "ok" | "alerta" | "atencao" 
   nao_configurado: { rotulo: "Não configurado", tom: "neutro" },
 };
 
-export default async function PaginaIntegracoes() {
+export default async function PaginaIntegracoes({ searchParams }: PageProps<"/integracoes">) {
+  const { google } = await searchParams;
+  const retorno = typeof google === "string" ? RETORNO_GOOGLE[google] : undefined;
   const { supabase } = await exigirSessaoCompleta();
   const [conectores, execucoes] = await Promise.all([
     supabase.from("conectores").select("*"),
@@ -38,12 +47,13 @@ export default async function PaginaIntegracoes() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Integrações</h1>
-          <p className="text-sm text-suave">Somente leitura: nenhuma ferramenta de origem é alterada. Sincronização automática a cada hora.</p>
+          <p className="text-sm text-suave">Sincronização automática a cada hora. O sistema só grava nas ferramentas em “Leitura e escrita”.</p>
         </div>
         <a href={WORKFLOW} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-2 rounded-lg border border-borda bg-superficie px-3 text-sm font-medium hover:bg-superficie-2">
           Sincronizar agora <ExternalLink className="size-4" aria-hidden="true" />
         </a>
       </div>
+      {retorno && <Aviso tipo={retorno.tipo}>{retorno.texto}</Aviso>}
       <Aviso tipo="info">
         “Sincronizar agora” abre o GitHub: clique em <strong>Run workflow</strong>. Em cerca de 1 minuto os dados aparecem aqui.
       </Aviso>
@@ -73,6 +83,13 @@ export default async function PaginaIntegracoes() {
                   <dd>{c ? (c.modo === "leitura" ? "Somente leitura" : "Leitura e escrita") : "—"}</dd>
                 </div>
               </dl>
+              {p.ferramenta === "google_agenda" && (
+                // Link comum: a rota redireciona para o Google e não pode ser pré-carregada
+                // eslint-disable-next-line @next/next/no-html-link-for-pages
+                <a href="/api/google/conectar" className="mt-3 inline-flex h-9 items-center rounded-lg border border-borda px-3 text-xs font-medium hover:bg-superficie-2">
+                  {c?.modo === "leitura_escrita" ? "Reconectar Google" : "Conectar Google"}
+                </a>
+              )}
             </Cartao>
           );
         })}

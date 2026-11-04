@@ -2222,6 +2222,12 @@ export type Database = {
       }
     }
     Functions: {
+      ler_credencial: { Args: { p_ferramenta: string }; Returns: string }
+      ler_credencial_servico: { Args: { p_ferramenta: string }; Returns: string }
+      salvar_credencial: {
+        Args: { p_ferramenta: string; p_valor: string }
+        Returns: undefined
+      }
       aprovar_importacao_obra: {
         Args: {
           p_cidade?: string

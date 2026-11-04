@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aprovacaoSchema, decisaoSchema, empresaSchema, mensagemDoBanco, obraSchema, riscoSchema, validar } from "./validacao";
+import { aprovacaoSchema, compromissoSchema, decisaoSchema, empresaSchema, mensagemDoBanco, obraSchema, riscoSchema, validar } from "./validacao";
 import { nivelSeveridade } from "./dominio";
 
 const UUID = "00000000-0000-4000-8000-000000000001";
@@ -49,6 +49,28 @@ describe("validação de cadastros, riscos e decisões", () => {
   it("aprovação aceita empresa nova digitada", () => {
     const { dados } = validar(aprovacaoSchema, { proposta_id: UUID, codigo: "ANP", nome: "ANP", situacao: "andamento", nova_empresa: "L7 Construtora" });
     expect(dados).toMatchObject({ empresa_id: null, nova_empresa: "L7 Construtora" });
+  });
+});
+
+describe("compromissos da agenda", () => {
+  const base = { titulo: "Vistoria", data: "2026-11-10", inicio: "09:00", fim: "10:00" };
+
+  it("aceita compromisso com horário e assume a mesma data final", () => {
+    expect(validar(compromissoSchema, base).dados).toMatchObject({ data_fim: "2026-11-10", dia_inteiro: false });
+  });
+
+  it("dia inteiro dispensa horários", () => {
+    expect(validar(compromissoSchema, { titulo: "Feriado", data: "2026-11-15", dia_inteiro: "on" }).erros).toBeNull();
+  });
+
+  it("recusa término antes do início e horário ausente", () => {
+    expect(validar(compromissoSchema, { ...base, fim: "08:00" }).erros?.fim).toBeTruthy();
+    expect(validar(compromissoSchema, { ...base, inicio: "" }).erros?.inicio).toBeTruthy();
+  });
+
+  it("aceita término menor quando acaba em outro dia, mas recusa data final anterior", () => {
+    expect(validar(compromissoSchema, { ...base, inicio: "22:00", fim: "02:00", data_fim: "2026-11-11" }).erros).toBeNull();
+    expect(validar(compromissoSchema, { ...base, data_fim: "2026-11-09" }).erros?.data_fim).toBeTruthy();
   });
 });
 

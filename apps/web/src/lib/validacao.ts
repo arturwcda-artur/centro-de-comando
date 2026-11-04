@@ -147,6 +147,34 @@ export const tarefaRapidaSchema = z.object({
   obra_id: uuidOpcional,
 });
 
+const horaOpcional = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v : null))
+  .refine((v) => v === null || /^([01]\d|2[0-3]):[0-5]\d$/.test(v), "Horário inválido.");
+
+export const compromissoSchema = z
+  .object({
+    titulo: texto("Título", 300),
+    data: z.iso.date("Data inválida."),
+    data_fim: dataOpcional,
+    dia_inteiro: z.string().optional().transform((v) => v === "on"),
+    inicio: horaOpcional,
+    fim: horaOpcional,
+    local: textoOpcional(300),
+    descricao: textoOpcional(4000),
+    obra_id: uuidOpcional,
+  })
+  .transform((c) => ({ ...c, data_fim: c.data_fim ?? c.data }))
+  .superRefine((c, ctx) => {
+    if (c.data_fim < c.data) ctx.addIssue({ code: "custom", path: ["data_fim"], message: "A data final não pode ser antes da inicial." });
+    if (c.dia_inteiro) return;
+    if (!c.inicio) ctx.addIssue({ code: "custom", path: ["inicio"], message: "Informe o horário de início." });
+    if (!c.fim) ctx.addIssue({ code: "custom", path: ["fim"], message: "Informe o horário de término." });
+    if (c.inicio && c.fim && c.data_fim === c.data && c.fim <= c.inicio) ctx.addIssue({ code: "custom", path: ["fim"], message: "O término deve ser depois do início." });
+  });
+
 export const aprovacaoSchema = z.object({
   proposta_id: z.uuid(),
   codigo,

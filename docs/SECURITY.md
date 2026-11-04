@@ -14,7 +14,8 @@
 |---|---|
 | Nenhum segredo no código ou no GitHub | `.gitignore` bloqueia `.env*`, `*.key`, `credentials*.json`; varredura de segredos no CI (Fase 2) |
 | Variáveis de ambiente | Vercel/Supabase; modelo em `.env.example` sem valores |
-| Tokens OAuth de terceiros | Supabase Vault; `conectores.credencial_ref` guarda só o nome do segredo |
+| Tokens OAuth de terceiros | Supabase Vault; `conectores.credencial_ref` guarda só o nome do segredo. A leitura exige proprietário com segundo fator ou a chave de serviço (ADR 0014) |
+| Conexão com o Google | Só com sessão completa. Um valor aleatório em cookie protegido, conferido no retorno, impede que outro site conclua a conexão |
 | Agente local | chave em arquivo fora do repositório, protegido por permissão de usuário do Windows |
 | Sincronizador (GitHub Actions) | `SUPABASE_SERVICE_ROLE_KEY` e os tokens/iCal só como *Actions secrets*. O workflow tem `permissions: contents: read`, e o código nunca imprime segredos nem URLs |
 

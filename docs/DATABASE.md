@@ -18,6 +18,7 @@ PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas
 | `0011_endurecimento.sql` | fuso das sessões da API, `search_path` fixo nas funções, auditoria imutável, `app` inacessível pela API |
 | `0013_importacao_obras.sql` | propostas de obras lidas das pastas (`importacao_obras`) e `aprovar_importacao_obra()`, que cria a obra e marca a proposta numa só transação |
 | `0017_operacoes_externas.sql` | registro das gravações nas ferramentas de origem e autorização de escrita no Trello e no Notion (ADR 0013) |
+| `0018_google_agenda.sql` | funções do cofre de credenciais e operações criar, alterar e excluir (ADR 0014) |
 | `0016_remover_listas_sensiveis.sql` | remove as cópias da lista de credenciais do Trello (RN-66) |
 | `0015_eventos_cancelados.sql` | `eventos.cancelado_em`: evento removido ou cancelado na origem sai das telas sem ser apagado |
 | `0014_tarefas_minhas.sql` | `v_tarefas_priorizadas.minha` inclui tarefas sem responsável (RN-45) |
