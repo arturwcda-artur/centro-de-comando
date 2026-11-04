@@ -12,6 +12,15 @@ function chamar(caminho, { chave, token }, params = {}) {
   return buscar(`${API}${caminho}?${qs}`, { headers: { Accept: 'application/json' } }, `Trello ${caminho.split('/')[1]}`).then((r) => r.json());
 }
 
+/**
+ * Listas que nunca entram no sistema (RN-66): credenciais não devem ser copiadas para o banco,
+ * o histórico de auditoria ou os backups. Os cartões seguem intactos no Trello.
+ */
+export function listaSensivel(nomeLista) {
+  const n = (nomeLista ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return /senha|password|credencia|\blogin|\btoken/.test(n);
+}
+
 /** Situação a partir da lista em que o cartão está (o nome da lista é a convenção do quadro). */
 export function statusDaLista(nomeLista) {
   const n = (nomeLista ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -53,7 +62,9 @@ export async function lerTrello(credenciais, { idEquipe }) {
     ]);
     const nomeLista = new Map(listas.map((l) => [l.id, l.name]));
     for (const c of cartoes) {
-      registros.push(mapearCartao(c, { quadro: q.name, lista: nomeLista.get(c.idList), meuId: eu.id, idEquipe }));
+      const lista = nomeLista.get(c.idList);
+      if (listaSensivel(lista)) continue;
+      registros.push(mapearCartao(c, { quadro: q.name, lista, meuId: eu.id, idEquipe }));
     }
   }
   return { registros, quadros: quadros.length };

@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.6.1] — 2026-11-04 — Listas de credenciais fora do sistema
+### Segurança
+- O sincronizador deixa de importar listas do Trello ligadas a credenciais (RN-66).
+- Migration `0016_remover_listas_sensiveis.sql`: remove do banco e da auditoria as cópias da lista "Senhas apps", importadas na primeira sincronização. Autorizado pelo proprietário; os cartões seguem intactos no Trello. É a única exceção à imutabilidade da auditoria.
+
 ## [0.6.0] — 2026-11-03 — Fase 5, etapa B: conectores somente leitura
 ### Adicionado
 - `packages/integrations`: motor de sincronização idempotente (hash + upsert por fonte e id externo, execuções registradas) e conectores **Trello** (API), **Google Agenda** (iCal, com recorrências) e **Notion** (Central de Gestão).
