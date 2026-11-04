@@ -7,6 +7,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - **Novo compromisso**, edição e exclusão na tela Agenda, gravando no Google Agenda (ADR 0014, RN-67). Em evento recorrente, vale só para a data escolhida.
 - Botão **Conectar Google** em Integrações, com autorização pelo Google.
 - Migration `0018_google_agenda.sql`: token do Google no cofre do Supabase e registro de criar, alterar e excluir.
+- Página pública `/privacidade`, exigida pelo Google para publicar o app. É a única sem login e não mostra dados do sistema.
 
 ### Alterado
 - Depois de conectado, a agenda é lida pela API oficial do Google. As cópias do iCal saem das telas sem ser apagadas.
