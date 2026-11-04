@@ -77,7 +77,7 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-63** Se houve alteração nos dois lados desde a última sincronização, gera-se um **conflito** para decisão do usuário. Nada é sobrescrito sozinho.
 - **RN-64** A gravação em ferramenta externa exige `modo = leitura_escrita` **e** `escrita_autorizada_em` preenchido pelo proprietário.
 - **RN-65** O MS Project é a fonte oficial do cronograma. O sistema só lê os arquivos `.mpp`.
-- **RN-66** Listas do Trello com nomes ligados a credenciais (senha, password, credencial, login, token) **nunca são importadas**. Os cartões continuam no Trello; apenas não são copiados para o banco, a auditoria ou os backups.
+- **RN-66** Listas do Trello com nomes ligados a credenciais (senha, password, credencial, login, token) e cartões com credencial escrita no título ou na descrição (por exemplo, `senha:`) **nunca são importados**. Os cartões continuam no Trello; apenas não são copiados para o banco, a auditoria ou os backups.
 
 ## 7. Documentos
 - **RN-70** O arquivo original não é copiado nem alterado. O sistema guarda índice, referência (Drive/caminho) e texto extraído.

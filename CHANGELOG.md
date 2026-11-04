@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.7.1] — 2026-11-04 — Origem das tarefas
+### Adicionado
+- Etiqueta **Trello** ou **Notion** em cada tarefa importada, com quadro e lista, e filtro por origem na tela Tarefas.
+
+### Segurança
+- O sincronizador deixa de importar cartões com credencial escrita no título ou na descrição (RN-66).
+
 ## [0.7.0] — 2026-11-04 — Fase 5: concluir tarefas na origem
 ### Adicionado
 - Concluir tarefas próprias do Trello e do Notion pelo sistema, em Meu dia, Tarefas e no detalhe da tarefa (ADR 0013, RN-48). Cartões de terceiros seguem só leitura; nada é excluído na origem.

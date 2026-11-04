@@ -21,6 +21,11 @@ export function listaSensivel(nomeLista) {
   return /senha|password|credencia|\blogin|\btoken/.test(n);
 }
 
+/** Cartão com credencial escrita no título ou na descrição (ex.: "senha: ...") também não é importado (RN-66). */
+export function cartaoSensivel(cartao) {
+  return /(senha|password|pass|pin)\s*[:=]/i.test(`${cartao.name ?? ''} ${cartao.desc ?? ''}`);
+}
+
 /** Situação a partir da lista em que o cartão está (o nome da lista é a convenção do quadro). */
 export function statusDaLista(nomeLista) {
   const n = (nomeLista ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -63,7 +68,7 @@ export async function lerTrello(credenciais, { idEquipe }) {
     const nomeLista = new Map(listas.map((l) => [l.id, l.name]));
     for (const c of cartoes) {
       const lista = nomeLista.get(c.idList);
-      if (listaSensivel(lista)) continue;
+      if (listaSensivel(lista) || cartaoSensivel(c)) continue;
       registros.push(mapearCartao(c, { quadro: q.name, lista, meuId: eu.id, idEquipe }));
     }
   }
