@@ -16,6 +16,8 @@ export const ROTA_MFA_CADASTRAR = "/mfa/cadastrar";
 export const ROTA_MFA_VERIFICAR = "/mfa/verificar";
 export const ROTA_INICIAL = "/";
 export const ROTA_SAIR = "/sair";
+/** Única página pública: o Google exige a política de privacidade sem login. Não mostra dados. */
+export const ROTA_PRIVACIDADE = "/privacidade";
 
 function rotaDoSegundoFator(s: EstadoSessao) {
   return s.aalProximo === "aal2" ? ROTA_MFA_VERIFICAR : ROTA_MFA_CADASTRAR;
@@ -25,7 +27,7 @@ function rotaDoSegundoFator(s: EstadoSessao) {
 export function decidirRedirecionamento(caminho: string, s: EstadoSessao): string | null {
   const completo = s.logado && s.aalAtual === "aal2";
 
-  if (caminho === ROTA_SAIR) return null; // sair precisa funcionar em qualquer estado
+  if (caminho === ROTA_SAIR || caminho === ROTA_PRIVACIDADE) return null; // funcionam em qualquer estado
 
   if (caminho === ROTA_LOGIN) {
     if (!s.logado) return null;

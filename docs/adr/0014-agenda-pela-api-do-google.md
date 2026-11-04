@@ -24,3 +24,4 @@ O proprietário quer controlar a agenda pelo sistema. O iCal só permite leitura
 - Se a autorização for revogada, o conector fica em "Erro de autorização" e basta usar **Reconectar Google**.
 - Convites de outras pessoas podem ser recusados pelo Google ao alterar: o erro aparece na tela.
 - Outras agendas além da principal não entram nesta etapa.
+- O Google exige uma política de privacidade pública. Por isso `/privacidade` é a única página sem login, e ela não mostra dados do sistema.
