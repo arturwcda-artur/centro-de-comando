@@ -34,5 +34,6 @@ describe("acesso às rotas", () => {
 
   it("sair funciona em qualquer estado", () => {
     for (const s of [anonimo, semFator, faltaCodigo, completo]) expect(decidir("/sair", s)).toBeNull();
+    for (const s of [anonimo, semFator, faltaCodigo, completo]) expect(decidir("/privacidade", s)).toBeNull();
   });
 });

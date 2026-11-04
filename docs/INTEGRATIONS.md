@@ -33,7 +33,7 @@ Para cada ferramenta o painel mostra:
 | Ferramenta | Caminho | Fase | Fonte oficial de |
 |---|---|---|---|
 | Trello | API REST, só GET, a cada hora ✅ | 5 | tarefas operacionais de equipe |
-| Google Agenda | endereço secreto **iCal**, a cada hora ✅ (ADR 0012) | 5 | compromissos/horários |
+| Google Agenda | **API oficial**, leitura e gravação (ADR 0014); iCal enquanto não conectar | 5 | compromissos/horários |
 | Notion | API REST (integração interna, só leitura), a cada hora ✅ | 5 | histórico (Central de Gestão) |
 | MS Project | agente local, COM via pywin32 | 6 | cronograma, linha de base |
 | Excel | agente local, openpyxl, um modelo de importação por tipo de planilha | 7 | carga inicial de medições/orçamentos |
@@ -42,20 +42,22 @@ Para cada ferramenta o painel mostra:
 | Gmail, Todoist | a decidir | 9+ | — |
 
 ## Sincronizador (Fase 5)
-- O código fica em `packages/integrations/src/`: `motor.js` (upsert idempotente e registro das execuções), `trello.js`, `google-ical.js`, `notion.js` e `sincronizar.js`, que é o ponto de entrada.
+- O código fica em `packages/integrations/src/`: `motor.js` (upsert idempotente e registro das execuções), `trello.js`, `google.js`, `google-ical.js`, `notion.js` e `sincronizar.js`, que é o ponto de entrada.
 - O agendador é `.github/workflows/sincronizar.yml`, que roda a cada hora e também pelo botão **Run workflow**. A tela **Integrações** do sistema leva até ele.
 - **Trello:** cartões abertos de todos os quadros viram tarefas `fonte = trello`.
   - A situação vem do nome da lista: concluído/feito → `concluida`; andamento/fazendo → `em_andamento`; o resto → `a_fazer`.
   - Cartões em que você é membro (ou sem membros) ficam sem responsável, ou seja, "minhas". Os de outros membros vão para a pessoa **Equipe (Trello)**.
   - Cartões arquivados ou excluídos viram `cancelada`, sem serem apagados.
-- **Google Agenda:** cada endereço iCal é lido na janela de −7 a +90 dias.
-  - As recorrências são expandidas, com EXDATE e exceções.
+- **Google Agenda:** a agenda principal é lida pela API na janela de −7 a +90 dias. Sem conexão feita, a leitura usa os endereços iCal.
+  - As recorrências são expandidas.
+  - Na primeira leitura pela API, as cópias do iCal recebem `cancelado_em`.
   - Eventos que somem da origem recebem `cancelado_em` (migration 0015) e saem das telas.
 - **Notion:** só as bases compartilhadas com a integração.
   - Título com "demanda", "tarefa" ou "pendência" → tarefas `fonte = notion`.
   - Título com "reunião" → reuniões.
   - A situação "concluído", "feito" ou "resolvido" → `concluida`.
 - **Tarefas importadas não são editadas no sistema** (RN-47), exceto a conclusão.
+- **Agenda pelo sistema (ADR 0014):** criar, alterar e excluir ficam em `packages/integrations/src/google.js`, chamados pela aplicação. Cada gravação fica em `operacoes_externas` (RN-67).
 - **Concluir na origem (ADR 0013):** `packages/integrations/src/escrita.js`, chamado pela aplicação. Cada gravação fica em `operacoes_externas`. Cartões de terceiros são só leitura (RN-48).
 
 ## Segredos (o proprietário cadastra no GitHub; nunca vão para o Git nem para o banco)
@@ -68,6 +70,9 @@ Em **GitHub → repositório → Settings → Secrets and variables → Actions 
 | `TRELLO_API_KEY` | API key | trello.com/power-ups/admin → seu Power-Up → API key |
 | `TRELLO_TOKEN` | token | link "Token" ao lado da API key |
 | `GOOGLE_ICAL_URLS` | um endereço secreto iCal por linha | Google Agenda → Configurações → a agenda → Integrar agenda |
+| `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` | ID e chave do cliente OAuth | Google Cloud → APIs e serviços → Credenciais. Os mesmos dois valores vão também para a Vercel |
 | `NOTION_TOKEN` | `ntn_…` | notion.so/profile/integrations → Conexões → Token de API. Por decisão do proprietário a conexão tem ler, atualizar e inserir (uso futuro com autorização, RN-64); o sincronizador só lê |
 
 Se algum segredo vazar, revogue-o na origem: gere um novo endereço iCal ("Redefinir"), um novo token no Trello ou no Notion, ou uma nova secret key no Supabase. Depois atualize o segredo no GitHub.
+
+O token de longa duração do Google não fica no GitHub: ele vai para o cofre do Supabase ao clicar em **Conectar Google**. Para cortar o acesso, remova o app em myaccount.google.com → Segurança → Apps de terceiros.

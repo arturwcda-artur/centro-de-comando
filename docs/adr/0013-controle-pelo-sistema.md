@@ -9,7 +9,7 @@ O sistema nasceu como espelho somente leitura. Com o uso real, o proprietário d
    - Trello: move o cartão para a lista de concluídos do quadro; sem essa lista, marca o cartão como concluído.
    - Notion: muda a situação para a opção de concluído da própria base.
    - Cartões de terceiros (atribuídos a outros membros) continuam só leitura.
-2. **Etapa 2 (próxima):** controlar o Google Agenda exige OAuth, porque o iCal só permite leitura. Terá ADR próprio.
+2. **Etapa 2 (próxima):** controlar o Google Agenda exige OAuth, porque o iCal só permite leitura. Decidida no [ADR 0014](0014-agenda-pela-api-do-google.md).
 3. **Escopo mínimo de escrita:** só as operações listadas aqui. **Nada é excluído nem arquivado** nas ferramentas de origem.
 4. **Ordem de gravação:** primeiro a origem, depois o sistema. Se a origem recusar, a tarefa continua aberta e o erro aparece na tela.
 5. **Rastreabilidade:** cada gravação fica em `operacoes_externas`. A autorização fica em `conectores.escrita_autorizada_em`, e a sincronização nunca a altera.

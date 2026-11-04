@@ -9,7 +9,7 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 2 — Nuvem e segurança | Supabase, Auth+MFA, migrations aplicadas, CI, backup semanal | ✅ aprovada em 03/11/2026 |
 | 3 — Dashboard e navegação | login + MFA, layout, menu lateral, busca global, painel, PWA | ✅ aprovada em 03/11/2026 · https://centro-de-comando-chi.vercel.app |
 | 4 — Obras | cadastros, importação assistida, ambiente da obra, riscos e decisões | ✅ entregue em 03/11/2026. Importação revisada pelo proprietário: 23 propostas, 8 obras aprovadas (7 em andamento, 1 aguardando), 15 descartadas. Aguardando aprovação |
-| 5 — Tarefas e agenda | "Meu dia", 6 visões, conectores de leitura Trello, Agenda e Notion — **primeiro uso real** | 🔶 etapa A (tarefas, Meu dia, agenda) em revisão; etapa B (conectores) a seguir |
+| 5 — Tarefas e agenda | "Meu dia", 6 visões, conectores de leitura Trello, Agenda e Notion — **primeiro uso real** | 🔶 tarefas, Meu dia, conectores e conclusão na origem no ar; controle da agenda (ADR 0014) em implantação |
 | 6 — Planejamento | agente local MS Project, versões, Curva S (piloto: PRF-Recanto) | |
 | 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | |
 | 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | |

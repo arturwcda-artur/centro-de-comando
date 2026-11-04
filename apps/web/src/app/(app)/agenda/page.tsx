@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import { Aviso, Cartao, EstadoVazio } from "@/components/ui";
 import { dataCivil, hojeSP, hora, limitesDoDiaSP, somarDias } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -12,10 +14,11 @@ export default async function PaginaAgenda() {
   const hoje = hojeSP();
   const ate = somarDias(hoje, 13);
   const [eventos, obras, conector] = await Promise.all([
-    supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local, obra_id, fonte").is("cancelado_em", null).gte("inicio", limitesDoDiaSP(hoje).inicio).lte("inicio", limitesDoDiaSP(ate).fim).order("inicio"),
+    supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local, obra_id, fonte, calendario_externo_id").is("cancelado_em", null).gte("inicio", limitesDoDiaSP(hoje).inicio).lte("inicio", limitesDoDiaSP(ate).fim).order("inicio"),
     supabase.from("obras").select("id, codigo"),
-    supabase.from("conectores").select("ultima_sync_em, ativo").eq("ferramenta", "google_agenda").maybeSingle(),
+    supabase.from("conectores").select("modo").eq("ferramenta", "google_agenda").maybeSingle(),
   ]);
+  const podeGravar = conector.data?.modo === "leitura_escrita";
   const nomeObra = new Map((obras.data ?? []).map((o) => [o.id, o.codigo]));
 
   // Agrupa por dia civil em São Paulo
@@ -27,13 +30,24 @@ export default async function PaginaAgenda() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
-        <p className="text-sm text-suave">Próximos 14 dias · horário de São Paulo</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
+          <p className="text-sm text-suave">Próximos 14 dias · horário de São Paulo</p>
+        </div>
+        {podeGravar && (
+          <Link href="/agenda/novo" className="inline-flex h-10 items-center gap-2 rounded-lg bg-marca px-4 text-sm font-medium text-white hover:opacity-90">
+            <Plus className="size-4" aria-hidden="true" /> Novo compromisso
+          </Link>
+        )}
       </div>
-      {!conector.data?.ativo && (
+      {!podeGravar && (
         <Aviso tipo="info">
-          A leitura do Google Agenda (somente leitura, sem alterar sua agenda) é ativada na próxima etapa da Fase 5.
+          Para criar e alterar compromissos por aqui, use{" "}
+          <Link href="/integracoes" className="underline">
+            Integrações → Conectar Google
+          </Link>
+          .
         </Aviso>
       )}
       {porDia.size === 0 ? (
@@ -47,7 +61,13 @@ export default async function PaginaAgenda() {
                   <li key={e.id} className="flex gap-3 text-sm">
                     <span className="w-24 shrink-0 tabular-nums text-suave">{e.dia_inteiro ? "Dia inteiro" : `${hora(e.inicio)}${e.fim ? `–${hora(e.fim)}` : ""}`}</span>
                     <span className="min-w-0">
-                      <span className="block truncate">{e.titulo}</span>
+                      {podeGravar && e.calendario_externo_id === "primary" ? (
+                        <Link href={`/agenda/${e.id}`} className="block truncate hover:underline">
+                          {e.titulo}
+                        </Link>
+                      ) : (
+                        <span className="block truncate">{e.titulo}</span>
+                      )}
                       {(e.local || e.obra_id) && <span className="block truncate text-xs text-suave">{[e.obra_id ? nomeObra.get(e.obra_id) : null, e.local].filter(Boolean).join(" · ")}</span>}
                     </span>
                   </li>

@@ -2,7 +2,7 @@
   "name": "@cc/integrations",
   "private": true,
   "type": "module",
-  "description": "Conectores somente leitura (Trello, Google Agenda via iCal, Notion) e motor de sincronização",
+  "description": "Conectores (Trello, Google Agenda, Notion) e motor de sincronização",
   "scripts": {
     "test": "vitest run",
     "sincronizar": "node src/sincronizar.js"
