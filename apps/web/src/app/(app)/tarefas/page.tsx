@@ -10,20 +10,27 @@ import { contarVisoes, tarefasDaVisao } from "@/lib/tarefas";
 
 export const metadata: Metadata = { title: "Tarefas" };
 
+const ORIGENS = [
+  { valor: "manual", rotulo: "Criadas aqui" },
+  { valor: "trello", rotulo: "Trello" },
+  { valor: "notion", rotulo: "Notion" },
+];
+
 export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefas">) {
   const params = await searchParams;
   const visao = (VISOES_TAREFA.find((v) => v.valor === params.visao)?.valor ?? "minhas") as VisaoTarefa;
   const obraId = typeof params.obra === "string" && UUID.test(params.obra) ? params.obra : null;
+  const fonte = ORIGENS.some((o) => o.valor === params.origem) ? (params.origem as string) : null;
   const { supabase } = await exigirSessaoCompleta();
 
   const [lista, contagem, obras] = await Promise.all([
-    tarefasDaVisao(supabase, visao, obraId),
+    tarefasDaVisao(supabase, visao, obraId, fonte),
     contarVisoes(supabase),
     supabase.from("obras").select("id, codigo, nome").is("arquivado_em", null).order("codigo"),
   ]);
   const nomeObra = new Map((obras.data ?? []).map((o) => [o.id, o.codigo]));
   const itens = visao === "concluidas" ? lista.concluidas : lista.abertas;
-  const sufixo = obraId ? `&obra=${obraId}` : "";
+  const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}`;
 
   return (
     <div className="space-y-5">
@@ -40,6 +47,14 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
               {(obras.data ?? []).map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.codigo}
+                </option>
+              ))}
+            </select>
+            <select name="origem" defaultValue={fonte ?? ""} aria-label="Filtrar por origem" className="h-10 rounded-lg border border-borda bg-superficie px-2 text-sm">
+              <option value="">Todas as origens</option>
+              {ORIGENS.map((o) => (
+                <option key={o.valor} value={o.valor}>
+                  {o.rotulo}
                 </option>
               ))}
             </select>

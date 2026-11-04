@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { listaSensivel, mapearCartao, statusDaLista } from '../src/trello.js';
+import { cartaoSensivel, listaSensivel, mapearCartao, statusDaLista } from '../src/trello.js';
 import { BASES_CENTRAL, classificarBase, lerNotion, mapearDemanda, mapearReuniao } from '../src/notion.js';
 
 // Dados de TESTE no formato das APIs — não são cartões ou páginas reais.
@@ -18,6 +18,13 @@ describe('Trello', () => {
     for (const nome of ['ANP', 'PRF', 'concluidos', 'Cozinha', 'SENADO-PISO ELEVADO', undefined]) {
       expect(listaSensivel(nome)).toBe(false);
     }
+  });
+
+  it('nunca importa cartão com credencial no título ou na descrição (RN-66)', () => {
+    expect(cartaoSensivel({ name: 'acesso ao portal; senha: abc' })).toBe(true);
+    expect(cartaoSensivel({ name: 'Portal', desc: 'usuario x; Password=abc' })).toBe(true);
+    expect(cartaoSensivel({ name: 'Trocar a senha do portal' })).toBe(false); // falar de senha não é conter senha
+    expect(cartaoSensivel({ name: 'Medição PRF', desc: 'conferir planilha' })).toBe(false);
   });
 
   const base = { id: 'c1', name: 'Cotar aço', desc: 'CA-50', due: '2026-11-05T02:00:00.000Z', dueComplete: false, idMembers: ['eu'], url: 'https://trello.com/c/x', dateLastActivity: '2026-11-01T10:00:00.000Z' };

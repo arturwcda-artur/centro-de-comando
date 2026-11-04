@@ -6,6 +6,8 @@ import { Etiqueta } from "@/components/ui";
 import { motivosPrioridade, podeConcluir, rotuloDe, STATUS_TAREFA, TIPOS_TAREFA } from "@/lib/dominio";
 import { dataCivil } from "@/lib/formato";
 
+const ROTULO_ORIGEM: Record<string, string> = { trello: "Trello", notion: "Notion" };
+
 export type LinhaTarefaDados = {
   id: string | null;
   titulo: string | null;
@@ -20,6 +22,7 @@ export type LinhaTarefaDados = {
   tipo: string | null;
   status: string | null;
   fonte: string | null;
+  categoria?: string | null;
   responsavel_id?: string | null;
   obra_id: string | null;
   concluida_em?: string | null;
@@ -61,11 +64,12 @@ export function LinhaTarefa({ t, nomeObra, mostrarMotivos = true }: { t: LinhaTa
           {t.titulo}
         </Link>
         <span className="block truncate text-xs text-suave">
-          {[nomeObra, t.tipo !== "acao" ? rotuloDe(TIPOS_TAREFA, t.tipo) : null, t.status === "aguardando_terceiro" ? rotuloDe(STATUS_TAREFA, t.status) : null, ...motivos]
+          {[nomeObra, t.fonte !== "manual" ? t.categoria : null, t.tipo !== "acao" ? rotuloDe(TIPOS_TAREFA, t.tipo) : null, t.status === "aguardando_terceiro" ? rotuloDe(STATUS_TAREFA, t.status) : null, ...motivos]
             .filter(Boolean)
             .join(" · ")}
         </span>
       </span>
+      {ROTULO_ORIGEM[t.fonte ?? ""] && <Etiqueta tom="marca">{ROTULO_ORIGEM[t.fonte ?? ""]}</Etiqueta>}
       {t.vencida && !concluida ? <Etiqueta tom="alerta">Vencida</Etiqueta> : t.vence_hoje && !concluida ? <Etiqueta tom="atencao">Hoje</Etiqueta> : null}
       <span className="w-20 shrink-0 text-right text-xs tabular-nums text-suave">{concluida ? dataCivil(t.concluida_em?.slice(0, 10)) : dataCivil(t.prazo)}</span>
     </li>

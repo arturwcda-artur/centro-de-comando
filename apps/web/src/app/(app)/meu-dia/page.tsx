@@ -26,7 +26,7 @@ export default async function PaginaMeuDia() {
   const [tarefas, eventos, vencimentos, obras, pessoas] = await Promise.all([
     supabase
       .from("v_tarefas_priorizadas")
-      .select("id, titulo, prazo, escore, vencida, vence_hoje, dias_para_prazo, critica, impacto, importancia, tipo, status, fonte, obra_id, responsavel_id, minha, aguardando_pessoa_id")
+      .select("id, titulo, prazo, escore, vencida, vence_hoje, dias_para_prazo, critica, impacto, importancia, tipo, status, categoria, fonte, obra_id, responsavel_id, minha, aguardando_pessoa_id")
       .order("escore", { ascending: false })
       .order("prazo", { ascending: true, nullsFirst: false })
       .limit(300),

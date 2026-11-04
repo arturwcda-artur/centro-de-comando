@@ -1409,46 +1409,46 @@ export type Database = {
       }
       operacoes_externas: {
         Row: {
-          id: string
-          ferramenta: string
-          operacao: string
-          entidade: string
-          registro_id: string
-          id_externo: string
-          status: string
+          atualizado_em: string
+          criado_em: string
           detalhe: string | null
+          entidade: string
           erro: string | null
           executado_em: string | null
-          criado_em: string
-          atualizado_em: string
+          ferramenta: string
+          id: string
+          id_externo: string
+          operacao: string
+          registro_id: string
+          status: string
         }
         Insert: {
-          id?: string
-          ferramenta: string
-          operacao: string
-          entidade?: string
-          registro_id: string
-          id_externo: string
-          status?: string
+          atualizado_em?: string
+          criado_em?: string
           detalhe?: string | null
+          entidade?: string
           erro?: string | null
           executado_em?: string | null
-          criado_em?: string
-          atualizado_em?: string
+          ferramenta: string
+          id?: string
+          id_externo: string
+          operacao: string
+          registro_id: string
+          status?: string
         }
         Update: {
-          id?: string
-          ferramenta?: string
-          operacao?: string
-          entidade?: string
-          registro_id?: string
-          id_externo?: string
-          status?: string
+          atualizado_em?: string
+          criado_em?: string
           detalhe?: string | null
+          entidade?: string
           erro?: string | null
           executado_em?: string | null
-          criado_em?: string
-          atualizado_em?: string
+          ferramenta?: string
+          id?: string
+          id_externo?: string
+          operacao?: string
+          registro_id?: string
+          status?: string
         }
         Relationships: []
       }
