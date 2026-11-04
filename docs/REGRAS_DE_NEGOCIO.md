@@ -77,6 +77,7 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-63** Se houve alteração nos dois lados desde a última sincronização, gera-se um **conflito** para decisão do usuário. Nada é sobrescrito sozinho.
 - **RN-64** A gravação em ferramenta externa exige `modo = leitura_escrita` **e** `escrita_autorizada_em` preenchido pelo proprietário.
 - **RN-67** Compromissos da agenda principal são criados, alterados e excluídos pelo sistema, gravando primeiro no Google. Em evento recorrente, a mudança vale só para a data escolhida. A exclusão pede confirmação e, no sistema, o registro fica como cancelado (ADR 0014).
+- **RN-68** A linha de base só muda por ação do proprietário. Um arquivo de linha de base alterado entra como reprogramação, e a tela avisa (ADR 0015).
 - **RN-65** O MS Project é a fonte oficial do cronograma. O sistema só lê os arquivos `.mpp`.
 - **RN-66** Listas do Trello com nomes ligados a credenciais (senha, password, credencial, login, token) e cartões com credencial escrita no título ou na descrição (por exemplo, `senha:`) **nunca são importados**. Os cartões continuam no Trello; apenas não são copiados para o banco, a auditoria ou os backups.
 

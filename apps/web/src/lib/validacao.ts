@@ -175,6 +175,11 @@ export const compromissoSchema = z
     if (c.inicio && c.fim && c.data_fim === c.data && c.fim <= c.inicio) ctx.addIssue({ code: "custom", path: ["fim"], message: "O término deve ser depois do início." });
   });
 
+export const executadoAnteriorSchema = z.object({
+  valor: z.coerce.number({ error: "Valor inválido." }).min(0, "O valor não pode ser negativo."),
+  data: z.iso.date("Informe a data de referência."),
+});
+
 export const aprovacaoSchema = z.object({
   proposta_id: z.uuid(),
   codigo,

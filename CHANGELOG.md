@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.9.0] — 2026-11-04 — Fase 6: planejamento
+### Adicionado
+- Agente local lê os cronogramas do MS Project em modo somente leitura, com o atalho **Atualizar cronogramas** (ADR 0015).
+- Tela **Planejamento**: resumo de prazo, Curva S em reais, atividades com filtros, arquivos e versões.
+- Migration `0019_cronogramas.sql`: arquivos acompanhados, custo das atividades, importação em uma transação e papel restrito `agente_cronograma`.
+- A linha de base só muda por decisão do proprietário (RN-68).
+
 ## [0.8.0] — 2026-11-04 — Fase 5: controle da agenda
 ### Adicionado
 - **Novo compromisso**, edição e exclusão na tela Agenda, gravando no Google Agenda (ADR 0014, RN-67). Em evento recorrente, vale só para a data escolhida.

@@ -111,6 +111,7 @@ export type Database = {
           atualizado_em: string
           criado_em: string
           critica: boolean
+          custo: number | null
           duracao_dias: number | null
           edt: string | null
           fim_previsto: string | null
@@ -130,6 +131,7 @@ export type Database = {
           atualizado_em?: string
           criado_em?: string
           critica?: boolean
+          custo?: number | null
           duracao_dias?: number | null
           edt?: string | null
           fim_previsto?: string | null
@@ -149,6 +151,7 @@ export type Database = {
           atualizado_em?: string
           criado_em?: string
           critica?: boolean
+          custo?: number | null
           duracao_dias?: number | null
           edt?: string | null
           fim_previsto?: string | null
@@ -394,8 +397,59 @@ export type Database = {
           },
         ]
       }
+      cronograma_arquivos: {
+        Row: {
+          atualizado_em: string
+          caminho: string
+          criado_em: string
+          data_executado_anterior: string | null
+          id: string
+          obra_id: string
+          papel: string
+          ultima_leitura_em: string | null
+          ultimo_erro: string | null
+          ultimo_hash: string | null
+          valor_executado_anterior: number | null
+        }
+        Insert: {
+          atualizado_em?: string
+          caminho: string
+          criado_em?: string
+          data_executado_anterior?: string | null
+          id?: string
+          obra_id: string
+          papel: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+          valor_executado_anterior?: number | null
+        }
+        Update: {
+          atualizado_em?: string
+          caminho?: string
+          criado_em?: string
+          data_executado_anterior?: string | null
+          id?: string
+          obra_id?: string
+          papel?: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+          valor_executado_anterior?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cronograma_arquivos_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cronograma_versoes: {
         Row: {
+          arquivo_id: string | null
           arquivo_origem: string | null
           atualizado_em: string
           atualizado_em_origem: string | null
@@ -412,6 +466,7 @@ export type Database = {
           tipo: string
         }
         Insert: {
+          arquivo_id?: string | null
           arquivo_origem?: string | null
           atualizado_em?: string
           atualizado_em_origem?: string | null
@@ -428,6 +483,7 @@ export type Database = {
           tipo: string
         }
         Update: {
+          arquivo_id?: string | null
           arquivo_origem?: string | null
           atualizado_em?: string
           atualizado_em_origem?: string | null
@@ -1986,6 +2042,17 @@ export type Database = {
       }
     }
     Views: {
+      cronograma_realizado: {
+        Row: {
+          arquivo_id: string | null
+          data_leitura: string | null
+          obra_id: string | null
+          realizado: number | null
+          total: number | null
+          versao_id: string | null
+        }
+        Relationships: []
+      }
       v_contratos_resumo: {
         Row: {
           contrato_id: string | null
@@ -2222,6 +2289,7 @@ export type Database = {
       }
     }
     Functions: {
+      tornar_linha_base: { Args: { p_versao: string }; Returns: undefined }
       ler_credencial: { Args: { p_ferramenta: string }; Returns: string }
       ler_credencial_servico: { Args: { p_ferramenta: string }; Returns: string }
       salvar_credencial: {

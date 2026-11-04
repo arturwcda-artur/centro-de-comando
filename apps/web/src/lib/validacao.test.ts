@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aprovacaoSchema, compromissoSchema, decisaoSchema, empresaSchema, mensagemDoBanco, obraSchema, riscoSchema, validar } from "./validacao";
+import { aprovacaoSchema, compromissoSchema, decisaoSchema, empresaSchema, executadoAnteriorSchema, mensagemDoBanco, obraSchema, riscoSchema, validar } from "./validacao";
 import { nivelSeveridade } from "./dominio";
 
 const UUID = "00000000-0000-4000-8000-000000000001";
@@ -71,6 +71,14 @@ describe("compromissos da agenda", () => {
   it("aceita término menor quando acaba em outro dia, mas recusa data final anterior", () => {
     expect(validar(compromissoSchema, { ...base, inicio: "22:00", fim: "02:00", data_fim: "2026-11-11" }).erros).toBeNull();
     expect(validar(compromissoSchema, { ...base, data_fim: "2026-11-09" }).erros?.data_fim).toBeTruthy();
+  });
+});
+
+describe("valor executado antes da retomada", () => {
+  it("exige valor não negativo e data", () => {
+    expect(validar(executadoAnteriorSchema, { valor: "63892.61", data: "2026-04-17" }).dados).toEqual({ valor: 63892.61, data: "2026-04-17" });
+    expect(validar(executadoAnteriorSchema, { valor: "-1", data: "2026-04-17" }).erros?.valor).toBeTruthy();
+    expect(validar(executadoAnteriorSchema, { valor: "10", data: "" }).erros?.data).toBeTruthy();
   });
 });
 
