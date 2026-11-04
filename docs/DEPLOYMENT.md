@@ -83,6 +83,13 @@ Em **Vercel → projeto → Settings → Environment Variables**, para **Product
 4. Cadastre `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` na Vercel, como variáveis de produção, e nos Secrets do GitHub. Faça um novo deploy.
 5. No sistema, use **Integrações → Conectar Google** e rode a sincronização.
 
+### E4. Leitura dos cronogramas (ADR 0015)
+1. Instale as dependências: `py -m pip install pywin32 "psycopg[binary]"`.
+2. No SQL Editor do Supabase, ative o papel com uma senha só dele: `alter role agente_cronograma login password '...'`.
+3. Em `agente.env`, preencha `CRONOGRAMA_DB_URL` (mesmo endereço de `SUPABASE_DB_URL`, com o usuário `agente_cronograma.<ref>`) e `CRONOGRAMA_DB_PASSWORD`.
+4. Rode `agente-local\atualizar-cronogramas.cmd`.
+5. Crie a tarefa semanal no Agendador do Windows, com o argumento `/agendado`.
+
 ### F. Desenvolvimento local da aplicação
 ```bash
 npm install

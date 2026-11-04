@@ -50,6 +50,7 @@
 | percentual | numeric(5,2) | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| custo | numeric(14,2) |  |  |  |
 
 ## Tabela `avanco_fisico`
 
@@ -124,6 +125,24 @@ Clientes/órgãos que contratam as obras.
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `cronograma_arquivos`
+
+Arquivos do MS Project acompanhados pelo agente local.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| obra_id | uuid | sim | obras |  |
+| papel | text | sim |  |  |
+| caminho | text | sim |  |  |
+| ultimo_hash | text |  |  |  |
+| ultima_leitura_em | timestamp with time zone |  |  |  |
+| ultimo_erro | text |  |  |  |
+| valor_executado_anterior | numeric(14,2) |  |  | Valor já executado antes do início deste cronograma. É o ponto de partida da Curva S vigente. |
+| data_executado_anterior | date |  |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `cronograma_versoes`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -142,6 +161,7 @@ Clientes/órgãos que contratam as obras.
 | status_sync | text | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| arquivo_id | uuid |  | cronograma_arquivos |  |
 
 ## Tabela `decisoes`
 
@@ -576,6 +596,17 @@ Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual r
 | status_sync | text | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+
+## View `cronograma_realizado`
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| versao_id | uuid |  |  |  |
+| obra_id | uuid |  |  |  |
+| arquivo_id | uuid |  |  |  |
+| data_leitura | date |  |  |  |
+| total | numeric |  |  |  |
+| realizado | numeric |  |  |  |
 
 ## View `v_contratos_resumo`
 

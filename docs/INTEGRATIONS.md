@@ -35,7 +35,7 @@ Para cada ferramenta o painel mostra:
 | Trello | API REST, só GET, a cada hora ✅ | 5 | tarefas operacionais de equipe |
 | Google Agenda | **API oficial**, leitura e gravação (ADR 0014); iCal enquanto não conectar | 5 | compromissos/horários |
 | Notion | API REST (integração interna, só leitura), a cada hora ✅ | 5 | histórico (Central de Gestão) |
-| MS Project | agente local, COM via pywin32 | 6 | cronograma, linha de base |
+| MS Project | agente local, COM via pywin32, somente leitura ✅ (ADR 0015) | 6 | cronograma, linha de base |
 | Excel | agente local, openpyxl, um modelo de importação por tipo de planilha | 7 | carga inicial de medições/orçamentos |
 | Google Drive | API Drive v3, `drive.readonly` (nuvem) | 8 | arquivos (por referência) |
 | GitHub | API REST | 9 | código do próprio sistema |
@@ -59,6 +59,12 @@ Para cada ferramenta o painel mostra:
 - **Tarefas importadas não são editadas no sistema** (RN-47), exceto a conclusão.
 - **Agenda pelo sistema (ADR 0014):** criar, alterar e excluir ficam em `packages/integrations/src/google.js`, chamados pela aplicação. Cada gravação fica em `operacoes_externas` (RN-67).
 - **Concluir na origem (ADR 0013):** `packages/integrations/src/escrita.js`, chamado pela aplicação. Cada gravação fica em `operacoes_externas`. Cartões de terceiros são só leitura (RN-48).
+
+## MS Project (Fase 6)
+- O agente `cc_agente.cronogramas` lê os arquivos de `cronograma_arquivos` e só abre os que mudaram.
+- Se o Project estiver aberto, nada é lido: feche-o e rode de novo.
+- Cada arquivo tem um papel: `vigente`, `linha_base` ou `historico`.
+- Para incluir outra obra, cadastre os arquivos em `cronograma_arquivos`. Não é preciso programar.
 
 ## Segredos (o proprietário cadastra no GitHub; nunca vão para o Git nem para o banco)
 Em **GitHub → repositório → Settings → Secrets and variables → Actions → New repository secret**, ou pelo terminal com `gh secret set NOME`, que pede o valor sem mostrá-lo:

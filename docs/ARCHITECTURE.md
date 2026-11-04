@@ -66,6 +66,7 @@ Ver [docs/adr](adr). Índice:
 | [0012](adr/0012-conectores-gratuitos.md) | Conectores de leitura: iCal (Google), API (Trello), integração (Notion), agendados pelo GitHub Actions |
 | [0013](adr/0013-controle-pelo-sistema.md) | O sistema comanda tarefas e agenda do proprietário; hospedagem segue na Vercel |
 | [0014](adr/0014-agenda-pela-api-do-google.md) | Agenda lida e gravada pela API do Google, com token no cofre do Supabase |
+| [0015](adr/0015-leitura-do-ms-project.md) | Leitura do MS Project com papel restrito e Curva S em reais |
 
 ## Aplicação web (`apps/web`, Fase 3)
 | Peça | Arquivo | Papel |
