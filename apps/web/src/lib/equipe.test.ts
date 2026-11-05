@@ -29,10 +29,21 @@ describe("contagem de tarefas", () => {
     expect(r.porLista.map((l) => l.nome).sort()).toEqual(["CEF-01", "CEF-02"]);
   });
 
-  it("tarefa com dois membros conta para os dois, e uma vez no total", () => {
+  it("tarefa com dois membros vale metade para cada um, e 1 no total", () => {
     const r = resumirEquipe([cartao({ membros: ["Ana", "Bia"] })], hoje);
-    expect(r.porResponsavel.map((l) => l.nome)).toEqual(["Ana", "Bia"]);
+    expect(r.porResponsavel.map((l) => [l.nome, l.sobResponsabilidade])).toEqual([["Ana", 0.5], ["Bia", 0.5]]);
     expect(r.total?.sobResponsabilidade).toBe(1);
+  });
+
+  it("a soma das pessoas bate com o total", () => {
+    const r = resumirEquipe([cartao({ membros: ["Ana", "Bia", "Caio"], itens: [pendente(), pendente(), pendente()] }), concluido({ membros: ["Ana", "Bia"] })], hoje);
+    expect(r.porResponsavel.reduce((s, l) => s + l.sobResponsabilidade, 0)).toBeCloseTo(r.total?.sobResponsabilidade ?? 0);
+  });
+
+  it("um cartão com 15 itens e 3 membros não vale 45", () => {
+    const r = resumirEquipe([concluido({ membros: ["Ana", "Bia", "Caio"], itens: Array.from({ length: 15 }, () => pendente()) })], hoje);
+    expect(r.porResponsavel[0].resolvidas).toBeCloseTo(5);
+    expect(r.total?.resolvidas).toBe(15);
   });
 
   it("sem membro aparece como sem responsável", () => {
@@ -44,15 +55,34 @@ describe("contagem de tarefas", () => {
   });
 });
 
-describe("crédito do item, por enquanto", () => {
+describe("crédito pelos responsáveis, se a regra for desligada", () => {
   it("vai para o responsável pelo cartão, mesmo que outra pessoa tenha marcado", () => {
-    const r = resumirEquipe([cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Bia", responsaveis: ["Caio"] })] })], hoje).porResponsavel;
+    const r = resumirEquipe([cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Bia", responsaveis: ["Caio"] })] })], hoje, undefined, false).porResponsavel;
     expect(r.map((l) => [l.nome, l.resolvidas])).toEqual([["Ana", 1]]);
   });
+});
 
-  it("com dois responsáveis no cartão, conta para os dois", () => {
-    const r = resumirEquipe([cartao({ membros: ["Ana", "Bia"], itens: [item()] })], hoje).porResponsavel;
-    expect(r.map((l) => l.nome)).toEqual(["Ana", "Bia"]);
+describe("crédito do cartão sem checklist", () => {
+  it("vai inteiro para quem concluiu", () => {
+    const r = resumirEquipe([concluido({ membros: ["Ana", "Bia"], resolvido_por: "Bia" })], hoje).porResponsavel;
+    expect(r.find((l) => l.nome === "Bia")?.resolvidas).toBe(1);
+    expect(r.find((l) => l.nome === "Ana")?.resolvidas).toBe(0);
+  });
+
+  it("sem registro de quem concluiu, é dividido entre os membros", () => {
+    const r = resumirEquipe([concluido({ membros: ["Ana", "Bia"] })], hoje).porResponsavel;
+    expect(r.map((l) => l.resolvidas)).toEqual([0.5, 0.5]);
+  });
+
+  it("item não marcado de cartão concluído vai para quem concluiu o cartão", () => {
+    const r = resumirEquipe([concluido({ membros: ["Ana"], resolvido_por: "Bia", itens: [pendente()] })], hoje).porResponsavel;
+    expect(r.find((l) => l.nome === "Bia")?.resolvidas).toBe(1);
+  });
+
+  it("cartão sem membros que alguém concluiu conta para essa pessoa e para a equipe", () => {
+    const r = resumirEquipe([concluido({ membros: [], resolvido_por: "Bia" })], hoje);
+    expect(r.total?.resolvidas).toBe(1);
+    expect(r.porResponsavel.map((l) => l.nome)).toContain("Bia");
   });
 });
 
@@ -76,9 +106,9 @@ describe("sem responsável", () => {
   });
 });
 
-describe("crédito por quem marcou, para quando for ligado", () => {
+describe("crédito do item por quem marcou", () => {
   // O membro do cartão pode aparecer zerado: ele continua respondendo pelo prazo do cartão
-  const porPessoa = (c: CartaoEquipe) => Object.fromEntries(resumirEquipe([c], hoje, undefined, true).porResponsavel.filter((l) => l.sobResponsabilidade > 0).map((l) => [l.nome, [l.resolvidas, l.pendentes]]));
+  const porPessoa = (c: CartaoEquipe) => Object.fromEntries(resumirEquipe([c], hoje).porResponsavel.filter((l) => l.sobResponsabilidade > 0).map((l) => [l.nome, [l.resolvidas, l.pendentes]]));
 
   it("vai para quem marcou, não para o membro do cartão", () => {
     expect(porPessoa(cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Bia" })] }))).toEqual({ Bia: [1, 0] });

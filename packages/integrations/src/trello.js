@@ -85,17 +85,18 @@ export function criacaoDoCartao(idCartao) {
   return new Date(parseInt(idCartao.slice(0, 8), 16) * 1000).toISOString();
 }
 
-/** Última vez que cada cartão entrou numa lista de concluídos ou foi marcado como concluído. */
+/** Última vez que cada cartão entrou numa lista de concluídos ou foi marcado como concluído, e por quem. */
 export function conclusoesDoHistorico(acoes) {
-  const datas = new Map();
+  const conclusoes = new Map();
   for (const a of acoes) {
     const entrouEmConcluidos = a.data?.listAfter && statusDaLista(a.data.listAfter.name) === 'concluida';
     const marcou = a.data?.card?.dueComplete === true && a.data?.old?.dueComplete === false;
     if (!entrouEmConcluidos && !marcou) continue;
     const id = a.data.card.id;
-    if (!datas.has(id) || a.date > datas.get(id)) datas.set(id, a.date);
+    const atual = conclusoes.get(id);
+    if (!atual || a.date > atual.data) conclusoes.set(id, { data: a.date, membro: a.idMemberCreator ?? null });
   }
-  return datas;
+  return conclusoes;
 }
 
 /** Primeira data de entrega de cada cartão e quantas vezes uma data existente foi mudada ou retirada. */
@@ -118,7 +119,8 @@ export function datasDoCartao(cartao, lista, conclusoes, prazos = new Map()) {
   return {
     cartao: cartao.id,
     criado_em: criacaoDoCartao(cartao.id),
-    concluido_em: concluido ? (conclusoes.get(cartao.id) ?? cartao.dateLastActivity ?? null) : null,
+    concluido_em: concluido ? (conclusoes.get(cartao.id)?.data ?? cartao.dateLastActivity ?? null) : null,
+    concluido_por: concluido ? (conclusoes.get(cartao.id)?.membro ?? null) : null,
     prazo_original: dataSP(prazo?.original ?? cartao.due),
     prazo_alteracoes: prazo?.alteracoes ?? 0,
   };
@@ -229,7 +231,7 @@ export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios
   const ligar = (lista) => lista.filter((x) => idTarefa.has(x.cartao)).map(({ cartao, ...resto }) => ({ ...resto, tarefa_id: idTarefa.get(cartao) }));
   const linhasComentarios = ligar(comentarios);
   const linhasItens = ligar(itens).map(({ membro, concluido_por, ...resto }) => ({ ...resto, membro_id: idMembro.get(membro) ?? null, concluido_por_id: idMembro.get(concluido_por) ?? null }));
-  const linhasDatas = datas.filter((d) => idTarefa.has(d.cartao)).map(({ cartao, ...resto }) => ({ ...resto, tarefa_id: idTarefa.get(cartao) }));
+  const linhasDatas = datas.filter((d) => idTarefa.has(d.cartao)).map(({ cartao, concluido_por, ...resto }) => ({ ...resto, tarefa_id: idTarefa.get(cartao), concluido_por_id: idMembro.get(concluido_por) ?? null }));
   await gravarLotes(supabase, 'trello_cartao_datas', linhasDatas, 'tarefa_id');
   await gravarLotes(supabase, 'trello_comentarios', linhasComentarios, 'id_externo');
   await gravarLotes(supabase, 'trello_checklist_itens', linhasItens, 'id_externo');

@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.12.4] — 2026-11-05 — Crédito dividido
+### Alterado
+- A tarefa resolvida conta para quem marcou no Trello, item ou cartão. A pendente é dividida entre os responsáveis do cartão.
+- A soma das pessoas passa a bater com o total da equipe. Migration `0026_cartao_concluido_por.sql`.
+
 ## [0.12.3] — 2026-11-05 — Tela Equipe mais simples
 ### Alterado
 - O crédito dos itens volta ao responsável pelo cartão. Quem marcou continua guardado para uso futuro.

@@ -702,6 +702,7 @@ Criação, conclusão real e prazo original do cartão, lidos do histórico do T
 | prazo_original | date |  |  | Primeira data de entrega do cartão. É a referência da taxa de eficiência, para adiar o prazo não melhorar a taxa. |
 | prazo_alteracoes | integer | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| concluido_por_id | uuid |  | trello_membros | Membro que moveu o cartão para concluídos ou marcou o prazo como concluído. |
 
 ## Tabela `trello_checklist_itens`
 

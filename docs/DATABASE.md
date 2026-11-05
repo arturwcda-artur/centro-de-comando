@@ -26,6 +26,7 @@ PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas
 | `0023_documentos_indice.sql` | pastas, links do Drive, importação e busca de documentos (ADR 0018) |
 | `0024_cartoes_rotina.sql` | marcação de cartões de rotina e datas dos itens de checklist (ADR 0017) |
 | `0025_item_resolvido_por.sql` | quem marcou cada item de checklist como concluído (ADR 0017) |
+| `0026_cartao_concluido_por.sql` | quem concluiu cada cartão do quadro detalhado (ADR 0017) |
 | `0016_remover_listas_sensiveis.sql` | remove as cópias da lista de credenciais do Trello (RN-66) |
 | `0015_eventos_cancelados.sql` | `eventos.cancelado_em`: evento removido ou cancelado na origem sai das telas sem ser apagado |
 | `0014_tarefas_minhas.sql` | `v_tarefas_priorizadas.minha` inclui tarefas sem responsável (RN-45) |

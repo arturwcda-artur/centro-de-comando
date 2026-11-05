@@ -35,7 +35,7 @@ describe('cartaoImportavel', () => {
 });
 
 describe('datas reais do cartão', () => {
-  const mover = (date, card, lista) => ({ date, data: { card: { id: card }, listAfter: { name: lista } } });
+  const mover = (date, card, lista, idMemberCreator = 'm1') => ({ date, idMemberCreator, data: { card: { id: card }, listAfter: { name: lista } } });
 
   it('a criação vem do id do cartão', () => {
     expect(criacaoDoCartao('5f5e1000aaaaaaaaaaaaaaaa')).toBe(new Date(0x5f5e1000 * 1000).toISOString());
@@ -43,12 +43,12 @@ describe('datas reais do cartão', () => {
 
   it('usa a entrada em lista de concluídos, não a última atividade', () => {
     const c = conclusoesDoHistorico([mover('2026-10-10T12:00:00Z', 'c1', '6. CONCLUÍDO'), mover('2026-10-01T12:00:00Z', 'c1', 'Fazendo')]);
-    expect(c.get('c1')).toBe('2026-10-10T12:00:00Z');
+    expect(c.get('c1')).toEqual({ data: '2026-10-10T12:00:00Z', membro: 'm1' });
   });
 
   it('se voltou e foi concluído de novo, vale a última conclusão', () => {
-    const c = conclusoesDoHistorico([mover('2026-10-20T12:00:00Z', 'c1', 'Concluído'), mover('2026-10-10T12:00:00Z', 'c1', 'Concluído')]);
-    expect(c.get('c1')).toBe('2026-10-20T12:00:00Z');
+    const c = conclusoesDoHistorico([mover('2026-10-20T12:00:00Z', 'c1', 'Concluído', 'm2'), mover('2026-10-10T12:00:00Z', 'c1', 'Concluído', 'm1')]);
+    expect(c.get('c1')).toEqual({ data: '2026-10-20T12:00:00Z', membro: 'm2' });
   });
 
   it('marcar o prazo como concluído também conta; desmarcar, não', () => {
@@ -61,8 +61,13 @@ describe('datas reais do cartão', () => {
   });
 
   it('cartão aberto não tem data de conclusão, mesmo com histórico antigo', () => {
-    const c = new Map([['5f5e1000aaaaaaaaaaaaaaaa', '2026-10-10T12:00:00Z']]);
-    expect(datasDoCartao({ id: '5f5e1000aaaaaaaaaaaaaaaa' }, 'Fazendo', c).concluido_em).toBeNull();
+    const c = new Map([['5f5e1000aaaaaaaaaaaaaaaa', { data: '2026-10-10T12:00:00Z', membro: 'm1' }]]);
+    expect(datasDoCartao({ id: '5f5e1000aaaaaaaaaaaaaaaa' }, 'Fazendo', c)).toMatchObject({ concluido_em: null, concluido_por: null });
+  });
+
+  it('guarda quem concluiu o cartão', () => {
+    const c = new Map([['5f5e1000aaaaaaaaaaaaaaaa', { data: '2026-10-10T12:00:00Z', membro: 'm2' }]]);
+    expect(datasDoCartao({ id: '5f5e1000aaaaaaaaaaaaaaaa' }, 'Concluído', c)).toMatchObject({ concluido_em: '2026-10-10T12:00:00Z', concluido_por: 'm2' });
   });
 
   it('sem histórico, usa a última atividade', () => {
@@ -191,7 +196,7 @@ describe('aplicarDetalhes', () => {
     vinculos: [{ cartao: 'c1', membro: 'm1' }, { cartao: 'fora', membro: 'm1' }],
     comentarios: [{ id_externo: 'a1', cartao: 'c1', autor: 'Um', texto: 'ok', data: '2026-11-01' }, { id_externo: 'a2', cartao: 'fora', autor: 'Um', texto: 'ignorado', data: '2026-11-01' }],
     itens: [{ id_externo: 'i1', cartao: 'c1', checklist: 'L', nome: 'Item', concluido: true, posicao: 1, membro: null, concluido_por: 'm1' }],
-    datas: [{ cartao: 'c1', criado_em: '2026-10-01', concluido_em: null }, { cartao: 'fora', criado_em: '2026-10-01', concluido_em: null }],
+    datas: [{ cartao: 'c1', criado_em: '2026-10-01', concluido_em: null, concluido_por: 'm1' }, { cartao: 'fora', criado_em: '2026-10-01', concluido_em: null, concluido_por: null }],
   };
 
   it('grava só o que pertence a cartões importados e tira o que sumiu do Trello', async () => {
@@ -203,6 +208,7 @@ describe('aplicarDetalhes', () => {
     expect(t.trello_checklist_itens[0]).toMatchObject({ tarefa_id: 't1', membro_id: null });
     expect(t.trello_checklist_itens[0].concluido_por_id).toBe(t.trello_membros[0].id);
     expect(t.trello_cartao_datas.map((d) => d.tarefa_id)).toEqual(['t1']);
+    expect(t.trello_cartao_datas[0].concluido_por_id).toBe(t.trello_membros[0].id);
     expect(r).toEqual({ membros: 1, comentarios: 1, itens: 1 });
   });
 
