@@ -50,8 +50,6 @@ export type LinhaEquipe = {
   eficiencia: number | null;
   diasMedios: number | null;
   prazosAlterados: number;
-  /** Posição no ranking, pela taxa de resolução. */
-  posicao: number | null;
 };
 
 type Acumulador = LinhaEquipe & { somaDias: number; comTempo: number; somaDiasItem: number; itensComTempo: number };
@@ -62,7 +60,7 @@ const listaDe = (categoria: string | null) => categoria?.split(" › ")[1] ?? "�
 const quem = (nomes: string[]) => (nomes.length ? nomes : [SEM_RESPONSAVEL]);
 
 function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
-  const nova: Acumulador = { nome, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, diasMedios: null, prazosAlterados: 0, posicao: null, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
+  const nova: Acumulador = { nome, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, diasMedios: null, prazosAlterados: 0, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
   const l = linhas.get(nome) ?? nova;
   linhas.set(nome, l);
   return l;
@@ -94,8 +92,9 @@ function somarTarefa(l: Acumulador, resolvida: boolean, parte: number) {
   else l.pendentes += parte;
 }
 
+/** Sem posições: a ordem é por entregas, para ter mais tarefas não parecer pior. Sem responsável vai para o fim. */
 function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
-  const ordenadas = [...linhas.values()]
+  return [...linhas.values()]
     .map(({ somaDias, comTempo, somaDiasItem, itensComTempo, ...l }) => ({
       ...l,
       resolucao: l.sobResponsabilidade ? (l.resolvidas / l.sobResponsabilidade) * 100 : null,
@@ -103,9 +102,7 @@ function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
       diasMedios: comTempo ? somaDias / comTempo : null,
       diasPorItem: itensComTempo ? somaDiasItem / itensComTempo : null,
     }))
-    .sort((a, b) => Number(a.nome === SEM_RESPONSAVEL) - Number(b.nome === SEM_RESPONSAVEL) || (b.resolucao ?? -1) - (a.resolucao ?? -1) || b.sobResponsabilidade - a.sobResponsabilidade || a.nome.localeCompare(b.nome, "pt-BR"));
-  let posicao = 0;
-  return ordenadas.map((l) => ({ ...l, posicao: l.resolucao === null || l.nome === SEM_RESPONSAVEL ? null : ++posicao }));
+    .sort((a, b) => Number(a.nome === SEM_RESPONSAVEL) - Number(b.nome === SEM_RESPONSAVEL) || b.resolvidas - a.resolvidas || b.pendentes - a.pendentes || a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
 /**

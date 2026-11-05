@@ -100,9 +100,9 @@ describe("sem responsável", () => {
     expect(r).toMatchObject({ cobraveis: 1, eficiencia: 100, vencidas: 0 });
   });
 
-  it("fica no fim do ranking, mesmo com taxa maior, e sem posição", () => {
+  it("fica no fim, mesmo com mais entregas", () => {
     const r = resumirEquipe([cartao(), concluido({ membros: [] })], hoje).porResponsavel;
-    expect(r.map((l) => [l.nome, l.posicao])).toEqual([["Ana", 1], [SEM_RESPONSAVEL, null]]);
+    expect(r.map((l) => l.nome)).toEqual(["Ana", SEM_RESPONSAVEL]);
   });
 });
 
@@ -202,27 +202,21 @@ describe("cartão de rotina", () => {
   });
 });
 
-describe("ranking por resolução", () => {
+describe("ordem do painel", () => {
   const aberto = (membro: string) => cartao({ membros: [membro] });
   const feito = (membro: string) => concluido({ membros: [membro] });
 
-  it("ordena pela maior taxa de resolução e numera as posições", () => {
-    const r = resumirEquipe([aberto("Ana"), feito("Bia"), feito("Caio"), aberto("Caio")], hoje).porResponsavel;
-    expect(r.map((l) => [l.posicao, l.nome])).toEqual([[1, "Bia"], [2, "Caio"], [3, "Ana"]]);
+  it("ordena por entregas: ter mais tarefas pendentes não prejudica", () => {
+    const r = resumirEquipe([feito("Pedro"), feito("Pedro"), aberto("Pedro"), aberto("Pedro"), aberto("Pedro"), feito("Ana")], hoje).porResponsavel;
+    expect(r.map((l) => l.nome)).toEqual(["Pedro", "Ana"]);
   });
 
-  it("no empate, fica à frente quem carrega mais tarefas", () => {
-    expect(resumirEquipe([feito("Ana"), feito("Bia"), feito("Bia")], hoje).porResponsavel[0].nome).toBe("Bia");
+  it("no empate, vem primeiro quem carrega mais pendências", () => {
+    expect(resumirEquipe([feito("Ana"), feito("Bia"), aberto("Bia")], hoje).porResponsavel[0].nome).toBe("Bia");
   });
 
-  it("não depende de prazo", () => {
-    expect(resumirEquipe([feito("Ana")], hoje).porResponsavel[0]).toMatchObject({ resolucao: 100, eficiencia: null, posicao: 1 });
-  });
-
-  it("sem responsável não entra na numeração", () => {
-    const r = resumirEquipe([feito("Ana"), concluido({ membros: [] })], hoje).porResponsavel;
-    expect(r.find((l) => l.nome === SEM_RESPONSAVEL)?.posicao).toBeNull();
-    expect(r.find((l) => l.nome === "Ana")?.posicao).toBe(1);
+  it("não tem posição", () => {
+    expect(resumirEquipe([feito("Ana")], hoje).porResponsavel[0]).not.toHaveProperty("posicao");
   });
 });
 

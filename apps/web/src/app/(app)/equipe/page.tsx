@@ -19,20 +19,17 @@ const dias = (d: number | null) => (d === null ? "—" : `${d.toLocaleString("pt
 const NUMERO = "py-2.5 text-right tabular-nums";
 const CABECALHO = "py-2 text-right font-medium";
 
-/** Ranking: só o que responde "quanto carrega, quanto resolveu e se entrega no prazo". */
-function Ranking({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEquipe[]; destino: (nome: string) => string | null }) {
+/** Painel sem posições: quanto cada um entregou, quanto carrega e se entrega no prazo. */
+function Painel({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEquipe[]; destino: (nome: string) => string | null }) {
   if (linhas.length === 0) return <EstadoVazio>Nenhuma tarefa neste período.</EstadoVazio>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[560px] text-sm">
         <thead className="text-left text-xs text-suave">
           <tr>
-            <th className="w-8 py-2 font-medium">#</th>
             <th className="py-2 font-medium">{coluna}</th>
-            <th className={CABECALHO}>Tarefas</th>
             <th className={CABECALHO}>Resolvidas</th>
             <th className={CABECALHO}>Pendentes</th>
-            <th className={CABECALHO}>Resolução</th>
             <th className={CABECALHO}>No prazo</th>
           </tr>
         </thead>
@@ -42,7 +39,6 @@ function Ranking({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEqu
             const link = destino(l.nome);
             return (
               <tr key={l.nome} className={semDono ? "text-suave" : undefined}>
-                <td className="py-2.5 tabular-nums text-suave">{l.posicao ?? "—"}</td>
                 <td className="py-2.5 pr-3">
                   {link ? (
                     <Link href={link} className="hover:text-marca hover:underline">
@@ -52,10 +48,8 @@ function Ranking({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEqu
                     l.nome
                   )}
                 </td>
-                <td className={NUMERO}>{quantidade(l.sobResponsabilidade)}</td>
-                <td className={NUMERO}>{quantidade(l.resolvidas)}</td>
+                <td className={`${NUMERO} ${semDono ? "" : "font-semibold"}`}>{quantidade(l.resolvidas)}</td>
                 <td className={NUMERO}>{quantidade(l.pendentes)}</td>
-                <td className={`${NUMERO} ${semDono ? "" : "font-semibold"}`}>{pct(l.resolucao)}</td>
                 <td className={NUMERO} title={l.cobraveis > 0 ? `${l.noPrazo} de ${l.cobraveis} cartões com prazo` : undefined}>
                   {pct(l.eficiencia)}
                 </td>
@@ -138,10 +132,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined);
 
   const indicadores = [
-    ["Tarefas", quantidade(total?.sobResponsabilidade ?? 0)],
-    ["Resolvidas", quantidade(total?.resolvidas ?? 0)],
+    ["Resolvidas pela equipe", quantidade(total?.resolvidas ?? 0)],
     ["Pendentes", quantidade(total?.pendentes ?? 0)],
-    ["Resolução", pct(total?.resolucao)],
     ["No prazo", pct(total?.eficiencia)],
   ] as const;
 
@@ -165,7 +157,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </nav>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {indicadores.map(([rotulo, valor]) => (
           <Cartao key={rotulo}>
             <p className="text-xs text-suave">{rotulo}</p>
@@ -174,15 +166,15 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </div>
 
-      <Cartao titulo="Ranking da equipe">
-        <Ranking coluna="Responsável" linhas={porResponsavel} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
+      <Cartao titulo="Entregas da equipe">
+        <Painel coluna="Responsável" linhas={porResponsavel} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
       </Cartao>
 
       <Cartao>
         <details>
           <summary className="cursor-pointer text-sm font-medium">Por lista</summary>
           <div className="mt-3">
-            <Ranking coluna="Lista" linhas={porLista} destino={() => null} />
+            <Painel coluna="Lista" linhas={porLista} destino={() => null} />
           </div>
         </details>
       </Cartao>
@@ -201,7 +193,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
           <summary className="cursor-pointer text-sm font-medium">Como os números são calculados</summary>
           <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-suave">
             <li>Tarefas: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens.</li>
-            <li>Resolução: resolvidas divididas pelas tarefas. É ela que define o ranking.</li>
+            <li>A ordem é pelas entregas, sem posições. Pendente é carga de trabalho, não falha.</li>
             <li>No prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa.</li>
             <li>Tarefa resolvida conta para quem marcou no Trello: o item ou, sem checklist, o cartão. Por isso, cada um deve marcar o que resolveu.</li>
             <li>Tarefa pendente, ou sem registro de quem marcou, é dividida entre os responsáveis do cartão.</li>
