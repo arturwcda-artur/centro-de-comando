@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL, entregasPorSemana, resumirEquipe, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
 
 const hoje = "2026-11-05";
 const cartao = (extra: Partial<CartaoEquipe> = {}): CartaoEquipe => ({ status: "a_fazer", prazo: null, concluido_em: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › CEF-01`, membros: ["Ana"], ...extra });
@@ -241,20 +241,44 @@ describe("período anterior", () => {
   });
 });
 
-describe("entregas por semana", () => {
+describe("fluxo por semana", () => {
+  const resolvido = (data: string, extra = {}) => concluido({ criado_em: "2026-11-02T12:00:00Z", concluido_em: data, ...extra });
+
   it("agrupa de segunda a domingo e termina na semana atual", () => {
-    const r = entregasPorSemana([concluido({ concluido_em: "2026-11-02T12:00:00Z" }), concluido({ concluido_em: "2026-11-05T12:00:00Z" }), concluido({ concluido_em: "2026-11-01T12:00:00Z" })], hoje, 2);
-    expect(r).toEqual([{ inicio: "2026-10-26", entregas: 1 }, { inicio: "2026-11-02", entregas: 2 }]);
+    const r = fluxoPorSemana([resolvido("2026-11-02T12:00:00Z"), resolvido("2026-11-05T12:00:00Z"), resolvido("2026-11-01T12:00:00Z", { criado_em: "2026-10-27T12:00:00Z" })], hoje, 2);
+    expect(r).toEqual([{ inicio: "2026-10-26", entraram: 1, resolvidas: 1 }, { inicio: "2026-11-02", entraram: 2, resolvidas: 2 }]);
   });
 
   it("cartão com checklist conta pelos itens", () => {
-    const r = entregasPorSemana([cartao({ itens: [item({ concluido_em: "2026-11-03T12:00:00Z" }), item({ concluido_em: "2026-11-03T12:00:00Z" }), pendente()] })], hoje, 1);
-    expect(r[0].entregas).toBe(2);
+    const r = fluxoPorSemana([cartao({ itens: [item({ criado_em: "2026-11-03T12:00:00Z", concluido_em: "2026-11-03T12:00:00Z" }), pendente({ criado_em: "2026-11-03T12:00:00Z" })] })], hoje, 1);
+    expect(r[0]).toMatchObject({ entraram: 2, resolvidas: 1 });
   });
 
-  it("não conta cancelados, abertos nem tarefas sem responsável", () => {
-    const r = entregasPorSemana([cartao(), concluido({ status: "cancelada", concluido_em: "2026-11-03T12:00:00Z" }), concluido({ membros: [], concluido_em: "2026-11-03T12:00:00Z" })], hoje, 1);
-    expect(r[0].entregas).toBe(0);
+  it("não conta cancelados nem tarefas sem responsável", () => {
+    const r = fluxoPorSemana([resolvido("2026-11-03T12:00:00Z", { status: "cancelada" }), resolvido("2026-11-03T12:00:00Z", { membros: [] })], hoje, 1);
+    expect(r[0]).toMatchObject({ entraram: 0, resolvidas: 0 });
+  });
+});
+
+describe("tarefas que entraram", () => {
+  it("conta a partir da data, por tarefa", () => {
+    const lista = [cartao({ criado_em: "2026-09-01T12:00:00Z" }), cartao({ itens: [pendente({ criado_em: "2026-11-01T12:00:00Z" }), pendente({ criado_em: "2026-11-02T12:00:00Z" })] })];
+    expect(tarefasQueEntraram(lista, "2026-10-01")).toBe(2);
+    expect(tarefasQueEntraram(lista)).toBe(3);
+  });
+});
+
+describe("cartões parados", () => {
+  const agora = new Date("2026-11-05T12:00:00Z");
+  const parado = (extra = {}) => ({ ...cartao(), id: "1", titulo: "Cartão", ultima_atividade: "2026-10-20T12:00:00Z", ...extra });
+
+  it("mostra o aberto sem movimentação há 14 dias ou mais, o mais antigo primeiro", () => {
+    const r = cartoesParados([parado(), parado({ id: "2", ultima_atividade: "2026-10-01T12:00:00Z" }), parado({ id: "3", ultima_atividade: "2026-11-01T12:00:00Z" })], agora);
+    expect(r.map((c) => [c.id, c.dias])).toEqual([["2", 35], ["1", 16]]);
+  });
+
+  it("não mostra concluído, cancelado nem rotina", () => {
+    expect(cartoesParados([parado({ status: "concluida" }), parado({ status: "cancelada" }), parado({ rotina: true })], agora)).toEqual([]);
   });
 });
 

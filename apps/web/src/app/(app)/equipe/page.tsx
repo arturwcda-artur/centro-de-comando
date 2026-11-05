@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
-import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, SEM_RESPONSAVEL, entregasPorSemana, resumirEquipe, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
+import { CREDITO_POR_QUEM_MARCOU, DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
 import { dataCivil, hojeSP, somarDias } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -63,19 +63,29 @@ function Painel({ coluna, linhas, evolucao, destino }: { coluna: string; linhas:
   );
 }
 
-/** Entregas da equipe semana a semana: é o que mostra a evolução. */
-function Semanas({ semanas }: { semanas: { inicio: string; entregas: number }[] }) {
-  const maior = Math.max(...semanas.map((s) => s.entregas), 1);
+/** Entraram e resolvidas, semana a semana: mostra se a equipe está dando conta. */
+function Semanas({ semanas }: { semanas: { inicio: string; entraram: number; resolvidas: number }[] }) {
+  const maior = Math.max(...semanas.flatMap((s) => [s.entraram, s.resolvidas]), 1);
+  const barra = (n: number, cor: string, rotulo: string) => <span title={`${rotulo}: ${n}`} className={`w-1/2 rounded-t ${cor}`} style={{ height: `${(n / maior) * 100}%`, minHeight: n ? "2px" : 0 }} />;
   return (
-    <ul className="flex h-36 items-end gap-2" aria-label="Tarefas resolvidas por semana">
-      {semanas.map((s) => (
-        <li key={s.inicio} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
-          <span className="text-xs tabular-nums">{s.entregas}</span>
-          <span className="w-full rounded-t bg-marca" style={{ height: `${(s.entregas / maior) * 100}%`, minHeight: s.entregas ? "2px" : 0 }} />
-          <span className="text-[10px] tabular-nums text-suave">{dataCivil(s.inicio).slice(0, 5)}</span>
-        </li>
-      ))}
-    </ul>
+    <div>
+      <ul className="flex h-36 items-end gap-2" aria-label="Tarefas que entraram e que foram resolvidas por semana">
+        {semanas.map((s) => (
+          <li key={s.inicio} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
+            <span className="text-[10px] tabular-nums text-suave">{`${s.entraram} / ${s.resolvidas}`}</span>
+            <span className="flex min-h-0 w-full flex-1 items-end gap-0.5">
+              {barra(s.entraram, "bg-borda", "Entraram")}
+              {barra(s.resolvidas, "bg-marca", "Resolvidas")}
+            </span>
+            <span className="text-[10px] tabular-nums text-suave">{dataCivil(s.inicio).slice(0, 5)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 flex gap-4 text-xs">
+        <span className="inline-flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-borda" aria-hidden="true" /> Entraram</span>
+        <span className="inline-flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-marca" aria-hidden="true" /> Resolvidas</span>
+      </p>
+    </div>
   );
 }
 
@@ -125,7 +135,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const idMembro = new Map((membros ?? []).map((m) => [m.nome, m.id]));
   const { data } = await supabase
     .from("tarefas")
-    .select("id, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes), cartoes_rotina(tarefa_id)")
+    .select("id, titulo, atualizado_em_origem, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes), cartoes_rotina(tarefa_id)")
     .eq("fonte", "trello")
     .like("categoria", `${QUADRO_EQUIPE} › %`);
 
@@ -140,6 +150,9 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     itensDoCartao.set(i.tarefa_id, [...(itensDoCartao.get(i.tarefa_id) ?? []), item]);
   }
   const cartoes = (data ?? []).map((t) => ({
+    id: t.id,
+    titulo: t.titulo,
+    ultima_atividade: t.atualizado_em_origem,
     status: t.status,
     prazo: t.prazo,
     categoria: t.categoria,
@@ -160,8 +173,14 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const variacao = (linhas: LinhaEquipe[] | undefined) => (nome: string, atual: number) => (temHistorico ? atual - (linhas?.find((l) => l.nome === nome)?.resolvidas ?? 0) : null);
   const evolucaoEquipe = temHistorico ? (total?.resolvidas ?? 0) - (anterior?.total?.resolvidas ?? 0) : null;
 
+  const entraram = tarefasQueEntraram(cartoes, desde);
+  const saldoDoPeriodo = (total?.resolvidas ?? 0) - entraram;
+  const parados = cartoesParados(cartoes, new Date());
+
   const indicadores = [
     ["Tarefas resolvidas", quantidade(total?.resolvidas ?? 0), ""],
+    ["Entraram", quantidade(entraram), ""],
+    ["Saldo", comSinal(saldoDoPeriodo), corDoSinal(saldoDoPeriodo)],
     ["Tempo médio", dias(total?.diasPorTarefa ?? null), ""],
     ["Evolução", comSinal(evolucaoEquipe), corDoSinal(evolucaoEquipe)],
   ] as const;
@@ -186,7 +205,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </nav>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {indicadores.map(([rotulo, valor, cor]) => (
           <Cartao key={rotulo}>
             <p className="text-xs text-suave">{rotulo}</p>
@@ -199,8 +218,28 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         <Painel coluna="Responsável" linhas={porResponsavel} evolucao={variacao(anterior?.porResponsavel)} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
       </Cartao>
 
-      <Cartao titulo="Tarefas resolvidas por semana">
-        <Semanas semanas={entregasPorSemana(cartoes, hoje)} />
+      <Cartao titulo="Entraram × resolvidas por semana">
+        <Semanas semanas={fluxoPorSemana(cartoes, hoje)} />
+      </Cartao>
+
+      <Cartao titulo={`Cartões parados há ${DIAS_PARADA} dias ou mais (${parados.length})`}>
+        {parados.length === 0 ? (
+          <EstadoVazio>Nenhum cartão parado.</EstadoVazio>
+        ) : (
+          <ul className="divide-y divide-borda text-sm">
+            {parados.slice(0, 10).map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0">
+                  <Link href={`/tarefas/${c.id}`} className="block truncate hover:text-marca hover:underline">
+                    {c.titulo}
+                  </Link>
+                  <span className="block truncate text-xs text-suave">{c.membros.join(", ") || SEM_RESPONSAVEL}</span>
+                </span>
+                <span className="shrink-0 text-xs tabular-nums text-suave">{c.dias} dias</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Cartao>
 
       <Cartao>
@@ -228,6 +267,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
             <li>Tarefas resolvidas: cada item de checklist resolvido conta 1, e o cartão sem checklist concluído conta 1. Não importa em qual cartão ou lista. Cartão concluído resolve todos os seus itens.</li>
             <li>Tempo médio: da criação da tarefa até ela ser resolvida.</li>
             <li>Evolução: tarefas resolvidas no período menos as do período anterior, de mesmo tamanho. Aparece — enquanto não há histórico.</li>
+            <li>Entraram: tarefas criadas no período. Saldo: resolvidas menos entraram. Positivo mostra que a equipe está dando conta da demanda.</li>
+            <li>Parados: cartões abertos, fora os de rotina, sem nenhuma movimentação no Trello. Comentário também conta como movimentação.</li>
             <li>A ordem é por tarefas resolvidas, sem posições. Cartão aberto é carga de trabalho, não falha.</li>
             <li>Atribuídas, Abertas e Concluídas: cartões de cada responsável, sem os de rotina.</li>
             <li>No prazo: cartões entregues até a primeira data de entrega, menos os atrasados, que incluem os vencidos em aberto. Positivo é bom, negativo pede atenção. Vale só para cartões com data e que não são de rotina, e adiar a data não melhora.</li>
