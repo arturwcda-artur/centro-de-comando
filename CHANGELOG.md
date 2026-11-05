@@ -2,7 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
-## [0.11.3] — 2026-11-05 — Cartões de rotina
+## [0.12.2] — 2026-11-05 — Ajustes
+### Corrigido
+- O cartão do Google Drive mostra erro de autorização quando falta a permissão, em vez de Conectado.
+
+## [0.12.1] — 2026-11-05 — Cartões de rotina
 ### Adicionado
 - Botão **Marcar como rotina** no detalhe do cartão (RN-49b). O cartão sai da taxa de eficiência e das contagens.
 - Tela **Equipe**: colunas **Itens de rotina** e **Tempo por item**.
