@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.16.0] — 2026-11-05 — Fase 10: assistente no Claude
+### Adicionado
+- Conector só de leitura para o Claude, com autorização por login completo e revogação em Integrações.
+- Migration `0028_assistente_leitura.sql`.
+
 ## [0.15.0] — 2026-11-05 — Fase 10: alertas
 ### Adicionado
 - Tela **Alertas**: contratos, prazos, riscos, equipe e integrações que pedem atenção, com regras fixas e sem IA (RN-83).

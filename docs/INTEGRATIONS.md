@@ -56,6 +56,7 @@ Para cada ferramenta o painel mostra:
   - Título com "reunião" → reuniões.
   - A situação "concluído", "feito" ou "resolvido" → `concluida`.
 - **Tarefas importadas não são editadas no sistema** (RN-47), exceto a conclusão.
+- **Assistente no Claude (ADR 0021):** conector MCP em `/api/mcp`, com cinco ferramentas só de leitura. Autorização pelo servidor OAuth do Supabase na tela `/oauth/consent`, e revogação em Integrações.
 - **Demanda no Notion:** `criarDemandaNotion` cria a página em Demandas Ativas como Pendente, e a cópia chega na sincronização seguinte. Cada gravação fica em `operacoes_externas`.
 - **Pausar leitura:** com `pausado_ate` no futuro, o sincronizador não lê o conector. A gravação feita pelas telas continua funcionando.
 - **Agenda pelo sistema (ADR 0014):** criar, alterar e excluir ficam em `packages/integrations/src/google.js`, chamados pela aplicação. Cada gravação fica em `operacoes_externas` (RN-67).

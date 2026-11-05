@@ -33,10 +33,10 @@ export async function criarBanco() {
  * Executa fn numa transação com o papel e o usuário informados (simula a API do Supabase).
  * `aal` é o nível de autenticação do token: 'aal2' = senha + segundo fator (padrão).
  */
-export async function como(db, papel, usuario, fn, { aal = 'aal2' } = {}) {
+export async function como(db, papel, usuario, fn, { aal = 'aal2', clientId } = {}) {
   return db.transaction(async (tx) => {
     await tx.query(`select set_config('request.jwt.claim.sub', $1, true)`, [usuario ?? '']);
-    const claims = usuario ? JSON.stringify({ sub: usuario, role: papel, aal }) : '';
+    const claims = usuario ? JSON.stringify({ sub: usuario, role: papel, aal, ...(clientId ? { client_id: clientId } : {}) }) : '';
     await tx.query(`select set_config('request.jwt.claims', $1, true)`, [claims]);
     await tx.exec(`set local role ${papel}`);
     return fn(tx);

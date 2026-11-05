@@ -95,6 +95,12 @@ Em **Vercel → projeto → Settings → Environment Variables**, para **Product
 2. Cadastre o valor em `GITHUB_SINCRONIZAR_TOKEN` na Vercel, como variável de produção.
 3. Publique de novo. Sem a variável, o botão continua abrindo o GitHub.
 
+### E6. Assistente no Claude
+1. No Supabase, abra **Authentication > OAuth Server** e ligue o servidor OAuth.
+2. Em **Authorization Path**, use `/oauth/consent`. Ligue o registro dinâmico de clientes.
+3. Confira se o **Site URL** é o endereço de produção.
+4. No Claude, adicione um conector personalizado com o endereço `https://centro-de-comando-chi.vercel.app/api/mcp`.
+
 ### F. Desenvolvimento local da aplicação
 ```bash
 npm install
