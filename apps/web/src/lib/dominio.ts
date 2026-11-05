@@ -42,6 +42,7 @@ export const TIPOS_TAREFA = [
 
 /** RN-45: visões de tarefas. */
 export const VISOES_TAREFA = [
+  { valor: "todas", rotulo: "Todas" },
   { valor: "minhas", rotulo: "Minhas atribuições" },
   { valor: "aguardando", rotulo: "Aguardando terceiros" },
   { valor: "cobrancas", rotulo: "Cobranças" },
@@ -123,3 +124,9 @@ export const TIPOS_LANCAMENTO = [
   { valor: "previsao_recebimento", rotulo: "Previsão de recebimento" },
   { valor: "retencao", rotulo: "Retenção" },
 ] as const;
+
+/** Quadros com cartões abertos. No Trello, a categoria guarda "quadro › lista". */
+export function quadrosDoTrello(lista: { fonte: string | null; categoria: string | null }[]): string[] {
+  const nomes = lista.filter((t) => t.fonte === "trello" && t.categoria).map((t) => (t.categoria as string).split(" › ")[0]);
+  return [...new Set(nomes)].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}

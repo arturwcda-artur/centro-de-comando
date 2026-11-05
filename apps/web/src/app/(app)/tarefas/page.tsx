@@ -6,7 +6,7 @@ import { Cartao, EstadoVazio } from "@/components/ui";
 import { VISOES_TAREFA, type VisaoTarefa } from "@/lib/dominio";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
-import { contarVisoes, tarefasDaVisao } from "@/lib/tarefas";
+import { carregarResponsaveis, contarVisoes, tarefasDaVisao } from "@/lib/tarefas";
 
 export const metadata: Metadata = { title: "Tarefas" };
 
@@ -18,19 +18,23 @@ const ORIGENS = [
 
 export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefas">) {
   const params = await searchParams;
-  const visao = (VISOES_TAREFA.find((v) => v.valor === params.visao)?.valor ?? "minhas") as VisaoTarefa;
+  const quadro = typeof params.quadro === "string" && params.quadro ? params.quadro : null;
+  const membro = typeof params.membro === "string" && UUID.test(params.membro) ? params.membro : null;
+  // Abre em Todas: o Centro de Comando acompanha a equipe inteira, não só as atribuições do proprietário
+  const visao = (VISOES_TAREFA.find((v) => v.valor === params.visao)?.valor ?? "todas") as VisaoTarefa;
   const obraId = typeof params.obra === "string" && UUID.test(params.obra) ? params.obra : null;
   const fonte = ORIGENS.some((o) => o.valor === params.origem) ? (params.origem as string) : null;
   const { supabase } = await exigirSessaoCompleta();
 
-  const [lista, contagem, obras] = await Promise.all([
-    tarefasDaVisao(supabase, visao, obraId, fonte),
+  const [lista, contagem, obras, responsaveis] = await Promise.all([
+    tarefasDaVisao(supabase, visao, obraId, fonte, quadro, membro),
     contarVisoes(supabase),
     supabase.from("obras").select("id, codigo, nome").is("arquivado_em", null).order("codigo"),
+    carregarResponsaveis(supabase),
   ]);
   const nomeObra = new Map((obras.data ?? []).map((o) => [o.id, o.codigo]));
   const itens = visao === "concluidas" ? lista.concluidas : lista.abertas;
-  const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}`;
+  const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}${quadro ? `&quadro=${encodeURIComponent(quadro)}` : ""}${membro ? `&membro=${membro}` : ""}`;
 
   return (
     <div className="space-y-5">
@@ -40,7 +44,7 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
           <p className="text-sm text-suave">Ordenadas pela prioridade: 3·urgência + 2·importância + 2·impacto. Os prazos nunca são alterados.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <form method="get" className="flex gap-2">
+          <form method="get" className="flex flex-wrap gap-2">
             <input type="hidden" name="visao" value={visao} />
             <select name="obra" defaultValue={obraId ?? ""} aria-label="Filtrar por obra" className="h-10 rounded-lg border border-borda bg-superficie px-2 text-sm">
               <option value="">Todas as obras</option>
@@ -55,6 +59,22 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
               {ORIGENS.map((o) => (
                 <option key={o.valor} value={o.valor}>
                   {o.rotulo}
+                </option>
+              ))}
+            </select>
+            <select name="quadro" defaultValue={quadro ?? ""} aria-label="Filtrar por quadro do Trello" className="h-10 max-w-48 rounded-lg border border-borda bg-superficie px-2 text-sm">
+              <option value="">Todos os quadros</option>
+              {contagem.quadros.map((q) => (
+                <option key={q} value={q}>
+                  {q}
+                </option>
+              ))}
+            </select>
+            <select name="membro" defaultValue={membro ?? ""} aria-label="Filtrar por responsável" className="h-10 max-w-48 rounded-lg border border-borda bg-superficie px-2 text-sm">
+              <option value="">Todos os responsáveis</option>
+              {responsaveis.membros.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nome}
                 </option>
               ))}
             </select>
@@ -89,7 +109,7 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
         ) : (
           <ul className="divide-y divide-borda">
             {itens.map((t) => (
-              <LinhaTarefa key={t.id} t={t} nomeObra={t.obra_id ? nomeObra.get(t.obra_id) : undefined} />
+              <LinhaTarefa key={t.id} t={t} nomeObra={t.obra_id ? nomeObra.get(t.obra_id) : undefined} responsaveis={t.id ? responsaveis.porTarefa.get(t.id) : undefined} />
             ))}
           </ul>
         )}

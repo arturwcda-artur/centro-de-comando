@@ -15,7 +15,7 @@ const PERIODOS = [
 
 const dias = (d: number | null) => (d === null ? "—" : `${d.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`);
 
-function Tabela({ titulo, coluna, linhas }: { titulo: string; coluna: string; linhas: LinhaEquipe[] }) {
+function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: string; linhas: LinhaEquipe[]; destino: (nome: string) => string | null }) {
   return (
     <Cartao titulo={titulo}>
       {linhas.length === 0 ? (
@@ -40,7 +40,15 @@ function Tabela({ titulo, coluna, linhas }: { titulo: string; coluna: string; li
               {linhas.map((l) => (
                 <tr key={l.nome}>
                   <td className="py-2 pr-2 tabular-nums text-suave">{l.posicao ?? "—"}</td>
-                  <td className="py-2 pr-3">{l.nome}</td>
+                  <td className="py-2 pr-3">
+                    {destino(l.nome) ? (
+                      <Link href={destino(l.nome) as string} className="hover:text-marca hover:underline">
+                        {l.nome}
+                      </Link>
+                    ) : (
+                      l.nome
+                    )}
+                  </td>
                   <td className="py-2 text-right tabular-nums">{l.atribuidas}</td>
                   <td className="py-2 text-right tabular-nums">{l.abertas}</td>
                   <td className="py-2 text-right tabular-nums">{l.concluidas}</td>
@@ -65,6 +73,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const { periodo: bruto } = await searchParams;
   const periodo = PERIODOS.find((p) => p.valor === bruto) ?? PERIODOS[0];
   const { supabase } = await exigirSessaoCompleta();
+  const { data: membros } = await supabase.from("trello_membros").select("id, nome");
+  const idMembro = new Map((membros ?? []).map((m) => [m.nome, m.id]));
   const { data } = await supabase
     .from("tarefas")
     .select("status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes)")
@@ -122,8 +132,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </div>
 
-      <Tabela titulo="Ranking por responsável" coluna="Responsável" linhas={porResponsavel} />
-      <Tabela titulo="Ranking por lista" coluna="Lista" linhas={porLista} />
+      <Tabela titulo="Ranking por responsável" coluna="Responsável" linhas={porResponsavel} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
+      <Tabela titulo="Ranking por lista" coluna="Lista" linhas={porLista} destino={() => null} />
 
       <p className="text-xs text-suave">
         Eficiência: cartões concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora a taxa. O ranking vai da maior para a menor eficiência e muda conforme o período escolhido. Tempo médio: da criação à conclusão, em todos os concluídos. Cartão com dois membros conta para os dois, e a conclusão conta para quem estava atribuído. Nos períodos, os cartões abertos sempre aparecem.

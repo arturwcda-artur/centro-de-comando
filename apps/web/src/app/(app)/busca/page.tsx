@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Building2, FileText, ListChecks } from "lucide-react";
 import { Cartao, EstadoVazio } from "@/components/ui";
 import { dataCivil } from "@/lib/formato";
@@ -40,7 +41,9 @@ export default async function PaginaBusca({ searchParams }: PageProps<"/busca">)
             {obras.data.map((o) => (
               <li key={o.id} className="flex items-center gap-2 text-sm">
                 <Building2 className="size-4 text-suave" aria-hidden="true" />
-                <span className="font-medium">{o.codigo}</span> {o.nome}
+                <Link href={`/obras/${o.id}`} className="hover:text-marca hover:underline">
+                  <span className="font-medium">{o.codigo}</span> {o.nome}
+                </Link>
                 <span className="text-xs text-suave">{o.cidade}</span>
               </li>
             ))}
@@ -53,7 +56,9 @@ export default async function PaginaBusca({ searchParams }: PageProps<"/busca">)
             {tarefas.data.map((x) => (
               <li key={x.id} className="flex items-center gap-2 text-sm">
                 <ListChecks className="size-4 text-suave" aria-hidden="true" />
-                <span className="flex-1">{x.titulo}</span>
+                <Link href={`/tarefas/${x.id}`} className="flex-1 hover:text-marca hover:underline">
+                  {x.titulo}
+                </Link>
                 <span className="text-xs text-suave">{dataCivil(x.prazo)}</span>
               </li>
             ))}
