@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.11.1] — 2026-11-05 — Eficiência da equipe
+### Alterado
+- A tela **Equipe** troca o percentual concluído pela **taxa de eficiência** e pelo **tempo médio de conclusão**, com a base do cálculo (RN-49a).
+- A eficiência usa a primeira data de entrega, e a coluna **Prazos alterados** mostra cada mudança.
+- Ranking por responsável e por lista, da maior para a menor eficiência.
+- A data de conclusão passa a vir do histórico do Trello. Migration `0022_trello_datas.sql`.
+
 ## [0.11.0] — 2026-11-05 — Equipe e detalhes do Trello
 ### Adicionado
 - Tela **Equipe**: cartões por lista e por responsável no quadro Obras do Grupo - C.SALLES, com filtro de período (ADR 0017).

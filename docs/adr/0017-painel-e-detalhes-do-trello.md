@@ -8,7 +8,11 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 1. **Escopo:** só esse quadro (`QUADRO_DETALHADO`). Os outros quadros continuam como estavam.
 2. **Responsáveis reais:** `trello_membros` e `tarefa_membros`, fora de `pessoas`. O campo `responsavel_id` não muda, então Meu dia e conclusão continuam iguais.
 3. **Arquivados:** entram se estavam concluídos, para não prejudicar quem arquiva o que termina. Os demais ficam de fora da contagem.
-4. **Contagem:** cartão com dois membros conta para os dois. A conclusão conta para quem estava atribuído, e a data é a da última atividade do cartão.
+4. **Contagem:** cartão com dois membros conta para os dois. A conclusão conta para quem estava atribuído.
+   - **Taxa de eficiência:** concluídos até a **primeira** data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto (decisão do proprietário). Adiar a data não melhora a taxa, e cada mudança aparece em **Prazos alterados**.
+   - **Ranking:** da maior para a menor eficiência. No empate, fica à frente quem tem mais cartões cobráveis. Quem não tem base fica no fim, sem posição.
+   - **Tempo médio:** da criação à conclusão, em todos os concluídos.
+   - **Datas reais:** a conclusão vem do histórico do Trello, em `trello_cartao_datas`, porque `concluida_em` guarda a última atividade. A criação vem do id do cartão.
 5. **Leitura:** por quadro, sem uma chamada por cartão.
 6. **Credenciais:** comentário ou item com credencial escrita não é copiado (RN-66).
 7. **Sem auditoria nestas tabelas:** o texto vem de terceiros. Se uma credencial passar pelo filtro, ela some na sincronização seguinte em vez de ficar na auditoria imutável.
@@ -19,4 +23,6 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 - O filtro reconhece padrões como `senha:`. Outro formato de credencial pode passar.
 - O cartão novo aparece no sistema na sincronização seguinte.
 - Este painel mede volume, não dificuldade: um cartão simples e um complexo pesam igual.
+- Um adiamento legítimo, pedido pelo cliente ou por outra equipe, também conta contra a taxa. O sistema não sabe o motivo da mudança.
+- O ranking é calculado na hora e varia conforme o período. O histórico da posição de cada pessoa não fica guardado.
 - Estender a outro quadro exige alterar `QUADRO_DETALHADO` e `QUADRO_EQUIPE`.
