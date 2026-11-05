@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
-import { QUADRO_EQUIPE, resumirEquipe, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, resumirEquipe, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
 import { hojeSP, pct, somarDias } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -15,64 +15,87 @@ const PERIODOS = [
 
 const dias = (d: number | null) => (d === null ? "—" : `${d.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`);
 
-function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: string; linhas: LinhaEquipe[]; destino: (nome: string) => string | null }) {
+const NUMERO = "py-2.5 text-right tabular-nums";
+const CABECALHO = "py-2 text-right font-medium";
+
+/** Ranking: só o que responde "quanto carrega, quanto resolveu e se entrega no prazo". */
+function Ranking({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEquipe[]; destino: (nome: string) => string | null }) {
+  if (linhas.length === 0) return <EstadoVazio>Nenhuma tarefa neste período.</EstadoVazio>;
   return (
-    <Cartao titulo={titulo}>
-      {linhas.length === 0 ? (
-        <EstadoVazio>Nenhuma tarefa neste período.</EstadoVazio>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-sm">
-            <thead className="text-left text-xs text-suave">
-              <tr>
-                <th className="py-2 pr-2 font-medium">#</th>
-                <th className="py-2 font-medium">{coluna}</th>
-                <th className="py-2 text-right font-medium">Sob responsabilidade</th>
-                <th className="py-2 text-right font-medium">Resolvidas</th>
-                <th className="py-2 text-right font-medium">Pendentes</th>
-                <th className="py-2 text-right font-medium">Resolução</th>
-                <th className="py-2 text-right font-medium">Eficiência no prazo</th>
-                <th className="py-2 text-right font-medium">Vencidas</th>
-                <th className="py-2 text-right font-medium">Tempo médio</th>
-                <th className="py-2 text-right font-medium">Tempo por item</th>
-                <th className="py-2 text-right font-medium">Prazos alterados</th>
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[560px] text-sm">
+        <thead className="text-left text-xs text-suave">
+          <tr>
+            <th className="w-8 py-2 font-medium">#</th>
+            <th className="py-2 font-medium">{coluna}</th>
+            <th className={CABECALHO}>Tarefas</th>
+            <th className={CABECALHO}>Resolvidas</th>
+            <th className={CABECALHO}>Pendentes</th>
+            <th className={CABECALHO}>Resolução</th>
+            <th className={CABECALHO}>No prazo</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-borda">
+          {linhas.map((l) => {
+            const semDono = l.nome === SEM_RESPONSAVEL;
+            const link = destino(l.nome);
+            return (
+              <tr key={l.nome} className={semDono ? "text-suave" : undefined}>
+                <td className="py-2.5 tabular-nums text-suave">{l.posicao ?? "—"}</td>
+                <td className="py-2.5 pr-3">
+                  {link ? (
+                    <Link href={link} className="hover:text-marca hover:underline">
+                      {l.nome}
+                    </Link>
+                  ) : (
+                    l.nome
+                  )}
+                </td>
+                <td className={NUMERO}>{l.sobResponsabilidade}</td>
+                <td className={NUMERO}>{l.resolvidas}</td>
+                <td className={NUMERO}>{l.pendentes}</td>
+                <td className={`${NUMERO} ${semDono ? "" : "font-semibold"}`}>{pct(l.resolucao)}</td>
+                <td className={NUMERO} title={l.cobraveis > 0 ? `${l.noPrazo} de ${l.cobraveis} cartões com prazo` : undefined}>
+                  {pct(l.eficiencia)}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-borda">
-              {linhas.map((l) => (
-                <tr key={l.nome}>
-                  <td className="py-2 pr-2 tabular-nums text-suave">{l.posicao ?? "—"}</td>
-                  <td className="py-2 pr-3">
-                    {destino(l.nome) ? (
-                      <Link href={destino(l.nome) as string} className="hover:text-marca hover:underline">
-                        {l.nome}
-                      </Link>
-                    ) : (
-                      l.nome
-                    )}
-                  </td>
-                  <td className="py-2 text-right tabular-nums">{l.sobResponsabilidade}</td>
-                  <td className="py-2 text-right tabular-nums">
-                    {l.resolvidas}
-                    {l.itensResolvidos > 0 && <span className="block text-xs text-suave">{`${l.itensResolvidos} itens`}</span>}
-                  </td>
-                  <td className="py-2 text-right tabular-nums">{l.pendentes}</td>
-                  <td className="py-2 text-right font-medium tabular-nums">{pct(l.resolucao)}</td>
-                  <td className="py-2 text-right tabular-nums">
-                    {pct(l.eficiencia)}
-                    {l.cobraveis > 0 && <span className="block text-xs text-suave">{`${l.noPrazo} de ${l.cobraveis}`}</span>}
-                  </td>
-                  <td className={`py-2 text-right tabular-nums ${l.vencidas > 0 ? "font-medium text-alerta" : ""}`}>{l.vencidas}</td>
-                  <td className="py-2 text-right tabular-nums">{dias(l.diasMedios)}</td>
-                  <td className="py-2 text-right tabular-nums">{dias(l.diasPorItem)}</td>
-                  <td className="py-2 text-right tabular-nums">{l.prazosAlterados}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </Cartao>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Prazos e tempos ficam à parte, para o ranking continuar simples. */
+function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[560px] text-sm">
+        <thead className="text-left text-xs text-suave">
+          <tr>
+            <th className="py-2 font-medium">Responsável</th>
+            <th className={CABECALHO}>Base do prazo</th>
+            <th className={CABECALHO}>Vencidas</th>
+            <th className={CABECALHO}>Tempo médio</th>
+            <th className={CABECALHO}>Tempo por item</th>
+            <th className={CABECALHO}>Prazos alterados</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-borda">
+          {linhas.map((l) => (
+            <tr key={l.nome}>
+              <td className="py-2 pr-3">{l.nome}</td>
+              <td className="py-2 text-right tabular-nums">{l.cobraveis > 0 ? `${l.noPrazo} de ${l.cobraveis}` : "—"}</td>
+              <td className={`py-2 text-right tabular-nums ${l.vencidas > 0 ? "font-medium text-alerta" : ""}`}>{l.vencidas}</td>
+              <td className="py-2 text-right tabular-nums">{dias(l.diasMedios)}</td>
+              <td className="py-2 text-right tabular-nums">{dias(l.diasPorItem)}</td>
+              <td className="py-2 text-right tabular-nums">{l.prazosAlterados}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -113,13 +136,11 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined);
 
   const indicadores = [
-    ["Sob responsabilidade", total?.sobResponsabilidade ?? 0],
+    ["Tarefas", total?.sobResponsabilidade ?? 0],
     ["Resolvidas", total?.resolvidas ?? 0],
     ["Pendentes", total?.pendentes ?? 0],
     ["Resolução", pct(total?.resolucao)],
-    ["Eficiência no prazo", pct(total?.eficiencia)],
-    ["Vencidos", total?.vencidas ?? 0],
-    ["Tempo médio", dias(total?.diasMedios ?? null)],
+    ["No prazo", pct(total?.eficiencia)],
   ] as const;
 
   return (
@@ -142,7 +163,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </nav>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {indicadores.map(([rotulo, valor]) => (
           <Cartao key={rotulo}>
             <p className="text-xs text-suave">{rotulo}</p>
@@ -151,12 +172,41 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </div>
 
-      <Tabela titulo="Ranking por responsável" coluna="Responsável" linhas={porResponsavel} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
-      <Tabela titulo="Ranking por lista" coluna="Lista" linhas={porLista} destino={() => null} />
+      <Cartao titulo="Ranking da equipe">
+        <Ranking coluna="Responsável" linhas={porResponsavel} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
+      </Cartao>
 
-      <p className="text-xs text-suave">
-        Sob responsabilidade: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens. O item resolvido conta para quem o marcou no Trello. Resolução: resolvidas divididas pelo que está sob responsabilidade, e define o ranking. Eficiência no prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa. Tempo médio: da criação à conclusão do cartão. Tarefa com dois membros conta para os dois. Nos períodos, o que está pendente sempre aparece.
-      </p>
+      <Cartao>
+        <details>
+          <summary className="cursor-pointer text-sm font-medium">Por lista</summary>
+          <div className="mt-3">
+            <Ranking coluna="Lista" linhas={porLista} destino={() => null} />
+          </div>
+        </details>
+      </Cartao>
+
+      <Cartao>
+        <details>
+          <summary className="cursor-pointer text-sm font-medium">Prazos e tempos</summary>
+          <div className="mt-3">
+            <Detalhes linhas={porResponsavel} />
+          </div>
+        </details>
+      </Cartao>
+
+      <Cartao>
+        <details>
+          <summary className="cursor-pointer text-sm font-medium">Como os números são calculados</summary>
+          <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-suave">
+            <li>Tarefas: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens.</li>
+            <li>Resolução: resolvidas divididas pelas tarefas. É ela que define o ranking.</li>
+            <li>No prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa.</li>
+            <li>O crédito é do responsável pelo cartão. Tarefa com dois responsáveis conta para os dois.</li>
+            <li>Sem responsável aparece no fim da lista e fica fora dos totais e das listas.</li>
+            <li>Nos períodos, o que está pendente sempre aparece.</li>
+          </ul>
+        </details>
+      </Cartao>
     </div>
   );
 }

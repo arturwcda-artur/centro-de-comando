@@ -44,9 +44,41 @@ describe("contagem de tarefas", () => {
   });
 });
 
-describe("crédito do item", () => {
+describe("crédito do item, por enquanto", () => {
+  it("vai para o responsável pelo cartão, mesmo que outra pessoa tenha marcado", () => {
+    const r = resumirEquipe([cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Bia", responsaveis: ["Caio"] })] })], hoje).porResponsavel;
+    expect(r.map((l) => [l.nome, l.resolvidas])).toEqual([["Ana", 1]]);
+  });
+
+  it("com dois responsáveis no cartão, conta para os dois", () => {
+    const r = resumirEquipe([cartao({ membros: ["Ana", "Bia"], itens: [item()] })], hoje).porResponsavel;
+    expect(r.map((l) => l.nome)).toEqual(["Ana", "Bia"]);
+  });
+});
+
+describe("sem responsável", () => {
+  const semDono = (extra = {}) => cartao({ membros: [], ...extra });
+
+  it("não entra no total nem nas listas", () => {
+    const r = resumirEquipe([concluido(), semDono(), semDono({ itens: [pendente(), pendente()] })], hoje);
+    expect(r.total).toMatchObject({ sobResponsabilidade: 1, resolvidas: 1, resolucao: 100 });
+    expect(r.porLista[0].sobResponsabilidade).toBe(1);
+  });
+
+  it("não entra na eficiência no prazo geral", () => {
+    const r = resumirEquipe([concluido({ prazo: "2026-10-20" }), semDono({ prazo: "2026-01-01" })], hoje).total;
+    expect(r).toMatchObject({ cobraveis: 1, eficiencia: 100, vencidas: 0 });
+  });
+
+  it("fica no fim do ranking, mesmo com taxa maior, e sem posição", () => {
+    const r = resumirEquipe([cartao(), concluido({ membros: [] })], hoje).porResponsavel;
+    expect(r.map((l) => [l.nome, l.posicao])).toEqual([["Ana", 1], [SEM_RESPONSAVEL, null]]);
+  });
+});
+
+describe("crédito por quem marcou, para quando for ligado", () => {
   // O membro do cartão pode aparecer zerado: ele continua respondendo pelo prazo do cartão
-  const porPessoa = (c: CartaoEquipe) => Object.fromEntries(resumirEquipe([c], hoje).porResponsavel.filter((l) => l.sobResponsabilidade > 0).map((l) => [l.nome, [l.resolvidas, l.pendentes]]));
+  const porPessoa = (c: CartaoEquipe) => Object.fromEntries(resumirEquipe([c], hoje, undefined, true).porResponsavel.filter((l) => l.sobResponsabilidade > 0).map((l) => [l.nome, [l.resolvidas, l.pendentes]]));
 
   it("vai para quem marcou, não para o membro do cartão", () => {
     expect(porPessoa(cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Bia" })] }))).toEqual({ Bia: [1, 0] });
