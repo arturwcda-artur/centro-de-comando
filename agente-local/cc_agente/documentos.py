@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from cc_agente.backup import caminho_config, ler_config
-from cc_agente.cronogramas import conectar, validar_config
+from cc_agente.cronogramas import conectar, registrar_execucao, validar_config
 
 LIMITE_TEXTO = 50_000
 LOTE = 50
@@ -244,13 +244,16 @@ def main() -> int:
     try:
         config = ler_config(arquivo_config)
         validar_config(config)
-        erros = 0
+        erros = lidos = iguais = 0
         with conectar(config) as conexao:
             banco = Banco(conexao)
             for pasta in banco.pastas():
                 r = processar_pasta(pasta, banco)
                 erros += r["erros"]
+                lidos += r["lidos"]
+                iguais += r["iguais"]
                 log.info("Documentos. Lidos: %s. Sem mudança: %s. Arquivados: %s. Com erro: %s.", r["lidos"], r["iguais"], r["arquivados"], r["erros"])
+            registrar_execucao(conexao, "pastas", lidos, iguais, erros, f"{lidos} documentos lidos, {iguais} sem mudança")
     except Exception as e:  # noqa: BLE001 - a mensagem final precisa aparecer para o usuário
         log.error("Falha: %s", e)
         return 1

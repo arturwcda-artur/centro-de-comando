@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AlertTriangle, CalendarClock, CheckCircle2 } from "lucide-react";
 import { Aviso, Cartao, EstadoVazio, Etiqueta } from "@/components/ui";
 import { brl, dataCivil, dataExtensa, hora, pct } from "@/lib/formato";
+import { alertasConectores } from "@/lib/integracoes";
 import { carregarPainel, lerFiltros, PERIODOS } from "@/lib/painel";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -30,12 +31,21 @@ function Indicador({ rotulo, valor, detalhe, tom }: { rotulo: string; valor: str
 export default async function Painel({ searchParams }: PageProps<"/">) {
   const { supabase } = await exigirSessaoCompleta();
   const filtros = lerFiltros(await searchParams);
-  const p = await carregarPainel(supabase, filtros);
+  const [p, conectores] = await Promise.all([carregarPainel(supabase, filtros), supabase.from("conectores").select("nome_exibicao, ativo, estado_conexao, ultima_sync_em, intervalo_minutos, pausado_ate")]);
+  const alertas = alertasConectores(conectores.data ?? [], new Date());
   const i = p.indicadores;
   const semObras = i.total === 0;
 
   return (
     <div className="space-y-6">
+      {alertas.length > 0 && (
+        <Aviso>
+          <Link href="/integracoes" className="font-medium underline">
+            Integrações pedem atenção
+          </Link>
+          : {alertas.join(" ")}
+        </Aviso>
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm text-suave">{dataExtensa()}</p>

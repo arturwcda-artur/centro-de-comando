@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { concluirCartaoTrello, concluirPaginaNotion } from '../src/escrita.js';
+import { concluirCartaoTrello, concluirPaginaNotion, criarDemandaNotion } from '../src/escrita.js';
 
 // Respostas de TESTE no formato das APIs. Nenhuma chamada real é feita.
 function apiFalsa(rotas) {
@@ -72,5 +72,22 @@ describe('concluir no Notion', () => {
   it('base sem propriedade de situação é recusada', async () => {
     apiFalsa({ 'GET /v1/pages/p2': { parent: { data_source_id: 'ds1' }, properties: { Nome: { type: 'title', title: [] } } } });
     await expect(concluirPaginaNotion('t', 'p2')).rejects.toThrow(/propriedade de situação/);
+  });
+});
+
+describe('criar demanda no Notion', () => {
+  it('cria na base certa, como Pendente, sem enviar campo vazio', async () => {
+    let enviado;
+    vi.stubGlobal('fetch', async (url, opcoes) => {
+      enviado = { url: String(url), corpo: JSON.parse(opcoes.body) };
+      return new Response(JSON.stringify({ id: 'p1', url: 'https://notion/p1' }), { status: 200 });
+    });
+    const r = await criarDemandaNotion('t', { titulo: 'Revisar', prazo: null, prioridade: '🟠 Alta', categoria: 'Obras', responsavel: null, observacoes: null });
+    vi.unstubAllGlobals();
+    expect(r).toEqual({ id: 'p1', url: 'https://notion/p1' });
+    expect(enviado.url).toMatch(/\/pages$/);
+    expect(enviado.corpo.parent.data_source_id).toBe('eaa80b95-7806-4a12-810b-f18195743cc0');
+    expect(enviado.corpo.properties.Status.select.name).toBe('🟡 Pendente');
+    expect(enviado.corpo.properties).not.toHaveProperty('Prazo');
   });
 });

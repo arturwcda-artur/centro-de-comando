@@ -80,6 +80,9 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
             </select>
             <button className="h-10 rounded-lg border border-borda bg-superficie px-3 text-sm hover:bg-superficie-2">Filtrar</button>
           </form>
+          <Link href="/tarefas/nova-demanda" className="inline-flex h-10 items-center rounded-lg border border-borda bg-superficie px-3 text-sm font-medium hover:bg-superficie-2">
+            Demanda no Notion
+          </Link>
           <Link href="/tarefas/nova" className="inline-flex h-10 items-center gap-2 rounded-lg bg-marca px-3 text-sm font-medium text-white hover:opacity-90">
             <Plus className="size-4" aria-hidden="true" /> Nova tarefa
           </Link>

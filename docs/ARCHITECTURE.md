@@ -71,6 +71,7 @@ Ver [docs/adr](adr). Índice:
 | [0017](adr/0017-painel-e-detalhes-do-trello.md) | Painel da equipe, detalhes do cartão e criação de cartão a partir de comentário |
 | [0018](adr/0018-indice-de-documentos.md) | Índice local de documentos e abertura pelo Google Drive |
 | [0019](adr/0019-relatorios.md) | Relatórios: PDF pela impressão do navegador e Excel gerado no servidor |
+| [0020](adr/0020-integracoes-completas.md) | Integrações completas: leituras do agente, pausa, alerta e demanda no Notion |
 
 ## Aplicação web (`apps/web`, Fase 3)
 | Peça | Arquivo | Papel |

@@ -58,6 +58,26 @@ export async function criarCartaoDeComentario(credenciais, { idCartaoOrigem, idL
   return { id: novo.id, url: novo.shortUrl };
 }
 
+const BASE_DEMANDAS = 'eaa80b95-7806-4a12-810b-f18195743cc0';
+
+/** Cria uma demanda na base Demandas Ativas. A página nasce como Pendente. */
+export async function criarDemandaNotion(token, { titulo, prazo, prioridade, categoria, responsavel, observacoes }) {
+  const texto = (t) => ({ rich_text: [{ text: { content: t.slice(0, 2000) } }] });
+  const properties = {
+    Demanda: { title: [{ text: { content: titulo } }] },
+    Status: { select: { name: '🟡 Pendente' } },
+    Prioridade: { select: { name: prioridade } },
+    Categoria: { select: { name: categoria } },
+    ...(prazo ? { Prazo: { date: { start: prazo } } } : {}),
+    ...(responsavel ? { Responsável: texto(responsavel) } : {}),
+    ...(observacoes ? { Observações: texto(observacoes) } : {}),
+  };
+  const headers = { Authorization: `Bearer ${token}`, 'Notion-Version': VERSAO_NOTION, 'Content-Type': 'application/json' };
+  const r = await buscar(`${NOTION}/pages`, { method: 'POST', headers, body: JSON.stringify({ parent: { type: 'data_source_id', data_source_id: BASE_DEMANDAS }, properties }) }, 'Notion');
+  const pagina = await r.json();
+  return { id: pagina.id, url: pagina.url };
+}
+
 /** Notion: muda a propriedade de situação da página para a opção de concluído da própria base. */
 export async function concluirPaginaNotion(token, idPagina) {
   const headers = { Authorization: `Bearer ${token}`, 'Notion-Version': VERSAO_NOTION, 'Content-Type': 'application/json' };

@@ -39,7 +39,7 @@ export const MODULOS: Modulo[] = [
 ];
 
 /** Última fase entregue: módulos de fases posteriores aparecem marcados como "em breve". */
-export const FASE_ATUAL = 8;
+export const FASE_ATUAL = 9;
 
 export function moduloPorSlug(slug: string): Modulo | undefined {
   return MODULOS.find((m) => m.slug === slug);

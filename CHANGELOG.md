@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.14.0] — 2026-11-05 — Fase 9: integrações completas
+### Adicionado
+- Tela **Integrações**: botões **Sincronizar agora** e **Pausar leitura**, histórico de gravações e estado de MS Project, Excel e Pastas das obras.
+- Alerta no **Painel** quando um conector falha ou fica sem ler.
+- **Demanda no Notion**: cria a demanda na base Demandas Ativas pelo sistema.
+- Migration `0027_leituras_do_agente.sql`.
+
 ## [0.13.0] — 2026-11-05 — Fase 8: relatórios
 ### Adicionado
 - Tela **Relatórios**: KPI da equipe e Situação da obra em PDF, Medições e contrato em Excel (ADR 0019). Todos para uso interno e gerados na hora.

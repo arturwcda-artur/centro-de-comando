@@ -38,7 +38,6 @@ Para cada ferramenta o painel mostra:
 | MS Project | agente local, COM via pywin32, somente leitura ✅ (ADR 0015) | 6 | cronograma, linha de base |
 | Excel | agente local, openpyxl, somente leitura, um modelo por tipo de planilha ✅ (ADR 0016) | 7 | itens e quantidades das medições |
 | Google Drive | API Drive v3, `drive.metadata.readonly`, só dados dos arquivos ✅ (ADR 0018) | 8 | link dos arquivos (por referência) |
-| GitHub | API REST | 9 | código do próprio sistema |
 | Gmail, Todoist | a decidir | 9+ | — |
 
 ## Sincronizador (Fase 5)
@@ -57,6 +56,8 @@ Para cada ferramenta o painel mostra:
   - Título com "reunião" → reuniões.
   - A situação "concluído", "feito" ou "resolvido" → `concluida`.
 - **Tarefas importadas não são editadas no sistema** (RN-47), exceto a conclusão.
+- **Demanda no Notion:** `criarDemandaNotion` cria a página em Demandas Ativas como Pendente, e a cópia chega na sincronização seguinte. Cada gravação fica em `operacoes_externas`.
+- **Pausar leitura:** com `pausado_ate` no futuro, o sincronizador não lê o conector. A gravação feita pelas telas continua funcionando.
 - **Agenda pelo sistema (ADR 0014):** criar, alterar e excluir ficam em `packages/integrations/src/google.js`, chamados pela aplicação. Cada gravação fica em `operacoes_externas` (RN-67).
 - **Quadro detalhado (ADR 0017):** só em Obras do Grupo - C.SALLES, o sincronizador lê também membros, checklists, comentários e cartões arquivados que estavam concluídos.
 - **Concluir na origem (ADR 0013):** `packages/integrations/src/escrita.js`, chamado pela aplicação. Cada gravação fica em `operacoes_externas`. Cartões de terceiros são só leitura (RN-48).

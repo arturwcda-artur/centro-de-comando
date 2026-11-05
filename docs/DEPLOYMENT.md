@@ -90,6 +90,11 @@ Em **Vercel → projeto → Settings → Environment Variables**, para **Product
 4. Rode `agente-local\atualizar-cronogramas.cmd`.
 5. Crie a tarefa semanal no Agendador do Windows, com o argumento `/agendado`.
 
+### E5. Botão Sincronizar agora
+1. No GitHub, crie um **fine-grained token** só para este repositório, com a permissão **Actions: Read and write**.
+2. Cadastre o valor em `GITHUB_SINCRONIZAR_TOKEN` na Vercel, como variável de produção.
+3. Publique de novo. Sem a variável, o botão continua abrindo o GitHub.
+
 ### F. Desenvolvimento local da aplicação
 ```bash
 npm install

@@ -17,8 +17,9 @@
 | Tokens OAuth de terceiros | Supabase Vault; `conectores.credencial_ref` guarda só o nome do segredo. A leitura exige proprietário com segundo fator ou a chave de serviço (ADR 0014) |
 | Conexão com o Google | Só com sessão completa. Um valor aleatório em cookie protegido, conferido no retorno, impede que outro site conclua a conexão |
 | Agente local | chave em arquivo fora do repositório, protegido por permissão de usuário do Windows |
-| Agente de cronogramas, medições e documentos | Papel `agente_cronograma`, que só executa onze funções e não lê nenhuma tabela. A senha fica em `agente.env`, fora do repositório |
+| Agente de cronogramas, medições e documentos | Papel `agente_cronograma`, que só executa doze funções e não lê nenhuma tabela. A senha fica em `agente.env`, fora do repositório |
 | Comentários e checklists do Trello | Texto com credencial não é copiado. As tabelas ficam fora da auditoria, para um texto sensível não ficar guardado se passar pelo filtro (ADR 0017) |
+| Sincronizar agora | `GITHUB_SINCRONIZAR_TOKEN`, variável só de servidor na Vercel, com permissão apenas de disparar a rotina neste repositório |
 | Sincronizador (GitHub Actions) | `SUPABASE_SERVICE_ROLE_KEY` e os tokens/iCal só como *Actions secrets*. O workflow tem `permissions: contents: read`, e o código nunca imprime segredos nem URLs |
 
 ## Relatórios

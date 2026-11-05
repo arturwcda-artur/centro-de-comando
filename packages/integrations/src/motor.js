@@ -54,6 +54,11 @@ export async function aplicar(supabase, { tabela, fonte, registros, agora = new 
 
 /** Executa um conector registrando início, fim, contagens e erros (sem nunca registrar segredos). */
 export async function executarConector(supabase, { ferramenta, nome, gatilho = 'agendado', intervaloMin = 60 }, fn) {
+  // Pausa é decisão do proprietário: não lê nem registra execução
+  const { data: atual } = await supabase.from('conectores').select('pausado_ate').eq('ferramenta', ferramenta).maybeSingle();
+  if (atual?.pausado_ate && Date.parse(atual.pausado_ate) > Date.now()) {
+    return { ok: true, lidos: 0, criados: 0, atualizados: 0, ignorados: 0, mensagem: `${nome}: pausado` };
+  }
   const { data: conector, error: e1 } = await supabase
     .from('conectores')
     // Sem "modo": a autorização de escrita é do proprietário e a sincronização nunca a altera

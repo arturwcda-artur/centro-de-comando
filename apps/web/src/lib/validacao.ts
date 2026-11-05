@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SITUACOES_ADITIVO, SITUACOES_MEDICAO, STATUS_DECISAO, STATUS_RISCO, TIPOS_ADITIVO, TIPOS_LANCAMENTO, STATUS_TAREFA, SITUACOES_OBRA, TIPOS_TAREFA, UFS } from "@/lib/dominio";
+import { CATEGORIAS_NOTION, PRIORIDADES_NOTION, SITUACOES_ADITIVO, SITUACOES_MEDICAO, STATUS_DECISAO, STATUS_RISCO, TIPOS_ADITIVO, TIPOS_LANCAMENTO, STATUS_TAREFA, SITUACOES_OBRA, TIPOS_TAREFA, UFS } from "@/lib/dominio";
 
 /** Valida os formulários no servidor (nunca confiar no navegador). Campos vazios viram null. */
 
@@ -250,6 +250,15 @@ export const lancamentoSchema = z
 export const cartaoDeComentarioSchema = z.object({
   titulo: texto("Título", 300),
   lista: texto("Lista", 40),
+});
+
+export const demandaNotionSchema = z.object({
+  titulo: texto("Demanda", 300),
+  prioridade: z.enum(valores(PRIORIDADES_NOTION), "Prioridade inválida."),
+  categoria: z.enum(valores(CATEGORIAS_NOTION), "Categoria inválida."),
+  prazo: dataOpcional,
+  responsavel: textoOpcional(200),
+  observacoes: textoOpcional(2000),
 });
 
 export const aprovacaoSchema = z.object({
