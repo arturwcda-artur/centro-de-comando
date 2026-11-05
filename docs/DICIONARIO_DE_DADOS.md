@@ -226,6 +226,31 @@ Arquivos do MS Project acompanhados pelo agente local.
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `documento_links`
+
+Link de cada documento no Google Drive, ligado pelo caminho na sincronização.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| documento_id | uuid | sim | documentos |  |
+| drive_file_id | text | sim |  |  |
+| url | text | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
+## Tabela `documento_pastas`
+
+Pasta de cada obra acompanhada pelo agente local.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| obra_id | uuid | sim | obras |  |
+| caminho | text | sim |  |  |
+| ultima_leitura_em | timestamp with time zone |  |  |  |
+| ultimo_erro | text |  |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `documento_versoes`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -265,6 +290,9 @@ Arquivos do MS Project acompanhados pelo agente local.
 | arquivado_em | timestamp with time zone |  |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| pasta | text |  |  |  |
+| obsoleto | boolean | sim |  |  |
+| sem_texto | boolean | sim |  | PDF digitalizado: entra na busca só pelo nome. |
 
 ## Tabela `empresas`
 

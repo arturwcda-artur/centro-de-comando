@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ExternalLink } from "lucide-react";
 import { Aviso, Cartao, EstadoVazio, Etiqueta } from "@/components/ui";
+import { espacoUsado } from "@/lib/documentos";
 import { dataHora } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -14,7 +15,7 @@ const PREVISTAS = [
   { ferramenta: "notion", nome: "Notion", oque: "Central de Gestão: demandas → tarefas, reuniões → reuniões" },
   { ferramenta: "msproject", nome: "MS Project", oque: "cronogramas → planejamento (Fase 6)" },
   { ferramenta: "excel", nome: "Excel", oque: "planilhas de medição → contratos (Fase 7)" },
-  { ferramenta: "google_drive", nome: "Google Drive", oque: "índice de documentos (Fase 8)" },
+  { ferramenta: "google_drive", nome: "Google Drive", oque: "link dos documentos, só dados dos arquivos" },
 ];
 
 const RETORNO_GOOGLE: Record<string, { tipo: "info" | "alerta"; texto: string }> = {
@@ -36,10 +37,12 @@ export default async function PaginaIntegracoes({ searchParams }: PageProps<"/in
   const { google } = await searchParams;
   const retorno = typeof google === "string" ? RETORNO_GOOGLE[google] : undefined;
   const { supabase } = await exigirSessaoCompleta();
-  const [conectores, execucoes] = await Promise.all([
+  const [conectores, execucoes, tamanho] = await Promise.all([
     supabase.from("conectores").select("*"),
     supabase.from("sync_execucoes").select("*, conectores(nome_exibicao)").order("iniciado_em", { ascending: false }).limit(15),
+    supabase.rpc("tamanho_do_banco"),
   ]);
+  const espaco = espacoUsado(tamanho.data ?? null);
   const porFerramenta = new Map((conectores.data ?? []).map((c) => [c.ferramenta, c]));
 
   return (
@@ -54,6 +57,7 @@ export default async function PaginaIntegracoes({ searchParams }: PageProps<"/in
         </a>
       </div>
       {retorno && <Aviso tipo={retorno.tipo}>{retorno.texto}</Aviso>}
+      {espaco && <p className="text-sm text-suave">Espaço usado no banco gratuito: {espaco}</p>}
       <Aviso tipo="info">
         “Sincronizar agora” abre o GitHub: clique em <strong>Run workflow</strong>. Em cerca de 1 minuto os dados aparecem aqui.
       </Aviso>

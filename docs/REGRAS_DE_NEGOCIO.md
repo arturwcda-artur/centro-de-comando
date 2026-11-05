@@ -91,6 +91,7 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 ## 7. Documentos
 - **RN-70** O arquivo original não é copiado nem alterado. O sistema guarda índice, referência (Drive/caminho) e texto extraído.
 - **RN-71** A categoria vem da pasta de origem (01–15/99 da estrutura-padrão das obras).
+- **RN-72** Nomes ligados a credenciais não entram no índice. Texto com credencial não é copiado, e o arquivo entra só pelo nome. Arquivo que some da pasta sai da busca, sem apagar o registro.
 
 ## 8. IA (Fase 10)
 - **RN-80** A IA responde só com base nas views de leitura, indicando fonte e data de atualização.

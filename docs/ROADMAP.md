@@ -10,10 +10,10 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 3 — Dashboard e navegação | login + MFA, layout, menu lateral, busca global, painel, PWA | ✅ aprovada em 03/11/2026 · https://centro-de-comando-chi.vercel.app |
 | 4 — Obras | cadastros, importação assistida, ambiente da obra, riscos e decisões | ✅ entregue em 03/11/2026. Importação revisada pelo proprietário: 23 propostas, 8 obras aprovadas (7 em andamento, 1 aguardando), 15 descartadas. Aprovada em 03/11/2026 |
 | 5 — Tarefas e agenda | "Meu dia", 6 visões, conectores de leitura Trello, Agenda e Notion — **primeiro uso real** | ✅ aprovada em 04/11/2026 |
-| 5+ — Equipe e detalhes do Trello | painel por lista e responsável, comentários, checklists e cartão a partir de comentário (ADR 0017) | 🔶 em implantação |
+| 5+ — Equipe e detalhes do Trello | painel por lista e responsável, comentários, checklists e cartão a partir de comentário (ADR 0017) | ✅ concluída em 05/11/2026, só no quadro Obras do Grupo - C.SALLES |
 | 6 — Planejamento | agente local MS Project, versões, Curva S (piloto: PRF-Recanto) | ✅ aprovada em 04/11/2026 |
 | 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | ✅ aprovada em 04/11/2026 |
-| 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | |
+| 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | 🔶 parte 1 (Documentos) em desenvolvimento |
 | 9 — Integrações completas | painel de conectores, conflitos, escrita opt-in | |
 | 10 — IA e automações | assistente com fonte e data, alertas, teto de custo | |
 | 11 — Testes e implantação | E2E, desempenho, domínio, teste de restauração | |
