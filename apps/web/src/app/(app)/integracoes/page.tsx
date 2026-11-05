@@ -6,6 +6,7 @@ import { dataHora } from "@/lib/formato";
 import { estaPausado } from "@/lib/integracoes";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
+import { revogarAssistente } from "../../(auth)/oauth/consent/acoes";
 import { alternarPausa } from "./acoes";
 import { BotaoSincronizar } from "./botao-sincronizar";
 
@@ -45,11 +46,12 @@ export default async function PaginaIntegracoes({ searchParams }: PageProps<"/in
   const { google } = await searchParams;
   const retorno = typeof google === "string" ? RETORNO_GOOGLE[google] : undefined;
   const { supabase } = await exigirSessaoCompleta();
-  const [conectores, execucoes, tamanho, gravacoes] = await Promise.all([
+  const [conectores, execucoes, tamanho, gravacoes, autorizacoes] = await Promise.all([
     supabase.from("conectores").select("*"),
     supabase.from("sync_execucoes").select("*, conectores(nome_exibicao)").order("iniciado_em", { ascending: false }).limit(15),
     supabase.rpc("tamanho_do_banco"),
     supabase.from("operacoes_externas").select("id, ferramenta, operacao, status, erro, criado_em").order("criado_em", { ascending: false }).limit(15),
+    supabase.auth.oauth.listGrants(),
   ]);
   const agora = new Date();
   const sincronizacaoDireta = !!process.env.GITHUB_SINCRONIZAR_TOKEN;
@@ -121,6 +123,25 @@ export default async function PaginaIntegracoes({ searchParams }: PageProps<"/in
           );
         })}
       </div>
+
+      <Cartao titulo="Assistente no Claude">
+        {(autorizacoes.data ?? []).length === 0 ? (
+          <EstadoVazio>Nenhum acesso autorizado.</EstadoVazio>
+        ) : (
+          <ul className="divide-y divide-borda text-sm">
+            {(autorizacoes.data ?? []).map((a) => (
+              <li key={a.client.id} className="flex items-center justify-between gap-3 py-2">
+                <span>
+                  {a.client.name} <span className="text-xs text-suave">autorizado em {dataHora(a.granted_at)}</span>
+                </span>
+                <form action={revogarAssistente.bind(null, a.client.id)}>
+                  <button className="inline-flex h-9 items-center rounded-lg border border-borda px-3 text-xs font-medium hover:bg-superficie-2">Revogar</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Cartao>
 
       <Cartao titulo="Gravações nas ferramentas">
         {(gravacoes.data ?? []).length === 0 ? (

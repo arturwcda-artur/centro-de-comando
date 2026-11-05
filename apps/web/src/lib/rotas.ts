@@ -19,6 +19,15 @@ export const ROTA_SAIR = "/sair";
 /** Única página pública: o Google exige a política de privacidade sem login. Não mostra dados. */
 export const ROTA_PRIVACIDADE = "/privacidade";
 
+export const ROTA_CONSENTIMENTO = "/oauth/consent";
+/** Guarda o pedido do Claude enquanto o proprietário faz login. */
+export const COOKIE_RETORNO = "cc_retorno";
+
+/** Só aceita voltar para a tela de autorização: evita redirecionamento para fora. */
+export function retornoDoConsentimento(valor: string | undefined): string | null {
+  return valor && /^\/oauth\/consent\?authorization_id=[\w-]+$/.test(valor) ? valor : null;
+}
+
 function rotaDoSegundoFator(s: EstadoSessao) {
   return s.aalProximo === "aal2" ? ROTA_MFA_VERIFICAR : ROTA_MFA_CADASTRAR;
 }
