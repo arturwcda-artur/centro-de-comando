@@ -26,8 +26,6 @@ export type CartaoEquipe = {
   prazo_alteracoes: number;
   categoria: string | null;
   membros: string[];
-  /** Quem concluiu o cartão no Trello. */
-  resolvido_por?: string | null;
   /** Cartão de rotina: fica fora da eficiência no prazo (RN-49b). */
   rotina?: boolean;
   itens?: ItemCartao[];
@@ -116,19 +114,15 @@ function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
 }
 
 /**
- * Decisão do proprietário em 05/11/2026: quem marca no Trello recebe o crédito, e a equipe combina
- * que cada um marca o que resolveu. Com false, o crédito volta aos responsáveis pelo cartão.
+ * Decisão do proprietário em 05/11/2026: o item resolvido é de quem marcou no Trello, e a equipe
+ * combina que cada um marca o que resolveu. O cartão é sempre dos responsáveis, porque encerrar um
+ * cartão costuma ser ato de gestão. Com false, os itens também voltam aos responsáveis.
  */
 export const CREDITO_POR_QUEM_MARCOU = true;
-
-function donosDoCartao(c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
-  return porQuemMarcou && resolvido && c.resolvido_por ? [c.resolvido_por] : c.membros;
-}
 
 function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
   if (!porQuemMarcou) return c.membros;
   if (resolvido && i.resolvido_por) return [i.resolvido_por];
-  if (resolvido && c.resolvido_por) return [c.resolvido_por]; // cartão concluído com item não marcado
   return i.responsaveis.length ? i.responsaveis : c.membros;
 }
 
@@ -167,7 +161,7 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
 
     if (!c.itens?.length) {
       if (cartaoConcluido && foraDoPeriodo(c.concluido_em)) continue;
-      contar(donosDoCartao(c, cartaoConcluido, porQuemMarcou), cartaoConcluido);
+      contar(c.membros, cartaoConcluido);
       continue;
     }
     for (const i of c.itens) {

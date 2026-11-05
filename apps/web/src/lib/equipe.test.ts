@@ -62,27 +62,20 @@ describe("crédito pelos responsáveis, se a regra for desligada", () => {
   });
 });
 
-describe("crédito do cartão sem checklist", () => {
-  it("vai inteiro para quem concluiu", () => {
-    const r = resumirEquipe([concluido({ membros: ["Ana", "Bia"], resolvido_por: "Bia" })], hoje).porResponsavel;
-    expect(r.find((l) => l.nome === "Bia")?.resolvidas).toBe(1);
-    expect(r.find((l) => l.nome === "Ana")?.resolvidas).toBe(0);
-  });
-
-  it("sem registro de quem concluiu, é dividido entre os membros", () => {
+describe("crédito do cartão", () => {
+  it("cartão sem checklist é dos responsáveis, dividido entre eles", () => {
     const r = resumirEquipe([concluido({ membros: ["Ana", "Bia"] })], hoje).porResponsavel;
     expect(r.map((l) => l.resolvidas)).toEqual([0.5, 0.5]);
   });
 
-  it("item não marcado de cartão concluído vai para quem concluiu o cartão", () => {
-    const r = resumirEquipe([concluido({ membros: ["Ana"], resolvido_por: "Bia", itens: [pendente()] })], hoje).porResponsavel;
-    expect(r.find((l) => l.nome === "Bia")?.resolvidas).toBe(1);
+  it("item não marcado de cartão concluído é dos responsáveis do cartão", () => {
+    const r = resumirEquipe([concluido({ membros: ["Ana"], itens: [pendente()] })], hoje).porResponsavel;
+    expect(r[0]).toMatchObject({ nome: "Ana", resolvidas: 1 });
   });
 
-  it("cartão sem membros que alguém concluiu conta para essa pessoa e para a equipe", () => {
-    const r = resumirEquipe([concluido({ membros: [], resolvido_por: "Bia" })], hoje);
-    expect(r.total?.resolvidas).toBe(1);
-    expect(r.porResponsavel.map((l) => l.nome)).toContain("Bia");
+  it("Concluídas e Entregas batem para quem só tem cartões sem checklist", () => {
+    const r = resumirEquipe([concluido(), concluido()], hoje).porResponsavel[0];
+    expect(r).toMatchObject({ concluidas: 2, resolvidas: 2 });
   });
 });
 
@@ -213,7 +206,7 @@ describe("cartão de rotina", () => {
 
 describe("cartões e entregas", () => {
   it("mostra os cartões e, à parte, os itens resolvidos", () => {
-    const r = resumirEquipe([cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Ana" }), item({ resolvido_por: "Ana" }), pendente()] }), concluido({ membros: ["Ana"], resolvido_por: "Ana" })], hoje).porResponsavel[0];
+    const r = resumirEquipe([cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Ana" }), item({ resolvido_por: "Ana" }), pendente()] }), concluido({ membros: ["Ana"] })], hoje).porResponsavel[0];
     expect(r).toMatchObject({ atribuidas: 2, abertas: 1, concluidas: 1, itensResolvidos: 2, resolvidas: 3 });
   });
 

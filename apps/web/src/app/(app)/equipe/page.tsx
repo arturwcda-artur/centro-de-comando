@@ -110,7 +110,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const idMembro = new Map((membros ?? []).map((m) => [m.nome, m.id]));
   const { data } = await supabase
     .from("tarefas")
-    .select("id, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes, trello_membros(nome)), cartoes_rotina(tarefa_id)")
+    .select("id, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes), cartoes_rotina(tarefa_id)")
     .eq("fonte", "trello")
     .like("categoria", `${QUADRO_EQUIPE} › %`);
 
@@ -133,7 +133,6 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     prazo_alteracoes: t.trello_cartao_datas?.prazo_alteracoes ?? 0,
     concluido_em: t.trello_cartao_datas?.concluido_em ?? t.concluida_em,
     membros: t.tarefa_membros.map((m) => m.trello_membros.nome),
-    resolvido_por: t.trello_cartao_datas?.trello_membros?.nome ?? null,
     rotina: !!t.cartoes_rotina,
     itens: itensDoCartao.get(t.id),
   }));
@@ -204,8 +203,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
             <li>Entregas: cada item de checklist resolvido conta 1, e o cartão sem checklist concluído conta 1. Cartão concluído resolve todos os seus itens.</li>
             <li>A ordem é pelas entregas, sem posições. Cartão aberto é carga de trabalho, não falha.</li>
             <li>No prazo: cartões entregues até a primeira data de entrega, menos os atrasados, que incluem os vencidos em aberto. Positivo é bom, negativo pede atenção. Vale só para cartões com data e que não são de rotina, e adiar a data não melhora.</li>
-            <li>Tarefa resolvida conta para quem marcou no Trello: o item ou, sem checklist, o cartão. Por isso, cada um deve marcar o que resolveu.</li>
-            <li>Tarefa pendente, ou sem registro de quem marcou, é dividida entre os responsáveis do cartão.</li>
+            <li>Item resolvido conta para quem o marcou no Trello. Por isso, cada um deve marcar o que resolveu.</li>
+            <li>Cartão sem checklist, e item sem registro de quem marcou, são divididos entre os responsáveis do cartão.</li>
             <li>Sem responsável aparece no fim da lista e fica fora dos totais e das listas.</li>
             <li>Nos períodos, o que está pendente sempre aparece.</li>
           </ul>
