@@ -86,48 +86,51 @@ describe("mudança da data de entrega", () => {
   });
 });
 
-describe("ranking", () => {
-  const noPrazo = (membro: string) => concluido({ prazo: "2026-10-20", membros: [membro] });
-  const atrasado = (membro: string) => concluido({ prazo: "2026-10-01", membros: [membro] });
+describe("ranking por resolução", () => {
+  const aberto = (membro: string) => cartao({ membros: [membro] });
+  const feito = (membro: string) => concluido({ membros: [membro] });
 
-  it("ordena pela maior eficiência e numera as posições", () => {
-    const r = resumirEquipe([atrasado("Ana"), noPrazo("Bia"), noPrazo("Caio"), atrasado("Caio")], hoje).porResponsavel;
+  it("ordena pela maior taxa de resolução e numera as posições", () => {
+    const r = resumirEquipe([aberto("Ana"), feito("Bia"), feito("Caio"), aberto("Caio")], hoje).porResponsavel;
     expect(r.map((l) => [l.posicao, l.nome])).toEqual([[1, "Bia"], [2, "Caio"], [3, "Ana"]]);
   });
 
-  it("no empate, fica à frente quem tem mais cartões cobráveis", () => {
-    const r = resumirEquipe([noPrazo("Ana"), noPrazo("Bia"), noPrazo("Bia")], hoje).porResponsavel;
+  it("no empate, fica à frente quem carrega mais tarefas", () => {
+    const r = resumirEquipe([feito("Ana"), feito("Bia"), feito("Bia")], hoje).porResponsavel;
     expect(r[0].nome).toBe("Bia");
   });
 
-  it("sem cartão cobrável, fica no fim e sem posição", () => {
-    const r = resumirEquipe([cartao({ membros: ["Ana"] }), atrasado("Bia")], hoje).porResponsavel;
-    expect(r.map((l) => [l.nome, l.posicao])).toEqual([["Bia", 1], ["Ana", null]]);
+  it("não depende de prazo: cartão sem data também conta", () => {
+    expect(resumirEquipe([feito("Ana")], hoje).porResponsavel[0]).toMatchObject({ resolucao: 100, eficiencia: null, posicao: 1 });
   });
 
   it("sem responsável não entra na numeração", () => {
-    const r = resumirEquipe([noPrazo("Ana"), concluido({ prazo: "2026-10-20", membros: [] })], hoje).porResponsavel;
+    const r = resumirEquipe([feito("Ana"), concluido({ membros: [] })], hoje).porResponsavel;
     expect(r.find((l) => l.nome === SEM_RESPONSAVEL)?.posicao).toBeNull();
     expect(r.find((l) => l.nome === "Ana")?.posicao).toBe(1);
   });
 });
 
 describe("cartões de rotina", () => {
-  const item = (extra = {}) => ({ criado_em: "2026-10-01T12:00:00Z", concluido_em: "2026-10-03T12:00:00Z", responsaveis: ["Ana"], categoria: `${QUADRO_EQUIPE} › CEF-01`, ...extra });
+  const item = (extra = {}) => ({ concluido: true, criado_em: "2026-10-01T12:00:00Z", concluido_em: "2026-10-03T12:00:00Z", responsaveis: ["Ana"], categoria: `${QUADRO_EQUIPE} › CEF-01`, ...extra });
 
-  it("saem das contagens e da taxa, mesmo com prazo vencido", () => {
+  it("saem das contagens de cartões e da taxa no prazo, mesmo com prazo vencido", () => {
     const r = resumirEquipe([cartao({ rotina: true, prazo: "2026-01-01" }), concluido({ prazo: "2026-10-20" })], hoje).total;
     expect(r).toMatchObject({ atribuidas: 1, abertas: 0, cobraveis: 1, eficiencia: 100 });
   });
 
-  it("contam pelos itens concluídos, com o tempo médio por item", () => {
-    const r = resumirEquipe([], hoje, undefined, [item(), item({ concluido_em: "2026-10-05T12:00:00Z" })]).porResponsavel[0];
-    expect(r).toMatchObject({ nome: "Ana", itensRotina: 2, diasPorItem: 3, atribuidas: 0 });
+  it("somam cartões e itens na responsabilidade e na resolução", () => {
+    const r = resumirEquipe([concluido(), cartao()], hoje, undefined, [item(), item({ concluido: false, concluido_em: null })]).porResponsavel[0];
+    expect(r).toMatchObject({ sobResponsabilidade: 4, resolvidas: 2, pendentes: 2, resolucao: 50, itensRotina: 1, itensPendentes: 1 });
   });
 
-  it("quem só tem rotina aparece, mas sem posição no ranking", () => {
-    const r = resumirEquipe([], hoje, undefined, [item()]).porResponsavel[0];
-    expect(r.posicao).toBeNull();
+  it("calcula o tempo médio só dos itens concluídos", () => {
+    const r = resumirEquipe([], hoje, undefined, [item(), item({ concluido_em: "2026-10-05T12:00:00Z" }), item({ concluido: false, concluido_em: null })]).porResponsavel[0];
+    expect(r).toMatchObject({ itensRotina: 2, diasPorItem: 3 });
+  });
+
+  it("quem só tem rotina entra no ranking", () => {
+    expect(resumirEquipe([], hoje, undefined, [item()]).porResponsavel[0].posicao).toBe(1);
   });
 
   it("item com dois responsáveis credita os dois; sem nenhum, fica sem responsável", () => {
@@ -136,9 +139,9 @@ describe("cartões de rotina", () => {
     expect(r.total?.itensRotina).toBe(2);
   });
 
-  it("no período, tira itens antigos", () => {
-    const r = resumirEquipe([], hoje, "2026-10-06", [item(), item({ concluido_em: "2026-11-01T12:00:00Z" })]).total;
-    expect(r?.itensRotina).toBe(1);
+  it("no período, tira itens concluídos antigos e mantém os pendentes", () => {
+    const r = resumirEquipe([], hoje, "2026-10-06", [item(), item({ concluido_em: "2026-11-01T12:00:00Z" }), item({ concluido: false, concluido_em: null })]).total;
+    expect(r).toMatchObject({ itensRotina: 1, itensPendentes: 1 });
   });
 
   it("item sem data de conclusão conta em todo o período e não entra no tempo", () => {

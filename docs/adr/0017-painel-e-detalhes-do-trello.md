@@ -10,7 +10,7 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 3. **Arquivados:** entram se estavam concluídos, para não prejudicar quem arquiva o que termina. Os demais ficam de fora da contagem.
 4. **Contagem:** cartão com dois membros conta para os dois. A conclusão conta para quem estava atribuído.
    - **Taxa de eficiência:** concluídos até a **primeira** data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto (decisão do proprietário). Adiar a data não melhora a taxa, e cada mudança aparece em **Prazos alterados**.
-   - **Ranking:** da maior para a menor eficiência. No empate, fica à frente quem tem mais cartões cobráveis. Quem não tem base fica no fim, sem posição.
+   - **Ranking:** pela **taxa de resolução** (RN-49c), que soma cartões e itens de rotina. Decisão do proprietário: ela cobre todo o trabalho, e a base de prazo é pequena. No empate, fica à frente quem carrega mais tarefas.
    - **Tempo médio:** da criação à conclusão, em todos os concluídos.
    - **Datas reais:** a conclusão vem do histórico do Trello, em `trello_cartao_datas`, porque `concluida_em` guarda a última atividade. A criação vem do id do cartão.
 5. **Leitura:** por quadro, sem uma chamada por cartão.
@@ -20,12 +20,13 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 9. **Nada é excluído nem arquivado no Trello.** Essa regra do ADR 0013 continua valendo.
 
 ## Cartões de rotina
-Cartões renovados sempre, como pedidos de compra, não têm fim nem prazo. O proprietário os marca no sistema, com auditoria e sem gravar no Trello, para a equipe não alterar o que entra na própria avaliação. Eles saem das contagens e da taxa e passam a contar pelos itens de checklist concluídos, com crédito ao membro do item ou, sem ele, aos membros do cartão. A taxa mede prazo, e os itens medem volume: os dois ficam separados de propósito.
+Cartões renovados sempre, como pedidos de compra, não têm fim nem prazo. O proprietário os marca no sistema, com auditoria e sem gravar no Trello, para a equipe não alterar o que entra na própria avaliação. Eles saem das contagens e da taxa e passam a contar pelos itens de checklist concluídos, com crédito ao membro do item ou, sem ele, aos membros do cartão. A eficiência no prazo continua só com cartões, porque itens não têm data de entrega. Na taxa de resolução, itens e cartões são somados.
 
 ## Consequências
 - O filtro reconhece padrões como `senha:`. Outro formato de credencial pode passar.
 - O cartão novo aparece no sistema na sincronização seguinte.
-- Este painel mede volume, não dificuldade: um cartão simples e um complexo pesam igual.
+- Este painel mede volume, não dificuldade: um cartão simples, um complexo e um item de checklist pesam igual. Quem cuida de rotina tende a subir no ranking, por isso a eficiência no prazo fica ao lado.
+- A taxa de resolução não penaliza atraso.
 - Um adiamento legítimo, pedido pelo cliente ou por outra equipe, também conta contra a taxa. O sistema não sabe o motivo da mudança.
 - O ranking é calculado na hora e varia conforme o período. O histórico da posição de cada pessoa não fica guardado.
 - Estender a outro quadro exige alterar `QUADRO_DETALHADO` e `QUADRO_EQUIPE`.

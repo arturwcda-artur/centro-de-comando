@@ -19,8 +19,9 @@ export type CartaoEquipe = {
   rotina?: boolean;
 };
 
-/** Item concluído de um cartão de rotina. */
+/** Item de checklist de um cartão de rotina. */
 export type ItemRotina = {
+  concluido: boolean;
   criado_em: string | null;
   concluido_em: string | null;
   responsaveis: string[];
@@ -40,8 +41,14 @@ export type LinhaEquipe = {
   diasMedios: number | null;
   prazosAlterados: number;
   itensRotina: number;
+  itensPendentes: number;
   diasPorItem: number | null;
-  /** Posição no ranking. Vazia para quem ainda não tem cartão com prazo cobrável. */
+  /** Cartões e itens de rotina somados: é o trabalho total da pessoa (RN-49c). */
+  sobResponsabilidade: number;
+  resolvidas: number;
+  pendentes: number;
+  resolucao: number | null;
+  /** Posição no ranking, pela taxa de resolução. */
   posicao: number | null;
 };
 
@@ -52,7 +59,7 @@ const diasEntre = (de: string, ate: string) => Math.max(Date.parse(ate) - Date.p
 const listaDe = (categoria: string | null) => categoria?.split(" › ")[1] ?? "—";
 
 function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
-  const nova: Acumulador = { nome, atribuidas: 0, abertas: 0, concluidas: 0, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, diasMedios: null, prazosAlterados: 0, itensRotina: 0, diasPorItem: null, posicao: null, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
+  const nova: Acumulador = { nome, atribuidas: 0, abertas: 0, concluidas: 0, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, diasMedios: null, prazosAlterados: 0, itensRotina: 0, itensPendentes: 0, diasPorItem: null, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, posicao: null, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
   const l = linhas.get(nome) ?? nova;
   linhas.set(nome, l);
   return l;
@@ -82,6 +89,10 @@ function somar(linhas: Map<string, Acumulador>, nome: string, c: CartaoEquipe, h
 
 function somarItem(linhas: Map<string, Acumulador>, nome: string, i: ItemRotina) {
   const l = linha(linhas, nome);
+  if (!i.concluido) {
+    l.itensPendentes += 1;
+    return;
+  }
   l.itensRotina += 1;
   if (i.criado_em && i.concluido_em) {
     l.somaDiasItem += diasEntre(i.criado_em, i.concluido_em);
@@ -89,18 +100,27 @@ function somarItem(linhas: Map<string, Acumulador>, nome: string, i: ItemRotina)
   }
 }
 
-/** Ranking: maior eficiência primeiro; no empate, quem tem mais cartões cobráveis. Sem base, vai para o fim. */
+/** Ranking: maior taxa de resolução primeiro; no empate, quem carrega mais tarefas. */
 function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
   const ordenadas = [...linhas.values()]
-    .map(({ somaDias, comTempo, somaDiasItem, itensComTempo, ...l }) => ({
+    .map(({ somaDias, comTempo, somaDiasItem, itensComTempo, ...l }) => {
+      const resolvidas = l.concluidas + l.itensRotina;
+      const pendentes = l.abertas + l.itensPendentes;
+      const sobResponsabilidade = resolvidas + pendentes;
+      return {
       ...l,
+      sobResponsabilidade,
+      resolvidas,
+      pendentes,
+      resolucao: sobResponsabilidade ? (resolvidas / sobResponsabilidade) * 100 : null,
       eficiencia: l.cobraveis ? (l.noPrazo / l.cobraveis) * 100 : null,
       diasMedios: comTempo ? somaDias / comTempo : null,
       diasPorItem: itensComTempo ? somaDiasItem / itensComTempo : null,
-    }))
-    .sort((a, b) => (b.eficiencia ?? -1) - (a.eficiencia ?? -1) || b.cobraveis - a.cobraveis || b.itensRotina - a.itensRotina || b.atribuidas - a.atribuidas || a.nome.localeCompare(b.nome, "pt-BR"));
+      };
+    })
+    .sort((a, b) => (b.resolucao ?? -1) - (a.resolucao ?? -1) || b.sobResponsabilidade - a.sobResponsabilidade || a.nome.localeCompare(b.nome, "pt-BR"));
   let posicao = 0;
-  return ordenadas.map((l) => ({ ...l, posicao: l.eficiencia === null || l.nome === SEM_RESPONSAVEL ? null : ++posicao }));
+  return ordenadas.map((l) => ({ ...l, posicao: l.resolucao === null || l.nome === SEM_RESPONSAVEL ? null : ++posicao }));
 }
 
 /**
@@ -119,7 +139,7 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
     for (const nome of c.membros.length ? c.membros : [SEM_RESPONSAVEL]) somar(porResponsavel, nome, c, hoje);
   }
   for (const i of itens) {
-    if (desde && (i.concluido_em ?? "") < desde) continue;
+    if (desde && i.concluido && (i.concluido_em ?? "") < desde) continue;
     somarItem(total, QUADRO_EQUIPE, i);
     somarItem(porLista, listaDe(i.categoria), i);
     for (const nome of i.responsaveis.length ? i.responsaveis : [SEM_RESPONSAVEL]) somarItem(porResponsavel, nome, i);

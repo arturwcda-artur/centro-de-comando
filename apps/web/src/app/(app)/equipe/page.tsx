@@ -19,23 +19,23 @@ function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: s
   return (
     <Cartao titulo={titulo}>
       {linhas.length === 0 ? (
-        <EstadoVazio>Nenhum cartão neste período.</EstadoVazio>
+        <EstadoVazio>Nenhuma tarefa neste período.</EstadoVazio>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-sm">
+          <table className="w-full min-w-[960px] text-sm">
             <thead className="text-left text-xs text-suave">
               <tr>
                 <th className="py-2 pr-2 font-medium">#</th>
                 <th className="py-2 font-medium">{coluna}</th>
-                <th className="py-2 text-right font-medium">Atribuídas</th>
-                <th className="py-2 text-right font-medium">Abertas</th>
-                <th className="py-2 text-right font-medium">Concluídas</th>
+                <th className="py-2 text-right font-medium">Sob responsabilidade</th>
+                <th className="py-2 text-right font-medium">Resolvidas</th>
+                <th className="py-2 text-right font-medium">Pendentes</th>
+                <th className="py-2 text-right font-medium">Resolução</th>
+                <th className="py-2 text-right font-medium">Eficiência no prazo</th>
                 <th className="py-2 text-right font-medium">Vencidas</th>
-                <th className="py-2 text-right font-medium">Eficiência</th>
                 <th className="py-2 text-right font-medium">Tempo médio</th>
-                <th className="py-2 text-right font-medium">Prazos alterados</th>
-                <th className="py-2 text-right font-medium">Itens de rotina</th>
                 <th className="py-2 text-right font-medium">Tempo por item</th>
+                <th className="py-2 text-right font-medium">Prazos alterados</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-borda">
@@ -51,18 +51,21 @@ function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: s
                       l.nome
                     )}
                   </td>
-                  <td className="py-2 text-right tabular-nums">{l.atribuidas}</td>
-                  <td className="py-2 text-right tabular-nums">{l.abertas}</td>
-                  <td className="py-2 text-right tabular-nums">{l.concluidas}</td>
-                  <td className={`py-2 text-right tabular-nums ${l.vencidas > 0 ? "font-medium text-alerta" : ""}`}>{l.vencidas}</td>
+                  <td className="py-2 text-right tabular-nums">{l.sobResponsabilidade}</td>
+                  <td className="py-2 text-right tabular-nums">
+                    {l.resolvidas}
+                    {l.itensRotina > 0 && <span className="block text-xs text-suave">{`${l.itensRotina} de rotina`}</span>}
+                  </td>
+                  <td className="py-2 text-right tabular-nums">{l.pendentes}</td>
+                  <td className="py-2 text-right font-medium tabular-nums">{pct(l.resolucao)}</td>
                   <td className="py-2 text-right tabular-nums">
                     {pct(l.eficiencia)}
                     {l.cobraveis > 0 && <span className="block text-xs text-suave">{`${l.noPrazo} de ${l.cobraveis}`}</span>}
                   </td>
+                  <td className={`py-2 text-right tabular-nums ${l.vencidas > 0 ? "font-medium text-alerta" : ""}`}>{l.vencidas}</td>
                   <td className="py-2 text-right tabular-nums">{dias(l.diasMedios)}</td>
-                  <td className="py-2 text-right tabular-nums">{l.prazosAlterados}</td>
-                  <td className="py-2 text-right tabular-nums">{l.itensRotina}</td>
                   <td className="py-2 text-right tabular-nums">{dias(l.diasPorItem)}</td>
+                  <td className="py-2 text-right tabular-nums">{l.prazosAlterados}</td>
                 </tr>
               ))}
             </tbody>
@@ -99,23 +102,23 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     id: t.id,
   }));
   const rotinas = new Map(cartoes.filter((c) => c.rotina).map((c) => [c.id, c]));
-  const { data: itensFeitos } = rotinas.size
-    ? await supabase.from("trello_checklist_itens").select("tarefa_id, criado_no_trello, concluido_em, trello_membros(nome)").eq("concluido", true).in("tarefa_id", [...rotinas.keys()])
+  const { data: itensRotina } = rotinas.size
+    ? await supabase.from("trello_checklist_itens").select("tarefa_id, concluido, criado_no_trello, concluido_em, trello_membros(nome)").in("tarefa_id", [...rotinas.keys()])
     : { data: [] };
-  const itens = (itensFeitos ?? []).map((i) => {
+  const itens = (itensRotina ?? []).map((i) => {
     const cartao = rotinas.get(i.tarefa_id);
-    return { criado_em: i.criado_no_trello, concluido_em: i.concluido_em, categoria: cartao?.categoria ?? null, responsaveis: i.trello_membros ? [i.trello_membros.nome] : (cartao?.membros ?? []) };
+    return { concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, categoria: cartao?.categoria ?? null, responsaveis: i.trello_membros ? [i.trello_membros.nome] : (cartao?.membros ?? []) };
   });
   const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined, itens);
 
   const indicadores = [
-    ["Cartões", total?.atribuidas ?? 0],
-    ["Abertos", total?.abertas ?? 0],
-    ["Concluídos", total?.concluidas ?? 0],
+    ["Sob responsabilidade", total?.sobResponsabilidade ?? 0],
+    ["Resolvidas", total?.resolvidas ?? 0],
+    ["Pendentes", total?.pendentes ?? 0],
+    ["Resolução", pct(total?.resolucao)],
+    ["Eficiência no prazo", pct(total?.eficiencia)],
     ["Vencidos", total?.vencidas ?? 0],
-    ["Eficiência", pct(total?.eficiencia)],
     ["Tempo médio", dias(total?.diasMedios ?? null)],
-    ["Itens de rotina", total?.itensRotina ?? 0],
   ] as const;
 
   return (
@@ -151,7 +154,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
       <Tabela titulo="Ranking por lista" coluna="Lista" linhas={porLista} destino={() => null} />
 
       <p className="text-xs text-suave">
-        Eficiência: cartões concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora a taxa. O ranking vai da maior para a menor eficiência e muda conforme o período escolhido. Tempo médio: da criação à conclusão, em todos os concluídos. Cartão com dois membros conta para os dois, e a conclusão conta para quem estava atribuído. Nos períodos, os cartões abertos sempre aparecem. Cartões de rotina ficam fora dessas contagens e contam só pelos itens de checklist concluídos.
+        Sob responsabilidade: cartões mais itens de cartões de rotina. Resolução: resolvidas divididas pelo que está sob responsabilidade, e define o ranking. Um item conta igual a um cartão. Eficiência no prazo: só cartões com data, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa. Tempo médio: da criação à conclusão do cartão. Cartão com dois membros conta para os dois. Nos períodos, o que está pendente sempre aparece.
       </p>
     </div>
   );
