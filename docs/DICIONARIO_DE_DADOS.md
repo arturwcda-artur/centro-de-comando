@@ -67,6 +67,16 @@ Série temporal da Curva S (percentuais acumulados).
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `cartoes_rotina`
+
+Cartões do Trello marcados pelo proprietário como rotina: saem da taxa de eficiência e contam pelos itens.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| tarefa_id | uuid | sim | tarefas |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `conectores`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -678,6 +688,9 @@ Criação, conclusão real e prazo original do cartão, lidos do histórico do T
 | posicao | numeric | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| membro_id | uuid |  | trello_membros | Membro atribuído ao item. Sem ele, o crédito vai para os membros do cartão. |
+| criado_no_trello | timestamp with time zone |  |  |  |
+| concluido_em | timestamp with time zone |  |  |  |
 
 ## Tabela `trello_comentarios`
 

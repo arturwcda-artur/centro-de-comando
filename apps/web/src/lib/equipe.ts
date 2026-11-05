@@ -15,6 +15,16 @@ export type CartaoEquipe = {
   prazo_alteracoes: number;
   categoria: string | null;
   membros: string[];
+  /** Cartão de rotina: sai das contagens e da taxa, e conta pelos itens de checklist (RN-49b). */
+  rotina?: boolean;
+};
+
+/** Item concluído de um cartão de rotina. */
+export type ItemRotina = {
+  criado_em: string | null;
+  concluido_em: string | null;
+  responsaveis: string[];
+  categoria: string | null;
 };
 
 export type LinhaEquipe = {
@@ -29,16 +39,27 @@ export type LinhaEquipe = {
   eficiencia: number | null;
   diasMedios: number | null;
   prazosAlterados: number;
+  itensRotina: number;
+  diasPorItem: number | null;
   /** Posição no ranking. Vazia para quem ainda não tem cartão com prazo cobrável. */
   posicao: number | null;
 };
 
-type Acumulador = LinhaEquipe & { somaDias: number; comTempo: number };
+type Acumulador = LinhaEquipe & { somaDias: number; comTempo: number; somaDiasItem: number; itensComTempo: number };
 
 const DIA_MS = 86400000;
+const diasEntre = (de: string, ate: string) => Math.max(Date.parse(ate) - Date.parse(de), 0) / DIA_MS;
+const listaDe = (categoria: string | null) => categoria?.split(" › ")[1] ?? "—";
+
+function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
+  const nova: Acumulador = { nome, atribuidas: 0, abertas: 0, concluidas: 0, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, diasMedios: null, prazosAlterados: 0, itensRotina: 0, diasPorItem: null, posicao: null, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
+  const l = linhas.get(nome) ?? nova;
+  linhas.set(nome, l);
+  return l;
+}
 
 function somar(linhas: Map<string, Acumulador>, nome: string, c: CartaoEquipe, hoje: string) {
-  const l = linhas.get(nome) ?? { nome, atribuidas: 0, abertas: 0, concluidas: 0, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, diasMedios: null, prazosAlterados: 0, posicao: null, somaDias: 0, comTempo: 0 };
+  const l = linha(linhas, nome);
   const referencia = c.prazo_original ?? c.prazo;
   l.atribuidas += 1;
   l.prazosAlterados += c.prazo_alteracoes;
@@ -49,7 +70,7 @@ function somar(linhas: Map<string, Acumulador>, nome: string, c: CartaoEquipe, h
       if (c.concluido_em && hojeSP(new Date(c.concluido_em)) <= referencia) l.noPrazo += 1;
     }
     if (c.concluido_em && c.criado_em) {
-      l.somaDias += Math.max(Date.parse(c.concluido_em) - Date.parse(c.criado_em), 0) / DIA_MS;
+      l.somaDias += diasEntre(c.criado_em, c.concluido_em);
       l.comTempo += 1;
     }
   } else {
@@ -57,18 +78,27 @@ function somar(linhas: Map<string, Acumulador>, nome: string, c: CartaoEquipe, h
     if (c.prazo && c.prazo < hoje) l.vencidas += 1;
     if (referencia && referencia < hoje) l.cobraveis += 1; // vencido em aberto conta contra a eficiência
   }
-  linhas.set(nome, l);
+}
+
+function somarItem(linhas: Map<string, Acumulador>, nome: string, i: ItemRotina) {
+  const l = linha(linhas, nome);
+  l.itensRotina += 1;
+  if (i.criado_em && i.concluido_em) {
+    l.somaDiasItem += diasEntre(i.criado_em, i.concluido_em);
+    l.itensComTempo += 1;
+  }
 }
 
 /** Ranking: maior eficiência primeiro; no empate, quem tem mais cartões cobráveis. Sem base, vai para o fim. */
 function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
   const ordenadas = [...linhas.values()]
-    .map(({ somaDias, comTempo, ...l }) => ({
+    .map(({ somaDias, comTempo, somaDiasItem, itensComTempo, ...l }) => ({
       ...l,
       eficiencia: l.cobraveis ? (l.noPrazo / l.cobraveis) * 100 : null,
       diasMedios: comTempo ? somaDias / comTempo : null,
+      diasPorItem: itensComTempo ? somaDiasItem / itensComTempo : null,
     }))
-    .sort((a, b) => (b.eficiencia ?? -1) - (a.eficiencia ?? -1) || b.cobraveis - a.cobraveis || b.atribuidas - a.atribuidas || a.nome.localeCompare(b.nome, "pt-BR"));
+    .sort((a, b) => (b.eficiencia ?? -1) - (a.eficiencia ?? -1) || b.cobraveis - a.cobraveis || b.itensRotina - a.itensRotina || b.atribuidas - a.atribuidas || a.nome.localeCompare(b.nome, "pt-BR"));
   let posicao = 0;
   return ordenadas.map((l) => ({ ...l, posicao: l.eficiencia === null || l.nome === SEM_RESPONSAVEL ? null : ++posicao }));
 }
@@ -76,16 +106,23 @@ function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
 /**
  * Cartão com dois membros conta para os dois, então a soma por pessoa pode passar do total.
  * Com `desde`, concluídos antes da data ficam de fora; os abertos sempre contam.
+ * Cartões de rotina não entram nas contagens: o trabalho deles vem em `itens`.
  */
-export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: string) {
-  const validos = cartoes.filter((c) => c.status !== "cancelada" && !(desde && c.status === "concluida" && (c.concluido_em ?? "") < desde));
+export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: string, itens: ItemRotina[] = []) {
+  const validos = cartoes.filter((c) => !c.rotina && c.status !== "cancelada" && !(desde && c.status === "concluida" && (c.concluido_em ?? "") < desde));
   const total = new Map<string, Acumulador>();
   const porLista = new Map<string, Acumulador>();
   const porResponsavel = new Map<string, Acumulador>();
   for (const c of validos) {
     somar(total, QUADRO_EQUIPE, c, hoje);
-    somar(porLista, c.categoria?.split(" › ")[1] ?? "—", c, hoje);
+    somar(porLista, listaDe(c.categoria), c, hoje);
     for (const nome of c.membros.length ? c.membros : [SEM_RESPONSAVEL]) somar(porResponsavel, nome, c, hoje);
+  }
+  for (const i of itens) {
+    if (desde && (i.concluido_em ?? "") < desde) continue;
+    somarItem(total, QUADRO_EQUIPE, i);
+    somarItem(porLista, listaDe(i.categoria), i);
+    for (const nome of i.responsaveis.length ? i.responsaveis : [SEM_RESPONSAVEL]) somarItem(porResponsavel, nome, i);
   }
   return { total: fechar(total)[0] ?? null, porLista: fechar(porLista), porResponsavel: fechar(porResponsavel) };
 }

@@ -71,6 +71,7 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-48** Podem ser concluídas pelo sistema: tarefas manuais, do Notion e cartões do Trello do proprietário. **Cartões de terceiros são só leitura.** A conclusão é gravada primeiro na origem; se a origem recusar, a tarefa continua aberta e o erro aparece na tela. No Trello e no Notion nada é excluído (ADR 0013).
 - **RN-49** No quadro Obras do Grupo - C.SALLES, um comentário pode virar cartão novo no mesmo quadro, uma única vez. O comentário e o cartão de origem não mudam, mesmo em cartões de terceiros (ADR 0017).
 - **RN-49a** Taxa de eficiência da equipe = cartões concluídos até a primeira data de entrega ÷ (concluídos com prazo + vencidos em aberto). Adiar a data não melhora a taxa. Cartões sem prazo entram só no tempo médio, da criação à conclusão.
+- **RN-49b** Cartão de rotina é marcado pelo proprietário no sistema. Ele sai das contagens de cartões e da taxa de eficiência, mesmo com prazo, e conta pelos itens de checklist concluídos.
 
 ## 5. Riscos e decisões
 - **RN-50** Severidade = probabilidade × impacto (1 a 25). **Crítico** quando ≥ 15, **alto** de 8 a 14, **moderado** até 7.
