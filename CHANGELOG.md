@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.13.0] — 2026-11-05 — Fase 8: relatórios
+### Adicionado
+- Tela **Relatórios**: KPI da equipe e Situação da obra em PDF, Medições e contrato em Excel (ADR 0019). Todos para uso interno e gerados na hora.
+
+### Alterado
+- Tela e relatório usam a mesma leitura de dados, para os números não divergirem.
+
 ## [0.12.7] — 2026-11-05 — Fluxo da equipe
 ### Adicionado
 - Tela **Equipe**: Entraram, Saldo, gráfico de entraram × resolvidas por semana e cartões parados há 14 dias ou mais.

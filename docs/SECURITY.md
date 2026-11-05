@@ -21,6 +21,9 @@
 | Comentários e checklists do Trello | Texto com credencial não é copiado. As tabelas ficam fora da auditoria, para um texto sensível não ficar guardado se passar pelo filtro (ADR 0017) |
 | Sincronizador (GitHub Actions) | `SUPABASE_SERVICE_ROLE_KEY` e os tokens/iCal só como *Actions secrets*. O workflow tem `permissions: contents: read`, e o código nunca imprime segredos nem URLs |
 
+## Relatórios
+Exigem sessão com segundo fator e são gerados na hora, sem guardar arquivo. Texto vindo do banco que comece com `=`, `+`, `-` ou `@` entra no Excel como texto, para não ser executado como fórmula.
+
 ## Auditoria
 - O trigger `app.registrar_auditoria()` grava `INSERT/UPDATE/DELETE` com o antes e o depois, o usuário e o papel em `app.auditoria`. Fica fora da API pública.
 - As execuções de sincronização ficam registradas em `sync_execucoes`/`sync_itens`.
