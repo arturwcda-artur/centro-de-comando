@@ -158,6 +158,15 @@ describe("eficiência no prazo", () => {
     expect(total([concluido({ prazo: "2026-10-20" }), cartao({ prazo: "2026-11-01" })])).toMatchObject({ noPrazo: 1, cobraveis: 2, vencidas: 1 });
   });
 
+  it("saldo é no prazo menos atrasados", () => {
+    expect(total([concluido({ prazo: "2026-10-20" }), concluido({ prazo: "2026-10-21" }), concluido({ prazo: "2026-10-01" })])?.saldoPrazo).toBe(1);
+    expect(total([concluido({ prazo: "2026-10-01" }), cartao({ prazo: "2026-11-01" })])?.saldoPrazo).toBe(-2);
+  });
+
+  it("sem cartão cobrável, não há saldo", () => {
+    expect(total([cartao()])?.saldoPrazo).toBeNull();
+  });
+
   it("aberto com prazo futuro ainda não conta, nem o de hoje", () => {
     expect(total([cartao({ prazo: "2026-12-01" }), cartao({ prazo: hoje })])).toMatchObject({ cobraveis: 0, eficiencia: null });
   });

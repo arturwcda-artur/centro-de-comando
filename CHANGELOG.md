@@ -5,6 +5,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 ## [0.12.5] — 2026-11-05 — Painel sem posições
 ### Alterado
 - A tela **Equipe** deixa de ter ranking: ordena pelas entregas, sem posições, e mostra Resolvidas, Pendentes e No prazo. A taxa de resolução saiu da tela.
+- **No prazo** passa a ser um saldo com sinal: cartões no prazo menos atrasados. O percentual fica em Prazos e tempos.
 
 ## [0.12.4] — 2026-11-05 — Crédito dividido
 ### Alterado

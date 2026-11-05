@@ -14,6 +14,8 @@ const PERIODOS = [
 ];
 
 const quantidade = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+const saldo = (n: number | null) => (n === null ? "—" : n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");
+const corDoSaldo = (n: number | null) => (n === null || n === 0 ? "" : n > 0 ? "text-ok" : "text-alerta");
 const dias = (d: number | null) => (d === null ? "—" : `${d.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`);
 
 const NUMERO = "py-2.5 text-right tabular-nums";
@@ -50,8 +52,8 @@ function Painel({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEqui
                 </td>
                 <td className={`${NUMERO} ${semDono ? "" : "font-semibold"}`}>{quantidade(l.resolvidas)}</td>
                 <td className={NUMERO}>{quantidade(l.pendentes)}</td>
-                <td className={NUMERO} title={l.cobraveis > 0 ? `${l.noPrazo} de ${l.cobraveis} cartões com prazo` : undefined}>
-                  {pct(l.eficiencia)}
+                <td className={`${NUMERO} font-medium ${corDoSaldo(l.saldoPrazo)}`} title={l.cobraveis > 0 ? `${l.noPrazo} no prazo e ${l.cobraveis - l.noPrazo} atrasados` : "Sem cartões com prazo cobrável"}>
+                  {saldo(l.saldoPrazo)}
                 </td>
               </tr>
             );
@@ -70,7 +72,7 @@ function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
         <thead className="text-left text-xs text-suave">
           <tr>
             <th className="py-2 font-medium">Responsável</th>
-            <th className={CABECALHO}>Base do prazo</th>
+            <th className={CABECALHO}>Eficiência no prazo</th>
             <th className={CABECALHO}>Vencidas</th>
             <th className={CABECALHO}>Tempo médio</th>
             <th className={CABECALHO}>Tempo por item</th>
@@ -81,7 +83,7 @@ function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
           {linhas.map((l) => (
             <tr key={l.nome}>
               <td className="py-2 pr-3">{l.nome}</td>
-              <td className="py-2 text-right tabular-nums">{l.cobraveis > 0 ? `${l.noPrazo} de ${l.cobraveis}` : "—"}</td>
+              <td className="py-2 text-right tabular-nums">{l.cobraveis > 0 ? `${pct(l.eficiencia)} (${l.noPrazo} de ${l.cobraveis})` : "—"}</td>
               <td className={`py-2 text-right tabular-nums ${l.vencidas > 0 ? "font-medium text-alerta" : ""}`}>{l.vencidas}</td>
               <td className="py-2 text-right tabular-nums">{dias(l.diasMedios)}</td>
               <td className="py-2 text-right tabular-nums">{dias(l.diasPorItem)}</td>
@@ -134,7 +136,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const indicadores = [
     ["Resolvidas pela equipe", quantidade(total?.resolvidas ?? 0)],
     ["Pendentes", quantidade(total?.pendentes ?? 0)],
-    ["No prazo", pct(total?.eficiencia)],
+    ["No prazo", saldo(total?.saldoPrazo ?? null)],
   ] as const;
 
   return (
@@ -194,7 +196,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
           <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-suave">
             <li>Tarefas: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens.</li>
             <li>A ordem é pelas entregas, sem posições. Pendente é carga de trabalho, não falha.</li>
-            <li>No prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa.</li>
+            <li>No prazo: cartões entregues até a primeira data de entrega, menos os atrasados, que incluem os vencidos em aberto. Positivo é bom, negativo pede atenção. Vale só para cartões com data e que não são de rotina, e adiar a data não melhora.</li>
             <li>Tarefa resolvida conta para quem marcou no Trello: o item ou, sem checklist, o cartão. Por isso, cada um deve marcar o que resolveu.</li>
             <li>Tarefa pendente, ou sem registro de quem marcou, é dividida entre os responsáveis do cartão.</li>
             <li>Sem responsável aparece no fim da lista e fica fora dos totais e das listas.</li>
