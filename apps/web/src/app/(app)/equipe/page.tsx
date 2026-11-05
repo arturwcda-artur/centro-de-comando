@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
-import { QUADRO_EQUIPE, resumirEquipe, type LinhaEquipe } from "@/lib/equipe";
+import { QUADRO_EQUIPE, resumirEquipe, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
 import { hojeSP, pct, somarDias } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -54,7 +54,7 @@ function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: s
                   <td className="py-2 text-right tabular-nums">{l.sobResponsabilidade}</td>
                   <td className="py-2 text-right tabular-nums">
                     {l.resolvidas}
-                    {l.itensRotina > 0 && <span className="block text-xs text-suave">{`${l.itensRotina} de rotina`}</span>}
+                    {l.itensResolvidos > 0 && <span className="block text-xs text-suave">{`${l.itensResolvidos} itens`}</span>}
                   </td>
                   <td className="py-2 text-right tabular-nums">{l.pendentes}</td>
                   <td className="py-2 text-right font-medium tabular-nums">{pct(l.resolucao)}</td>
@@ -89,6 +89,15 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     .like("categoria", `${QUADRO_EQUIPE} › %`);
 
   const hoje = hojeSP();
+  const ids = (data ?? []).map((t) => t.id);
+  const { data: itensChecklist } = ids.length
+    ? await supabase.from("trello_checklist_itens").select("tarefa_id, concluido, criado_no_trello, concluido_em, trello_membros(nome)").in("tarefa_id", ids).limit(5000)
+    : { data: [] };
+  const itensDoCartao = new Map<string, ItemCartao[]>();
+  for (const i of itensChecklist ?? []) {
+    const item = { concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, responsaveis: i.trello_membros ? [i.trello_membros.nome] : [] };
+    itensDoCartao.set(i.tarefa_id, [...(itensDoCartao.get(i.tarefa_id) ?? []), item]);
+  }
   const cartoes = (data ?? []).map((t) => ({
     status: t.status,
     prazo: t.prazo,
@@ -99,17 +108,9 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     concluido_em: t.trello_cartao_datas?.concluido_em ?? t.concluida_em,
     membros: t.tarefa_membros.map((m) => m.trello_membros.nome),
     rotina: !!t.cartoes_rotina,
-    id: t.id,
+    itens: itensDoCartao.get(t.id),
   }));
-  const rotinas = new Map(cartoes.filter((c) => c.rotina).map((c) => [c.id, c]));
-  const { data: itensRotina } = rotinas.size
-    ? await supabase.from("trello_checklist_itens").select("tarefa_id, concluido, criado_no_trello, concluido_em, trello_membros(nome)").in("tarefa_id", [...rotinas.keys()])
-    : { data: [] };
-  const itens = (itensRotina ?? []).map((i) => {
-    const cartao = rotinas.get(i.tarefa_id);
-    return { concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, categoria: cartao?.categoria ?? null, responsaveis: i.trello_membros ? [i.trello_membros.nome] : (cartao?.membros ?? []) };
-  });
-  const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined, itens);
+  const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined);
 
   const indicadores = [
     ["Sob responsabilidade", total?.sobResponsabilidade ?? 0],
@@ -154,7 +155,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
       <Tabela titulo="Ranking por lista" coluna="Lista" linhas={porLista} destino={() => null} />
 
       <p className="text-xs text-suave">
-        Sob responsabilidade: cartões mais itens de cartões de rotina. Resolução: resolvidas divididas pelo que está sob responsabilidade, e define o ranking. Um item conta igual a um cartão. Eficiência no prazo: só cartões com data, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa. Tempo médio: da criação à conclusão do cartão. Cartão com dois membros conta para os dois. Nos períodos, o que está pendente sempre aparece.
+        Sob responsabilidade: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens. Resolução: resolvidas divididas pelo que está sob responsabilidade, e define o ranking. Eficiência no prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa. Tempo médio: da criação à conclusão do cartão. Tarefa com dois membros conta para os dois. Nos períodos, o que está pendente sempre aparece.
       </p>
     </div>
   );

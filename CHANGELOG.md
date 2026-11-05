@@ -7,7 +7,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - O cartão do Google Drive mostra erro de autorização quando falta a permissão, em vez de Conectado.
 
 ### Alterado
-- Tela **Equipe**: cartões e itens de rotina somados em **Sob responsabilidade**, **Resolvidas** e **Pendentes**. O ranking passa a seguir a **taxa de resolução** (RN-49c).
+- Tela **Equipe**: cada item de checklist vale 1, e o cartão sem checklist vale 1, em **Sob responsabilidade**, **Resolvidas** e **Pendentes**. O ranking passa a seguir a **taxa de resolução** (RN-49c).
+- Cartão de rotina agora só fica fora da eficiência no prazo.
 
 ## [0.12.1] — 2026-11-05 — Cartões de rotina
 ### Adicionado
