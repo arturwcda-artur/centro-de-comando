@@ -98,11 +98,11 @@ describe('mudanças da data de entrega', () => {
 });
 
 describe('conclusão dos itens de checklist', () => {
-  const marcar = (date, id, state) => ({ date, data: { checkItem: { id, state } } });
+  const marcar = (date, id, state, idMemberCreator = 'm1') => ({ date, idMemberCreator, data: { checkItem: { id, state } } });
 
   it('guarda a última conclusão e ignora desmarcar', () => {
-    const c = conclusoesDeItens([marcar('2026-10-01T12:00:00Z', 'i1', 'complete'), marcar('2026-10-05T12:00:00Z', 'i1', 'complete'), marcar('2026-10-06T12:00:00Z', 'i2', 'incomplete')]);
-    expect(c.get('i1')).toBe('2026-10-05T12:00:00Z');
+    const c = conclusoesDeItens([marcar('2026-10-01T12:00:00Z', 'i1', 'complete', 'm1'), marcar('2026-10-05T12:00:00Z', 'i1', 'complete', 'm2'), marcar('2026-10-06T12:00:00Z', 'i2', 'incomplete')]);
+    expect(c.get('i1')).toEqual({ data: '2026-10-05T12:00:00Z', membro: 'm2' });
     expect(c.has('i2')).toBe(false);
   });
 });
@@ -120,7 +120,7 @@ describe('lerDetalhes', () => {
   const rotas = {
     '/members': [{ id: 'm1', fullName: 'Pessoa Um', username: 'um' }],
     '/checklists': [{ id: 'l1', name: 'Vistoria', idCard: 'c1', checkItems: [{ id: '5f5e1000aaaaaaaaaaaaaaaa', name: 'Fôrma', state: 'complete', pos: 1, idMember: 'm1' }, { id: 'i2', name: 'senha: 123', state: 'incomplete', pos: 2 }] }],
-    '/actions': (p) => (p.get('filter') === 'updateCheckItemStateOnCard' ? [{ id: 'k1', date: '2026-11-03T12:00:00.000Z', data: { checkItem: { id: '5f5e1000aaaaaaaaaaaaaaaa', state: 'complete' } } }] : [
+    '/actions': (p) => (p.get('filter') === 'updateCheckItemStateOnCard' ? [{ id: 'k1', date: '2026-11-03T12:00:00.000Z', idMemberCreator: 'm2', data: { checkItem: { id: '5f5e1000aaaaaaaaaaaaaaaa', state: 'complete' } } }] : [
       { id: 'a1', date: '2026-11-01T12:00:00.000Z', data: { text: 'Concreto liberado', card: { id: 'c1' } }, memberCreator: { fullName: 'Pessoa Um' } },
       { id: 'a2', date: '2026-11-02T12:00:00.000Z', data: { text: 'senha: 999', card: { id: 'c1' } }, memberCreator: { fullName: 'Pessoa Um' } },
     ]),
@@ -132,7 +132,7 @@ describe('lerDetalhes', () => {
     expect(d.membros).toEqual([{ id_externo: 'm1', nome: 'Pessoa Um', usuario: 'um' }]);
     expect(d.itens).toEqual([{
       id_externo: '5f5e1000aaaaaaaaaaaaaaaa', cartao: 'c1', checklist: 'Vistoria', nome: 'Fôrma', concluido: true, posicao: 1, membro: 'm1',
-      criado_no_trello: new Date(0x5f5e1000 * 1000).toISOString(), concluido_em: '2026-11-03T12:00:00.000Z',
+      criado_no_trello: new Date(0x5f5e1000 * 1000).toISOString(), concluido_em: '2026-11-03T12:00:00.000Z', concluido_por: 'm2',
     }]);
     expect(d.comentarios).toEqual([{ id_externo: 'a1', cartao: 'c1', autor: 'Pessoa Um', texto: 'Concreto liberado', data: '2026-11-01T12:00:00.000Z' }]);
   });
@@ -190,7 +190,7 @@ describe('aplicarDetalhes', () => {
     membros: [{ id_externo: 'm1', nome: 'Um', usuario: 'um' }],
     vinculos: [{ cartao: 'c1', membro: 'm1' }, { cartao: 'fora', membro: 'm1' }],
     comentarios: [{ id_externo: 'a1', cartao: 'c1', autor: 'Um', texto: 'ok', data: '2026-11-01' }, { id_externo: 'a2', cartao: 'fora', autor: 'Um', texto: 'ignorado', data: '2026-11-01' }],
-    itens: [{ id_externo: 'i1', cartao: 'c1', checklist: 'L', nome: 'Item', concluido: false, posicao: 1 }],
+    itens: [{ id_externo: 'i1', cartao: 'c1', checklist: 'L', nome: 'Item', concluido: true, posicao: 1, membro: null, concluido_por: 'm1' }],
     datas: [{ cartao: 'c1', criado_em: '2026-10-01', concluido_em: null }, { cartao: 'fora', criado_em: '2026-10-01', concluido_em: null }],
   };
 
@@ -200,7 +200,8 @@ describe('aplicarDetalhes', () => {
     const t = db.tabelas();
     expect(t.tarefa_membros).toHaveLength(1);
     expect(t.trello_comentarios.map((c) => c.id_externo)).toEqual(['a1']);
-    expect(t.trello_checklist_itens[0].tarefa_id).toBe('t1');
+    expect(t.trello_checklist_itens[0]).toMatchObject({ tarefa_id: 't1', membro_id: null });
+    expect(t.trello_checklist_itens[0].concluido_por_id).toBe(t.trello_membros[0].id);
     expect(t.trello_cartao_datas.map((d) => d.tarefa_id)).toEqual(['t1']);
     expect(r).toEqual({ membros: 1, comentarios: 1, itens: 1 });
   });

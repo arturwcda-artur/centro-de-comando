@@ -2236,6 +2236,7 @@ export type Database = {
           checklist: string
           concluido: boolean
           concluido_em: string | null
+          concluido_por_id: string | null
           criado_no_trello: string | null
           membro_id: string | null
           id_externo: string
@@ -2250,6 +2251,7 @@ export type Database = {
           checklist: string
           concluido?: boolean
           concluido_em?: string | null
+          concluido_por_id?: string | null
           criado_no_trello?: string | null
           membro_id?: string | null
           id_externo: string
@@ -2264,6 +2266,7 @@ export type Database = {
           checklist?: string
           concluido?: boolean
           concluido_em?: string | null
+          concluido_por_id?: string | null
           criado_no_trello?: string | null
           membro_id?: string | null
           id_externo?: string
@@ -2272,6 +2275,13 @@ export type Database = {
           tarefa_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "trello_checklist_itens_concluido_por_id_fkey"
+            columns: ["concluido_por_id"]
+            isOneToOne: false
+            referencedRelation: "trello_membros"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trello_checklist_itens_membro_id_fkey"
             columns: ["membro_id"]

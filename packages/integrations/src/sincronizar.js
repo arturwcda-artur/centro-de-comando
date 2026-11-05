@@ -74,9 +74,9 @@ async function principal() {
           const r = await vincularDocumentos(supabase, acesso);
           return { ...r, mensagem: `${r.lidos} documentos, ${r.semLink} sem link no Drive` };
         } catch (e) {
-          // Sem a permissão nova, a agenda continua funcionando e a tela de Documentos usa o caminho
-          if (!/HTTP 403/.test(e.message)) throw e;
-          return { lidos: 0, criados: 0, atualizados: 0, ignorados: 0, itens: [], mensagem: 'Falta aceitar a permissão do Drive: use Reconectar Google' };
+          // Sem permissão, o cartão precisa mostrar erro de autorização, e não "Conectado". A agenda não é afetada
+          if (/HTTP 403/.test(e.message)) throw new Error('Google Drive: HTTP 403, sem permissão. Use Reconectar Google');
+          throw e;
         }
       }),
     );
