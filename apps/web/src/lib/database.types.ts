@@ -2091,6 +2091,41 @@ export type Database = {
           },
         ]
       }
+      trello_cartao_datas: {
+        Row: {
+          atualizado_em: string
+          concluido_em: string | null
+          criado_em: string
+          prazo_alteracoes: number
+          prazo_original: string | null
+          tarefa_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          concluido_em?: string | null
+          criado_em: string
+          prazo_alteracoes?: number
+          prazo_original?: string | null
+          tarefa_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          concluido_em?: string | null
+          criado_em?: string
+          prazo_alteracoes?: number
+          prazo_original?: string | null
+          tarefa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_cartao_datas_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: true
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trello_checklist_itens: {
         Row: {
           atualizado_em: string

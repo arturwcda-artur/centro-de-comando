@@ -68,16 +68,60 @@ export function cartaoImportavel(cartao, lista) {
   return !cartao.closed || !!cartao.dueComplete || statusDaLista(lista) === 'concluida';
 }
 
-async function lerComentarios(credenciais, idQuadro) {
-  const comentarios = [];
+async function lerAcoes(credenciais, idQuadro, filter) {
+  const acoes = [];
   let antes;
   for (;;) {
-    const params = { filter: 'commentCard', limit: '1000', fields: 'data,date', memberCreator_fields: 'fullName', ...(antes ? { before: antes } : {}) };
+    const params = { filter, limit: '1000', fields: 'data,date', memberCreator_fields: 'fullName', ...(antes ? { before: antes } : {}) };
     const pagina = await chamar(`/boards/${idQuadro}/actions`, credenciais, params);
-    comentarios.push(...pagina);
-    if (pagina.length < 1000) return comentarios;
+    acoes.push(...pagina);
+    if (pagina.length < 1000) return acoes;
     antes = pagina.at(-1).id;
   }
+}
+
+/** O id do Trello começa com o instante da criação do cartão, em segundos e hexadecimal. */
+export function criacaoDoCartao(idCartao) {
+  return new Date(parseInt(idCartao.slice(0, 8), 16) * 1000).toISOString();
+}
+
+/** Última vez que cada cartão entrou numa lista de concluídos ou foi marcado como concluído. */
+export function conclusoesDoHistorico(acoes) {
+  const datas = new Map();
+  for (const a of acoes) {
+    const entrouEmConcluidos = a.data?.listAfter && statusDaLista(a.data.listAfter.name) === 'concluida';
+    const marcou = a.data?.card?.dueComplete === true && a.data?.old?.dueComplete === false;
+    if (!entrouEmConcluidos && !marcou) continue;
+    const id = a.data.card.id;
+    if (!datas.has(id) || a.date > datas.get(id)) datas.set(id, a.date);
+  }
+  return datas;
+}
+
+/** Primeira data de entrega de cada cartão e quantas vezes uma data existente foi mudada ou retirada. */
+export function prazosDoHistorico(acoes) {
+  const mudancas = acoes.filter((a) => a.data?.old && 'due' in a.data.old && a.data.card?.id).sort((a, b) => a.date.localeCompare(b.date));
+  const prazos = new Map();
+  for (const a of mudancas) {
+    const id = a.data.card.id;
+    const atual = prazos.get(id) ?? { original: a.data.old.due ?? a.data.card.due ?? null, alteracoes: 0 };
+    if (a.data.old.due && a.data.old.due !== a.data.card.due) atual.alteracoes += 1;
+    prazos.set(id, atual);
+  }
+  return prazos;
+}
+
+/** Sem registro no histórico (cartão criado já concluído), fica a última atividade. */
+export function datasDoCartao(cartao, lista, conclusoes, prazos = new Map()) {
+  const concluido = !!cartao.dueComplete || statusDaLista(lista) === 'concluida';
+  const prazo = prazos.get(cartao.id);
+  return {
+    cartao: cartao.id,
+    criado_em: criacaoDoCartao(cartao.id),
+    concluido_em: concluido ? (conclusoes.get(cartao.id) ?? cartao.dateLastActivity ?? null) : null,
+    prazo_original: dataSP(prazo?.original ?? cartao.due),
+    prazo_alteracoes: prazo?.alteracoes ?? 0,
+  };
 }
 
 /** Lê por quadro, sem uma chamada por cartão. Texto com credencial fica de fora (RN-66). */
@@ -85,7 +129,7 @@ export async function lerDetalhes(credenciais, idQuadro) {
   const [membros, checklists, comentarios] = await Promise.all([
     chamar(`/boards/${idQuadro}/members`, credenciais, { fields: 'fullName,username' }),
     chamar(`/boards/${idQuadro}/checklists`, credenciais, { fields: 'name,idCard', checkItems: 'all', checkItem_fields: 'name,state,pos' }),
-    lerComentarios(credenciais, idQuadro),
+    lerAcoes(credenciais, idQuadro, 'commentCard'),
   ]);
   return {
     membros: membros.map((m) => ({ id_externo: m.id, nome: m.fullName, usuario: m.username ?? null })),
@@ -119,9 +163,9 @@ async function retirarAusentes(supabase, tabela, presentes) {
 }
 
 /** Grava membros, vínculos, comentários e checklists dos cartões já importados. */
-export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios, itens }) {
+export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios, itens, datas = [] }) {
   // Em lotes pelos ids: uma consulta só pararia no limite de linhas da API
-  const cartoes = [...new Set([...vinculos, ...comentarios, ...itens].map((x) => x.cartao).filter(Boolean))];
+  const cartoes = [...new Set([...vinculos, ...comentarios, ...itens, ...datas].map((x) => x.cartao).filter(Boolean))];
   const idTarefa = new Map();
   for (let i = 0; i < cartoes.length; i += LOTE) {
     const { data, error } = await supabase.from('tarefas').select('id, id_externo').eq('fonte', 'trello').in('id_externo', cartoes.slice(i, i + LOTE));
@@ -157,6 +201,8 @@ export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios
   const ligar = (lista) => lista.filter((x) => idTarefa.has(x.cartao)).map(({ cartao, ...resto }) => ({ ...resto, tarefa_id: idTarefa.get(cartao) }));
   const linhasComentarios = ligar(comentarios);
   const linhasItens = ligar(itens);
+  const linhasDatas = datas.filter((d) => idTarefa.has(d.cartao)).map(({ cartao, ...resto }) => ({ ...resto, tarefa_id: idTarefa.get(cartao) }));
+  await gravarLotes(supabase, 'trello_cartao_datas', linhasDatas, 'tarefa_id');
   await gravarLotes(supabase, 'trello_comentarios', linhasComentarios, 'id_externo');
   await gravarLotes(supabase, 'trello_checklist_itens', linhasItens, 'id_externo');
   await retirarAusentes(supabase, 'trello_comentarios', new Set(linhasComentarios.map((c) => c.id_externo)));
@@ -186,7 +232,11 @@ export async function lerTrello(credenciais, { idEquipe }) {
     }
     if (detalhado) {
       const vinculos = importados.flatMap((c) => (c.idMembers ?? []).map((membro) => ({ cartao: c.id, membro })));
-      detalhes = { ...(await lerDetalhes(credenciais, q.id)), vinculos };
+      const historico = await lerAcoes(credenciais, q.id, 'updateCard');
+      const conclusoes = conclusoesDoHistorico(historico);
+      const prazos = prazosDoHistorico(historico);
+      const datas = importados.map((c) => datasDoCartao(c, nomeLista.get(c.idList), conclusoes, prazos));
+      detalhes = { ...(await lerDetalhes(credenciais, q.id)), vinculos, datas };
     }
   }
   return { registros, quadros: quadros.length, detalhes };

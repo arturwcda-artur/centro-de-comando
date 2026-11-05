@@ -652,6 +652,19 @@ Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual r
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `trello_cartao_datas`
+
+Criação, conclusão real e prazo original do cartão, lidos do histórico do Trello.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| tarefa_id | uuid | sim | tarefas |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| concluido_em | timestamp with time zone |  |  |  |
+| prazo_original | date |  |  | Primeira data de entrega do cartão. É a referência da taxa de eficiência, para adiar o prazo não melhorar a taxa. |
+| prazo_alteracoes | integer | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `trello_checklist_itens`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
