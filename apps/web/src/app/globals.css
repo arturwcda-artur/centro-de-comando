@@ -75,3 +75,41 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-feature-settings: "tnum" 1;
 }
+
+/* Relatórios: papel A4, sempre no tema claro, mesmo com o sistema em modo escuro. */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  :root {
+    --fundo: #ffffff;
+    --superficie: #ffffff;
+    --superficie-2: #f8f9fb;
+    --borda: #d5d9e0;
+    --texto: #18202b;
+    --texto-suave: #5c6675;
+    --marca: #1f5fae;
+    --alerta: #b4232f;
+    --atencao: #a15c00;
+    --ok: #1d7a4a;
+  }
+
+  html,
+  body {
+    background: #ffffff;
+    color: #18202b;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .nao-imprimir {
+    display: none;
+  }
+
+  .folha {
+    max-width: none;
+    padding: 0;
+  }
+}

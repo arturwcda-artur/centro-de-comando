@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
-import { CREDITO_POR_QUEM_MARCOU, DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
-import { dataCivil, hojeSP, somarDias } from "@/lib/formato";
+import { GraficoSemanas } from "@/components/grafico-semanas";
+import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type LinhaEquipe } from "@/lib/equipe";
+import { PERIODOS, carregarCartoesEquipe, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
 export const metadata: Metadata = { title: "Equipe" };
-
-const PERIODOS = [
-  { valor: "30", rotulo: "Último mês", dias: 30 },
-  { valor: "7", rotulo: "Última semana", dias: 7 },
-  { valor: "todos", rotulo: "Todo o período", dias: null },
-];
 
 const quantidade = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 const comSinal = (n: number | null) => (n === null ? "—" : n > 0 ? `+${quantidade(n)}` : n < 0 ? `−${quantidade(Math.abs(n))}` : "0");
@@ -63,32 +58,6 @@ function Painel({ coluna, linhas, evolucao, destino }: { coluna: string; linhas:
   );
 }
 
-/** Entraram e resolvidas, semana a semana: mostra se a equipe está dando conta. */
-function Semanas({ semanas }: { semanas: { inicio: string; entraram: number; resolvidas: number }[] }) {
-  const maior = Math.max(...semanas.flatMap((s) => [s.entraram, s.resolvidas]), 1);
-  const barra = (n: number, cor: string, rotulo: string) => <span title={`${rotulo}: ${n}`} className={`w-1/2 rounded-t ${cor}`} style={{ height: `${(n / maior) * 100}%`, minHeight: n ? "2px" : 0 }} />;
-  return (
-    <div>
-      <ul className="flex h-36 items-end gap-2" aria-label="Tarefas que entraram e que foram resolvidas por semana">
-        {semanas.map((s) => (
-          <li key={s.inicio} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
-            <span className="text-[10px] tabular-nums text-suave">{`${s.entraram} / ${s.resolvidas}`}</span>
-            <span className="flex min-h-0 w-full flex-1 items-end gap-0.5">
-              {barra(s.entraram, "bg-borda", "Entraram")}
-              {barra(s.resolvidas, "bg-marca", "Resolvidas")}
-            </span>
-            <span className="text-[10px] tabular-nums text-suave">{dataCivil(s.inicio).slice(0, 5)}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-2 flex gap-4 text-xs">
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-borda" aria-hidden="true" /> Entraram</span>
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-marca" aria-hidden="true" /> Resolvidas</span>
-      </p>
-    </div>
-  );
-}
-
 /** O restante fica à parte, para a tela principal continuar simples. */
 function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
   return (
@@ -129,53 +98,10 @@ function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
 
 export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe">) {
   const { periodo: bruto } = await searchParams;
-  const periodo = PERIODOS.find((p) => p.valor === bruto) ?? PERIODOS[0];
+  const periodo = periodoDe(bruto);
   const { supabase } = await exigirSessaoCompleta();
-  const { data: membros } = await supabase.from("trello_membros").select("id, nome");
-  const idMembro = new Map((membros ?? []).map((m) => [m.nome, m.id]));
-  const { data } = await supabase
-    .from("tarefas")
-    .select("id, titulo, atualizado_em_origem, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes), cartoes_rotina(tarefa_id)")
-    .eq("fonte", "trello")
-    .like("categoria", `${QUADRO_EQUIPE} › %`);
-
-  const hoje = hojeSP();
-  const ids = (data ?? []).map((t) => t.id);
-  const { data: itensChecklist } = ids.length
-    ? await supabase.from("trello_checklist_itens").select("tarefa_id, concluido, criado_no_trello, concluido_em, atribuido:trello_membros!trello_checklist_itens_membro_id_fkey(nome), resolvedor:trello_membros!trello_checklist_itens_concluido_por_id_fkey(nome)").in("tarefa_id", ids).limit(5000)
-    : { data: [] };
-  const itensDoCartao = new Map<string, ItemCartao[]>();
-  for (const i of itensChecklist ?? []) {
-    const item = { concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, resolvido_por: i.resolvedor?.nome ?? null, responsaveis: i.atribuido ? [i.atribuido.nome] : [] };
-    itensDoCartao.set(i.tarefa_id, [...(itensDoCartao.get(i.tarefa_id) ?? []), item]);
-  }
-  const cartoes = (data ?? []).map((t) => ({
-    id: t.id,
-    titulo: t.titulo,
-    ultima_atividade: t.atualizado_em_origem,
-    status: t.status,
-    prazo: t.prazo,
-    categoria: t.categoria,
-    criado_em: t.trello_cartao_datas?.criado_em ?? null,
-    prazo_original: t.trello_cartao_datas?.prazo_original ?? null,
-    prazo_alteracoes: t.trello_cartao_datas?.prazo_alteracoes ?? 0,
-    concluido_em: t.trello_cartao_datas?.concluido_em ?? t.concluida_em,
-    membros: t.tarefa_membros.map((m) => m.trello_membros.nome),
-    rotina: !!t.cartoes_rotina,
-    itens: itensDoCartao.get(t.id),
-  }));
-  const desde = periodo.dias ? somarDias(hoje, -periodo.dias) : undefined;
-  const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, desde);
-
-  // Comparação com o período anterior, de mesmo tamanho. Sem entregas nele, ainda não há histórico para comparar
-  const anterior = periodo.dias && desde ? resumirEquipe(cartoes, hoje, somarDias(hoje, -2 * periodo.dias), CREDITO_POR_QUEM_MARCOU, desde) : null;
-  const temHistorico = (anterior?.total?.resolvidas ?? 0) > 0;
-  const variacao = (linhas: LinhaEquipe[] | undefined) => (nome: string, atual: number) => (temHistorico ? atual - (linhas?.find((l) => l.nome === nome)?.resolvidas ?? 0) : null);
-  const evolucaoEquipe = temHistorico ? (total?.resolvidas ?? 0) - (anterior?.total?.resolvidas ?? 0) : null;
-
-  const entraram = tarefasQueEntraram(cartoes, desde);
-  const saldoDoPeriodo = (total?.resolvidas ?? 0) - entraram;
-  const parados = cartoesParados(cartoes, new Date());
+  const { cartoes, idMembro } = await carregarCartoesEquipe(supabase);
+  const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
 
   const indicadores = [
     ["Tarefas resolvidas", quantidade(total?.resolvidas ?? 0), ""],
@@ -215,11 +141,11 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
       </div>
 
       <Cartao titulo="Quem resolveu">
-        <Painel coluna="Responsável" linhas={porResponsavel} evolucao={variacao(anterior?.porResponsavel)} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
+        <Painel coluna="Responsável" linhas={porResponsavel} evolucao={evolucaoPessoa} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
       </Cartao>
 
       <Cartao titulo="Entraram × resolvidas por semana">
-        <Semanas semanas={fluxoPorSemana(cartoes, hoje)} />
+        <GraficoSemanas semanas={semanas} />
       </Cartao>
 
       <Cartao titulo={`Cartões parados há ${DIAS_PARADA} dias ou mais (${parados.length})`}>
@@ -246,7 +172,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         <details>
           <summary className="cursor-pointer text-sm font-medium">Por lista</summary>
           <div className="mt-3">
-            <Painel coluna="Lista" linhas={porLista} evolucao={variacao(anterior?.porLista)} destino={() => null} />
+            <Painel coluna="Lista" linhas={porLista} evolucao={evolucaoLista} destino={() => null} />
           </div>
         </details>
       </Cartao>
