@@ -13,7 +13,7 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 5+ — Equipe e detalhes do Trello | painel por lista e responsável, comentários, checklists e cartão a partir de comentário (ADR 0017) | ✅ concluída em 05/11/2026, só no quadro Obras do Grupo - C.SALLES, com cartões de rotina |
 | 6 — Planejamento | agente local MS Project, versões, Curva S (piloto: PRF-Recanto) | ✅ aprovada em 04/11/2026 |
 | 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | ✅ aprovada em 04/11/2026 |
-| 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | 🔶 Documentos no ar em 05/11/2026, piloto PRF-Recanto; Relatórios em implantação |
+| 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | ✅ aprovada em 05/11/2026, piloto PRF-Recanto |
 | 9 — Integrações completas | painel de conectores, conflitos, escrita opt-in | |
 | 10 — IA e automações | assistente com fonte e data, alertas, teto de custo | |
 | 11 — Testes e implantação | E2E, desempenho, domínio, teste de restauração | |
