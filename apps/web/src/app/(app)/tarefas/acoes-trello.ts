@@ -6,6 +6,17 @@ import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { cartaoDeComentarioSchema, mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
 
+/** Marca ou desmarca cartão de rotina (RN-49b). Fica só no sistema: nada é gravado no Trello. */
+export async function alternarRotina(tarefaId: string, marcado: boolean, _: EstadoFormulario): Promise<EstadoFormulario> {
+  const { supabase } = await exigirSessaoCompleta();
+  if (!UUID.test(tarefaId)) return { erro: "Tarefa inválida." };
+  const { error } = marcado ? await supabase.from("cartoes_rotina").delete().eq("tarefa_id", tarefaId) : await supabase.from("cartoes_rotina").insert({ tarefa_id: tarefaId });
+  if (error) return { erro: mensagemDoBanco(error) };
+  revalidatePath(`/tarefas/${tarefaId}`);
+  revalidatePath("/equipe");
+  return { ok: true };
+}
+
 /**
  * Cria um cartão no Trello a partir de um comentário (ADR 0017, RN-49).
  * O comentário e o cartão de origem não mudam, e cada comentário vira cartão uma única vez.

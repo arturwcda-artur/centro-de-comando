@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { criarCartaoDeComentario, listasDoCartao } from '../src/escrita.js';
-import { QUADRO_DETALHADO, aplicarDetalhes, cartaoImportavel, conclusoesDoHistorico, criacaoDoCartao, datasDoCartao, lerDetalhes, prazosDoHistorico, textoSensivel } from '../src/trello.js';
+import { QUADRO_DETALHADO, aplicarDetalhes, cartaoImportavel, conclusoesDeItens, conclusoesDoHistorico, criacaoDoCartao, datasDoCartao, lerDetalhes, prazosDoHistorico, textoSensivel } from '../src/trello.js';
 
 // Dados de TESTE no formato da API. Nenhuma chamada real é feita.
 const cred = { chave: 'k', token: 't' };
@@ -97,6 +97,16 @@ describe('mudanças da data de entrega', () => {
   });
 });
 
+describe('conclusão dos itens de checklist', () => {
+  const marcar = (date, id, state) => ({ date, data: { checkItem: { id, state } } });
+
+  it('guarda a última conclusão e ignora desmarcar', () => {
+    const c = conclusoesDeItens([marcar('2026-10-01T12:00:00Z', 'i1', 'complete'), marcar('2026-10-05T12:00:00Z', 'i1', 'complete'), marcar('2026-10-06T12:00:00Z', 'i2', 'incomplete')]);
+    expect(c.get('i1')).toBe('2026-10-05T12:00:00Z');
+    expect(c.has('i2')).toBe(false);
+  });
+});
+
 describe('textoSensivel', () => {
   it('reconhece credencial escrita no texto', () => {
     expect(textoSensivel('senha: abc')).toBe(true);
@@ -109,27 +119,30 @@ describe('textoSensivel', () => {
 describe('lerDetalhes', () => {
   const rotas = {
     '/members': [{ id: 'm1', fullName: 'Pessoa Um', username: 'um' }],
-    '/checklists': [{ id: 'l1', name: 'Vistoria', idCard: 'c1', checkItems: [{ id: 'i1', name: 'Fôrma', state: 'complete', pos: 1 }, { id: 'i2', name: 'senha: 123', state: 'incomplete', pos: 2 }] }],
-    '/actions': [
+    '/checklists': [{ id: 'l1', name: 'Vistoria', idCard: 'c1', checkItems: [{ id: '5f5e1000aaaaaaaaaaaaaaaa', name: 'Fôrma', state: 'complete', pos: 1, idMember: 'm1' }, { id: 'i2', name: 'senha: 123', state: 'incomplete', pos: 2 }] }],
+    '/actions': (p) => (p.get('filter') === 'updateCheckItemStateOnCard' ? [{ id: 'k1', date: '2026-11-03T12:00:00.000Z', data: { checkItem: { id: '5f5e1000aaaaaaaaaaaaaaaa', state: 'complete' } } }] : [
       { id: 'a1', date: '2026-11-01T12:00:00.000Z', data: { text: 'Concreto liberado', card: { id: 'c1' } }, memberCreator: { fullName: 'Pessoa Um' } },
       { id: 'a2', date: '2026-11-02T12:00:00.000Z', data: { text: 'senha: 999', card: { id: 'c1' } }, memberCreator: { fullName: 'Pessoa Um' } },
-    ],
+    ]),
   };
 
   it('lê membros, itens e comentários, sem copiar texto sensível', async () => {
     apiFalsa(rotas);
     const d = await lerDetalhes(cred, 'q1');
     expect(d.membros).toEqual([{ id_externo: 'm1', nome: 'Pessoa Um', usuario: 'um' }]);
-    expect(d.itens).toEqual([{ id_externo: 'i1', cartao: 'c1', checklist: 'Vistoria', nome: 'Fôrma', concluido: true, posicao: 1 }]);
+    expect(d.itens).toEqual([{
+      id_externo: '5f5e1000aaaaaaaaaaaaaaaa', cartao: 'c1', checklist: 'Vistoria', nome: 'Fôrma', concluido: true, posicao: 1, membro: 'm1',
+      criado_no_trello: new Date(0x5f5e1000 * 1000).toISOString(), concluido_em: '2026-11-03T12:00:00.000Z',
+    }]);
     expect(d.comentarios).toEqual([{ id_externo: 'a1', cartao: 'c1', autor: 'Pessoa Um', texto: 'Concreto liberado', data: '2026-11-01T12:00:00.000Z' }]);
   });
 
   it('percorre todas as páginas de comentários', async () => {
     const pagina = Array.from({ length: 1000 }, (_, i) => ({ id: `a${i}`, date: '2026-11-01T12:00:00.000Z', data: { text: 'ok', card: { id: 'c1' } }, memberCreator: { fullName: 'X' } }));
-    const c = apiFalsa({ ...rotas, '/actions': (p) => (p.get('before') ? [{ id: 'z', date: '2026-10-01T12:00:00.000Z', data: { text: 'antigo', card: { id: 'c1' } }, memberCreator: { fullName: 'X' } }] : pagina) });
+    const c = apiFalsa({ ...rotas, '/actions': (p) => (p.get('filter') !== 'commentCard' ? [] : p.get('before') ? [{ id: 'z', date: '2026-10-01T12:00:00.000Z', data: { text: 'antigo', card: { id: 'c1' } }, memberCreator: { fullName: 'X' } }] : pagina) });
     const d = await lerDetalhes(cred, 'q1');
     expect(d.comentarios).toHaveLength(1001);
-    expect(c.filter((x) => x.caminho.endsWith('/actions')).at(-1).params.get('before')).toBe('a999');
+    expect(c.filter((x) => x.caminho.endsWith('/actions') && x.params.get('filter') === 'commentCard').at(-1).params.get('before')).toBe('a999');
   });
 });
 

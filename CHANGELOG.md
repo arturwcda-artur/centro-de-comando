@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.11.3] — 2026-11-05 — Cartões de rotina
+### Adicionado
+- Botão **Marcar como rotina** no detalhe do cartão (RN-49b). O cartão sai da taxa de eficiência e das contagens.
+- Tela **Equipe**: colunas **Itens de rotina** e **Tempo por item**.
+- Migration `0024_cartoes_rotina.sql`.
 ## [0.12.0] — 2026-11-05 — Fase 8: documentos
 ### Adicionado
 - Tela **Documentos**: busca por nome e conteúdo, filtros e abertura pelo Google Drive (ADR 0018).

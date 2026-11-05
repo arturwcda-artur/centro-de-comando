@@ -22,7 +22,7 @@ function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: s
         <EstadoVazio>Nenhum cartão neste período.</EstadoVazio>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="text-left text-xs text-suave">
               <tr>
                 <th className="py-2 pr-2 font-medium">#</th>
@@ -34,6 +34,8 @@ function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: s
                 <th className="py-2 text-right font-medium">Eficiência</th>
                 <th className="py-2 text-right font-medium">Tempo médio</th>
                 <th className="py-2 text-right font-medium">Prazos alterados</th>
+                <th className="py-2 text-right font-medium">Itens de rotina</th>
+                <th className="py-2 text-right font-medium">Tempo por item</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-borda">
@@ -59,6 +61,8 @@ function Tabela({ titulo, coluna, linhas, destino }: { titulo: string; coluna: s
                   </td>
                   <td className="py-2 text-right tabular-nums">{dias(l.diasMedios)}</td>
                   <td className="py-2 text-right tabular-nums">{l.prazosAlterados}</td>
+                  <td className="py-2 text-right tabular-nums">{l.itensRotina}</td>
+                  <td className="py-2 text-right tabular-nums">{dias(l.diasPorItem)}</td>
                 </tr>
               ))}
             </tbody>
@@ -77,7 +81,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const idMembro = new Map((membros ?? []).map((m) => [m.nome, m.id]));
   const { data } = await supabase
     .from("tarefas")
-    .select("status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes)")
+    .select("id, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes), cartoes_rotina(tarefa_id)")
     .eq("fonte", "trello")
     .like("categoria", `${QUADRO_EQUIPE} › %`);
 
@@ -91,8 +95,18 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     prazo_alteracoes: t.trello_cartao_datas?.prazo_alteracoes ?? 0,
     concluido_em: t.trello_cartao_datas?.concluido_em ?? t.concluida_em,
     membros: t.tarefa_membros.map((m) => m.trello_membros.nome),
+    rotina: !!t.cartoes_rotina,
+    id: t.id,
   }));
-  const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined);
+  const rotinas = new Map(cartoes.filter((c) => c.rotina).map((c) => [c.id, c]));
+  const { data: itensFeitos } = rotinas.size
+    ? await supabase.from("trello_checklist_itens").select("tarefa_id, criado_no_trello, concluido_em, trello_membros(nome)").eq("concluido", true).in("tarefa_id", [...rotinas.keys()])
+    : { data: [] };
+  const itens = (itensFeitos ?? []).map((i) => {
+    const cartao = rotinas.get(i.tarefa_id);
+    return { criado_em: i.criado_no_trello, concluido_em: i.concluido_em, categoria: cartao?.categoria ?? null, responsaveis: i.trello_membros ? [i.trello_membros.nome] : (cartao?.membros ?? []) };
+  });
+  const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined, itens);
 
   const indicadores = [
     ["Cartões", total?.atribuidas ?? 0],
@@ -101,6 +115,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     ["Vencidos", total?.vencidas ?? 0],
     ["Eficiência", pct(total?.eficiencia)],
     ["Tempo médio", dias(total?.diasMedios ?? null)],
+    ["Itens de rotina", total?.itensRotina ?? 0],
   ] as const;
 
   return (
@@ -123,7 +138,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </nav>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
         {indicadores.map(([rotulo, valor]) => (
           <Cartao key={rotulo}>
             <p className="text-xs text-suave">{rotulo}</p>
@@ -136,7 +151,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
       <Tabela titulo="Ranking por lista" coluna="Lista" linhas={porLista} destino={() => null} />
 
       <p className="text-xs text-suave">
-        Eficiência: cartões concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora a taxa. O ranking vai da maior para a menor eficiência e muda conforme o período escolhido. Tempo médio: da criação à conclusão, em todos os concluídos. Cartão com dois membros conta para os dois, e a conclusão conta para quem estava atribuído. Nos períodos, os cartões abertos sempre aparecem.
+        Eficiência: cartões concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora a taxa. O ranking vai da maior para a menor eficiência e muda conforme o período escolhido. Tempo médio: da criação à conclusão, em todos os concluídos. Cartão com dois membros conta para os dois, e a conclusão conta para quem estava atribuído. Nos períodos, os cartões abertos sempre aparecem. Cartões de rotina ficam fora dessas contagens e contam só pelos itens de checklist concluídos.
       </p>
     </div>
   );

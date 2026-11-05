@@ -4,7 +4,8 @@ import { Aviso, Cartao, EstadoVazio } from "@/components/ui";
 import { tituloDoComentario } from "@/lib/equipe";
 import { dataHora } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
-import { transformarEmCartao } from "../acoes-trello";
+import { alternarRotina, transformarEmCartao } from "../acoes-trello";
+import { BotaoRotina } from "./botao-rotina";
 import { TransformarEmCartao } from "./transformar-em-cartao";
 
 async function carregarListas(idCartao: string) {
@@ -21,11 +22,13 @@ async function carregarListas(idCartao: string) {
 /** Membros, checklists e comentários do cartão. Só o quadro detalhado tem esses dados (ADR 0017). */
 export async function DetalhesTrello({ tarefaId, idCartao }: { tarefaId: string; idCartao: string }) {
   const { supabase } = await exigirSessaoCompleta();
-  const [membros, itens, comentarios] = await Promise.all([
+  const [membros, itens, comentarios, rotina] = await Promise.all([
     supabase.from("tarefa_membros").select("trello_membros(nome)").eq("tarefa_id", tarefaId),
     supabase.from("trello_checklist_itens").select("*").eq("tarefa_id", tarefaId).order("checklist").order("posicao"),
     supabase.from("trello_comentarios").select("*").eq("tarefa_id", tarefaId).order("data", { ascending: false }),
+    supabase.from("cartoes_rotina").select("tarefa_id").eq("tarefa_id", tarefaId).maybeSingle(),
   ]);
+  const ehRotina = !!rotina.data;
   const listaComentarios = comentarios.data ?? [];
   const [listas, criados] = await Promise.all([
     listaComentarios.length ? carregarListas(idCartao) : null,
@@ -40,6 +43,10 @@ export async function DetalhesTrello({ tarefaId, idCartao }: { tarefaId: string;
 
   return (
     <>
+      <Cartao titulo="Cartão de rotina">
+        <BotaoRotina acao={alternarRotina.bind(null, tarefaId, ehRotina)} rotina={ehRotina} />
+      </Cartao>
+
       <Cartao titulo="Membros">
         {(membros.data ?? []).length === 0 ? <p className="text-sm text-suave">Sem membros atribuídos.</p> : <p className="text-sm">{(membros.data ?? []).map((m) => m.trello_membros.nome).join(", ")}</p>}
       </Cartao>

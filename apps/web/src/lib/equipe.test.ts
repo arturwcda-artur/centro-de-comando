@@ -112,6 +112,41 @@ describe("ranking", () => {
   });
 });
 
+describe("cartões de rotina", () => {
+  const item = (extra = {}) => ({ criado_em: "2026-10-01T12:00:00Z", concluido_em: "2026-10-03T12:00:00Z", responsaveis: ["Ana"], categoria: `${QUADRO_EQUIPE} › CEF-01`, ...extra });
+
+  it("saem das contagens e da taxa, mesmo com prazo vencido", () => {
+    const r = resumirEquipe([cartao({ rotina: true, prazo: "2026-01-01" }), concluido({ prazo: "2026-10-20" })], hoje).total;
+    expect(r).toMatchObject({ atribuidas: 1, abertas: 0, cobraveis: 1, eficiencia: 100 });
+  });
+
+  it("contam pelos itens concluídos, com o tempo médio por item", () => {
+    const r = resumirEquipe([], hoje, undefined, [item(), item({ concluido_em: "2026-10-05T12:00:00Z" })]).porResponsavel[0];
+    expect(r).toMatchObject({ nome: "Ana", itensRotina: 2, diasPorItem: 3, atribuidas: 0 });
+  });
+
+  it("quem só tem rotina aparece, mas sem posição no ranking", () => {
+    const r = resumirEquipe([], hoje, undefined, [item()]).porResponsavel[0];
+    expect(r.posicao).toBeNull();
+  });
+
+  it("item com dois responsáveis credita os dois; sem nenhum, fica sem responsável", () => {
+    const r = resumirEquipe([], hoje, undefined, [item({ responsaveis: ["Ana", "Bia"] }), item({ responsaveis: [] })]);
+    expect(r.porResponsavel.map((l) => l.nome).sort()).toEqual(["Ana", "Bia", SEM_RESPONSAVEL]);
+    expect(r.total?.itensRotina).toBe(2);
+  });
+
+  it("no período, tira itens antigos", () => {
+    const r = resumirEquipe([], hoje, "2026-10-06", [item(), item({ concluido_em: "2026-11-01T12:00:00Z" })]).total;
+    expect(r?.itensRotina).toBe(1);
+  });
+
+  it("item sem data de conclusão conta em todo o período e não entra no tempo", () => {
+    const r = resumirEquipe([], hoje, undefined, [item({ concluido_em: null })]).total;
+    expect(r).toMatchObject({ itensRotina: 1, diasPorItem: null });
+  });
+});
+
 describe("tempo médio", () => {
   it("vai da criação à conclusão, em dias", () => {
     const r = resumirEquipe([concluido(), concluido({ concluido_em: "2026-10-21T12:00:00Z" })], hoje);

@@ -315,6 +315,32 @@ export type Database = {
         }
         Relationships: []
       }
+      cartoes_rotina: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          tarefa_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          tarefa_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          tarefa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartoes_rotina_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: true
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_itens: {
         Row: {
           atualizado_em: string
@@ -2209,6 +2235,9 @@ export type Database = {
           id: string
           checklist: string
           concluido: boolean
+          concluido_em: string | null
+          criado_no_trello: string | null
+          membro_id: string | null
           id_externo: string
           nome: string
           posicao: number
@@ -2220,6 +2249,9 @@ export type Database = {
           id?: string
           checklist: string
           concluido?: boolean
+          concluido_em?: string | null
+          criado_no_trello?: string | null
+          membro_id?: string | null
           id_externo: string
           nome: string
           posicao?: number
@@ -2231,12 +2263,22 @@ export type Database = {
           id?: string
           checklist?: string
           concluido?: boolean
+          concluido_em?: string | null
+          criado_no_trello?: string | null
+          membro_id?: string | null
           id_externo?: string
           nome?: string
           posicao?: number
           tarefa_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "trello_checklist_itens_membro_id_fkey"
+            columns: ["membro_id"]
+            isOneToOne: false
+            referencedRelation: "trello_membros"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trello_checklist_itens_tarefa_id_fkey"
             columns: ["tarefa_id"]

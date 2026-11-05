@@ -19,6 +19,9 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 8. **Gravação nova:** o sistema pode **criar** cartão a partir de comentário, inclusive em cartão de terceiros, na mesma tela. O comentário e o cartão de origem não mudam. Cada comentário vira cartão uma vez, e a operação fica em `operacoes_externas`.
 9. **Nada é excluído nem arquivado no Trello.** Essa regra do ADR 0013 continua valendo.
 
+## Cartões de rotina
+Cartões renovados sempre, como pedidos de compra, não têm fim nem prazo. O proprietário os marca no sistema, com auditoria e sem gravar no Trello, para a equipe não alterar o que entra na própria avaliação. Eles saem das contagens e da taxa e passam a contar pelos itens de checklist concluídos, com crédito ao membro do item ou, sem ele, aos membros do cartão. A taxa mede prazo, e os itens medem volume: os dois ficam separados de propósito.
+
 ## Consequências
 - O filtro reconhece padrões como `senha:`. Outro formato de credencial pode passar.
 - O cartão novo aparece no sistema na sincronização seguinte.
