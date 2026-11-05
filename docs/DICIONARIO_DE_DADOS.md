@@ -615,6 +615,14 @@ Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual r
 | depende_de_id | uuid | sim | tarefas |  |
 | criado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `tarefa_membros`
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| tarefa_id | uuid | sim | tarefas |  |
+| membro_id | uuid | sim | trello_membros |  |
+| criado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `tarefas`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -641,6 +649,46 @@ Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual r
 | atualizado_em_origem | timestamp with time zone |  |  |  |
 | hash_conteudo | text |  |  |  |
 | status_sync | text | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
+## Tabela `trello_checklist_itens`
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| tarefa_id | uuid | sim | tarefas |  |
+| id_externo | text | sim |  |  |
+| checklist | text | sim |  |  |
+| nome | text | sim |  |  |
+| concluido | boolean | sim |  |  |
+| posicao | numeric | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
+## Tabela `trello_comentarios`
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| tarefa_id | uuid | sim | tarefas |  |
+| id_externo | text | sim |  |  |
+| autor | text |  |  |  |
+| texto | text | sim |  |  |
+| data | timestamp with time zone | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
+## Tabela `trello_membros`
+
+Membros do Trello. Ficam fora de pessoas para não misturar com o cadastro da empresa.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| id_externo | text | sim |  |  |
+| nome | text | sim |  |  |
+| usuario | text |  |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 

@@ -9,6 +9,7 @@ export type Modulo = {
     | "dia"
     | "obras"
     | "tarefas"
+    | "equipe"
     | "agenda"
     | "planejamento"
     | "contratos"
@@ -26,6 +27,7 @@ export const MODULOS: Modulo[] = [
   { slug: "meu-dia", href: "/meu-dia", titulo: "Meu dia", descricao: "Prioridades, compromissos e pendências do dia", icone: "dia", fase: 5, grupo: "Visão geral" },
   { slug: "obras", href: "/obras", titulo: "Obras", descricao: "Cadastro e ambiente individual de cada obra", icone: "obras", fase: 4, grupo: "Gestão" },
   { slug: "tarefas", href: "/tarefas", titulo: "Tarefas", descricao: "Atribuições, cobranças e vencimentos", icone: "tarefas", fase: 5, grupo: "Gestão" },
+  { slug: "equipe", href: "/equipe", titulo: "Equipe", descricao: "Cartões por lista e por responsável no Trello", icone: "equipe", fase: 5, grupo: "Gestão" },
   { slug: "agenda", href: "/agenda", titulo: "Agenda", descricao: "Compromissos e reuniões (Google Agenda)", icone: "agenda", fase: 5, grupo: "Gestão" },
   { slug: "planejamento", href: "/planejamento", titulo: "Planejamento", descricao: "Cronogramas, linha de base e Curva S", icone: "planejamento", fase: 6, grupo: "Controle" },
   { slug: "contratos", href: "/contratos", titulo: "Contratos e financeiro", descricao: "Contratos, aditivos, medições e recebimentos", icone: "contratos", fase: 7, grupo: "Controle" },

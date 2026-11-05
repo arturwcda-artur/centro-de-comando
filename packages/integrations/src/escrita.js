@@ -1,8 +1,8 @@
 /**
- * Gravação nas ferramentas de origem (ADR 0013). Escopo deliberadamente mínimo: só CONCLUIR.
- * Nunca exclui nem arquiva nada. Quem decide se a tarefa pode ser concluída é a aplicação (RN-48).
+ * Gravação nas ferramentas de origem (ADR 0013 e 0017). Escopo deliberadamente mínimo: concluir e,
+ * no Trello, criar cartão a partir de comentário. Nunca exclui nem arquiva nada. Quem decide se a tarefa pode ser concluída é a aplicação (RN-48).
  */
-import { statusDaLista } from './trello.js';
+import { listaSensivel, statusDaLista } from './trello.js';
 import { buscar } from './util.js';
 
 const TRELLO = 'https://api.trello.com/1';
@@ -30,6 +30,32 @@ export async function concluirCartaoTrello({ chave, token }, idCartao) {
 
   await buscar(`${TRELLO}/cards/${idCartao}?${new URLSearchParams(mudancas)}&${auth}`, { method: 'PUT', headers: { Accept: 'application/json' } }, 'Trello');
   return destino ? `Cartão movido para a lista "${destino.name}"` : 'Cartão marcado como concluído';
+}
+
+const noTrello = ({ chave, token }, caminho, params = {}) =>
+  buscar(`${TRELLO}${caminho}?${new URLSearchParams({ ...params, key: chave, token })}`, { headers: { Accept: 'application/json' } }, 'Trello').then((r) => r.json());
+
+async function listasDoQuadro(credenciais, idQuadro) {
+  const listas = await noTrello(credenciais, `/boards/${idQuadro}/lists`, { fields: 'name', filter: 'open' });
+  return listas.filter((l) => !listaSensivel(l.name)).map((l) => ({ id: l.id, nome: l.name }));
+}
+
+/** Listas abertas do quadro do cartão, para escolher onde criar o cartão novo. */
+export async function listasDoCartao(credenciais, idCartao) {
+  const cartao = await noTrello(credenciais, `/cards/${idCartao}`, { fields: 'idBoard' });
+  return listasDoQuadro(credenciais, cartao.idBoard);
+}
+
+/** Cria um cartão novo com o texto do comentário. O cartão de origem e o comentário não mudam. */
+export async function criarCartaoDeComentario(credenciais, { idCartaoOrigem, idLista, titulo, texto }) {
+  const origem = await noTrello(credenciais, `/cards/${idCartaoOrigem}`, { fields: 'idBoard,shortUrl' });
+  const listas = await listasDoQuadro(credenciais, origem.idBoard);
+  if (!listas.some((l) => l.id === idLista)) throw new Error('A lista escolhida não pertence a este quadro');
+  const corpo = new URLSearchParams({ idList: idLista, name: titulo, desc: `${texto}\n\nOrigem: ${origem.shortUrl}`, pos: 'bottom' });
+  const auth = new URLSearchParams({ key: credenciais.chave, token: credenciais.token });
+  const r = await buscar(`${TRELLO}/cards?${auth}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' }, body: corpo }, 'Trello');
+  const novo = await r.json();
+  return { id: novo.id, url: novo.shortUrl };
 }
 
 /** Notion: muda a propriedade de situação da página para a opção de concluído da própria base. */

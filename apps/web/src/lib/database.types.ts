@@ -2058,6 +2058,152 @@ export type Database = {
           },
         ]
       }
+      tarefa_membros: {
+        Row: {
+          criado_em: string
+          membro_id: string
+          tarefa_id: string
+        }
+        Insert: {
+          criado_em?: string
+          membro_id: string
+          tarefa_id: string
+        }
+        Update: {
+          criado_em?: string
+          membro_id?: string
+          tarefa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_membros_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_membros_membro_id_fkey"
+            columns: ["membro_id"]
+            isOneToOne: false
+            referencedRelation: "trello_membros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_checklist_itens: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          checklist: string
+          concluido: boolean
+          id_externo: string
+          nome: string
+          posicao: number
+          tarefa_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          checklist: string
+          concluido?: boolean
+          id_externo: string
+          nome: string
+          posicao?: number
+          tarefa_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          checklist?: string
+          concluido?: boolean
+          id_externo?: string
+          nome?: string
+          posicao?: number
+          tarefa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_checklist_itens_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_comentarios: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          autor: string | null
+          data: string
+          id_externo: string
+          tarefa_id: string
+          texto: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          autor?: string | null
+          data: string
+          id_externo: string
+          tarefa_id: string
+          texto: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          autor?: string | null
+          data?: string
+          id_externo?: string
+          tarefa_id?: string
+          texto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_comentarios_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_membros: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          id_externo: string
+          nome: string
+          usuario: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          id_externo: string
+          nome: string
+          usuario?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          id_externo?: string
+          nome?: string
+          usuario?: string | null
+        }
+        Relationships: [
+        ]
+      }
       tarefas: {
         Row: {
           aguardando_pessoa_id: string | null
