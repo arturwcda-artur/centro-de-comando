@@ -26,6 +26,8 @@ export type CartaoEquipe = {
   prazo_alteracoes: number;
   categoria: string | null;
   membros: string[];
+  /** Quem concluiu o cartão no Trello. */
+  resolvido_por?: string | null;
   /** Cartão de rotina: fica fora da eficiência no prazo (RN-49b). */
   rotina?: boolean;
   itens?: ItemCartao[];
@@ -86,10 +88,10 @@ function somarPrazo(l: Acumulador, c: CartaoEquipe, hoje: string, noPeriodo: boo
   }
 }
 
-function somarTarefa(l: Acumulador, resolvida: boolean) {
-  l.sobResponsabilidade += 1;
-  if (resolvida) l.resolvidas += 1;
-  else l.pendentes += 1;
+function somarTarefa(l: Acumulador, resolvida: boolean, parte: number) {
+  l.sobResponsabilidade += parte;
+  if (resolvida) l.resolvidas += parte;
+  else l.pendentes += parte;
 }
 
 function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
@@ -107,21 +109,26 @@ function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
 }
 
 /**
- * Decisão do proprietário em 05/11/2026: por enquanto, o crédito do item é do responsável pelo cartão.
- * Quem marcou cada item já fica guardado. Para passar a usar, troque para true depois de alinhar com a equipe.
+ * Decisão do proprietário em 05/11/2026: quem marca no Trello recebe o crédito, e a equipe combina
+ * que cada um marca o que resolveu. Com false, o crédito volta aos responsáveis pelo cartão.
  */
-export const CREDITO_POR_QUEM_MARCOU = false;
+export const CREDITO_POR_QUEM_MARCOU = true;
+
+function donosDoCartao(c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
+  return porQuemMarcou && resolvido && c.resolvido_por ? [c.resolvido_por] : c.membros;
+}
 
 function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
   if (!porQuemMarcou) return c.membros;
   if (resolvido && i.resolvido_por) return [i.resolvido_por];
+  if (resolvido && c.resolvido_por) return [c.resolvido_por]; // cartão concluído com item não marcado
   return i.responsaveis.length ? i.responsaveis : c.membros;
 }
 
 /**
  * Cartão com checklist vale pelos itens; sem checklist, vale 1 (RN-49c). Cartão concluído resolve
- * todos os seus itens, mesmo os não marcados. Tarefa com dois responsáveis conta para os dois, então
- * a soma por pessoa pode passar do total. Com `desde`, resolvidas antes da data ficam de fora.
+ * todos os seus itens, mesmo os não marcados. Tarefa com dois responsáveis vale metade para cada um,
+ * então a soma das pessoas bate com o total. Com `desde`, resolvidas antes da data ficam de fora.
  * Sem responsável fica no fim e fora do total e das listas, para não mascarar a eficiência da equipe.
  */
 export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU) {
@@ -140,24 +147,34 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
       if (!cartaoConcluido || noPeriodo) for (const l of destinos(c, c.membros)) somarPrazo(l, c, hoje, noPeriodo);
     }
 
+    // O total e a lista recebem a tarefa inteira; as pessoas, a sua parte
+    const contar = (nomes: string[], resolvida: boolean, extra?: (l: Acumulador, parte: number) => void) => {
+      const parte = 1 / Math.max(nomes.length, 1);
+      if (nomes.length) for (const l of [linha(total, QUADRO_EQUIPE), linha(porLista, listaDe(c.categoria))]) (somarTarefa(l, resolvida, 1), extra?.(l, 1));
+      for (const nome of quem(nomes)) {
+        const l = linha(porResponsavel, nome);
+        somarTarefa(l, resolvida, parte);
+        extra?.(l, parte);
+      }
+    };
+
     if (!c.itens?.length) {
       if (cartaoConcluido && foraDoPeriodo(c.concluido_em)) continue;
-      for (const l of destinos(c, c.membros)) somarTarefa(l, cartaoConcluido);
+      contar(donosDoCartao(c, cartaoConcluido, porQuemMarcou), cartaoConcluido);
       continue;
     }
     for (const i of c.itens) {
       const resolvido = i.concluido || cartaoConcluido;
       const data = i.concluido_em ?? c.concluido_em;
       if (resolvido && foraDoPeriodo(data)) continue;
-      for (const l of destinos(c, donosDoItem(i, c, resolvido, porQuemMarcou))) {
-        somarTarefa(l, resolvido);
-        if (!resolvido) continue;
-        l.itensResolvidos += 1;
+      contar(donosDoItem(i, c, resolvido, porQuemMarcou), resolvido, (l, parte) => {
+        if (!resolvido) return;
+        l.itensResolvidos += parte;
         if (i.criado_em && data) {
-          l.somaDiasItem += diasEntre(i.criado_em, data);
-          l.itensComTempo += 1;
+          l.somaDiasItem += diasEntre(i.criado_em, data) * parte;
+          l.itensComTempo += parte;
         }
-      }
+      });
     }
   }
   return { total: fechar(total)[0] ?? null, porLista: fechar(porLista), porResponsavel: fechar(porResponsavel) };

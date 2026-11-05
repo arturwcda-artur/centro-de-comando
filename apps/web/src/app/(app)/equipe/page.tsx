@@ -13,6 +13,7 @@ const PERIODOS = [
   { valor: "30", rotulo: "Últimos 30 dias", dias: 30 },
 ];
 
+const quantidade = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 const dias = (d: number | null) => (d === null ? "—" : `${d.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`);
 
 const NUMERO = "py-2.5 text-right tabular-nums";
@@ -51,9 +52,9 @@ function Ranking({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEqu
                     l.nome
                   )}
                 </td>
-                <td className={NUMERO}>{l.sobResponsabilidade}</td>
-                <td className={NUMERO}>{l.resolvidas}</td>
-                <td className={NUMERO}>{l.pendentes}</td>
+                <td className={NUMERO}>{quantidade(l.sobResponsabilidade)}</td>
+                <td className={NUMERO}>{quantidade(l.resolvidas)}</td>
+                <td className={NUMERO}>{quantidade(l.pendentes)}</td>
                 <td className={`${NUMERO} ${semDono ? "" : "font-semibold"}`}>{pct(l.resolucao)}</td>
                 <td className={NUMERO} title={l.cobraveis > 0 ? `${l.noPrazo} de ${l.cobraveis} cartões com prazo` : undefined}>
                   {pct(l.eficiencia)}
@@ -107,7 +108,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const idMembro = new Map((membros ?? []).map((m) => [m.nome, m.id]));
   const { data } = await supabase
     .from("tarefas")
-    .select("id, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes), cartoes_rotina(tarefa_id)")
+    .select("id, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes, trello_membros(nome)), cartoes_rotina(tarefa_id)")
     .eq("fonte", "trello")
     .like("categoria", `${QUADRO_EQUIPE} › %`);
 
@@ -130,15 +131,16 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     prazo_alteracoes: t.trello_cartao_datas?.prazo_alteracoes ?? 0,
     concluido_em: t.trello_cartao_datas?.concluido_em ?? t.concluida_em,
     membros: t.tarefa_membros.map((m) => m.trello_membros.nome),
+    resolvido_por: t.trello_cartao_datas?.trello_membros?.nome ?? null,
     rotina: !!t.cartoes_rotina,
     itens: itensDoCartao.get(t.id),
   }));
   const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined);
 
   const indicadores = [
-    ["Tarefas", total?.sobResponsabilidade ?? 0],
-    ["Resolvidas", total?.resolvidas ?? 0],
-    ["Pendentes", total?.pendentes ?? 0],
+    ["Tarefas", quantidade(total?.sobResponsabilidade ?? 0)],
+    ["Resolvidas", quantidade(total?.resolvidas ?? 0)],
+    ["Pendentes", quantidade(total?.pendentes ?? 0)],
     ["Resolução", pct(total?.resolucao)],
     ["No prazo", pct(total?.eficiencia)],
   ] as const;
@@ -201,7 +203,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
             <li>Tarefas: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens.</li>
             <li>Resolução: resolvidas divididas pelas tarefas. É ela que define o ranking.</li>
             <li>No prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa.</li>
-            <li>O crédito é do responsável pelo cartão. Tarefa com dois responsáveis conta para os dois.</li>
+            <li>Tarefa resolvida conta para quem marcou no Trello: o item ou, sem checklist, o cartão. Por isso, cada um deve marcar o que resolveu.</li>
+            <li>Tarefa pendente, ou sem registro de quem marcou, é dividida entre os responsáveis do cartão.</li>
             <li>Sem responsável aparece no fim da lista e fica fora dos totais e das listas.</li>
             <li>Nos períodos, o que está pendente sempre aparece.</li>
           </ul>

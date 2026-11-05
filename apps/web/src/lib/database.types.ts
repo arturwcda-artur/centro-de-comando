@@ -2197,6 +2197,7 @@ export type Database = {
         Row: {
           atualizado_em: string
           concluido_em: string | null
+          concluido_por_id: string | null
           criado_em: string
           prazo_alteracoes: number
           prazo_original: string | null
@@ -2205,6 +2206,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           concluido_em?: string | null
+          concluido_por_id?: string | null
           criado_em: string
           prazo_alteracoes?: number
           prazo_original?: string | null
@@ -2213,12 +2215,20 @@ export type Database = {
         Update: {
           atualizado_em?: string
           concluido_em?: string | null
+          concluido_por_id?: string | null
           criado_em?: string
           prazo_alteracoes?: number
           prazo_original?: string | null
           tarefa_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "trello_cartao_datas_concluido_por_id_fkey"
+            columns: ["concluido_por_id"]
+            isOneToOne: false
+            referencedRelation: "trello_membros"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trello_cartao_datas_tarefa_id_fkey"
             columns: ["tarefa_id"]

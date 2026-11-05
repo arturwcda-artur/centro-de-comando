@@ -8,10 +8,10 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 1. **Escopo:** só esse quadro (`QUADRO_DETALHADO`). Os outros quadros continuam como estavam.
 2. **Responsáveis reais:** `trello_membros` e `tarefa_membros`, fora de `pessoas`. O campo `responsavel_id` não muda, então Meu dia e conclusão continuam iguais.
 3. **Arquivados:** entram se estavam concluídos, para não prejudicar quem arquiva o que termina. Os demais ficam de fora da contagem.
-4. **Contagem:** cartão com dois membros conta para os dois. A conclusão conta para quem estava atribuído.
+4. **Contagem:**
    - **Taxa de eficiência:** concluídos até a **primeira** data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto (decisão do proprietário). Adiar a data não melhora a taxa, e cada mudança aparece em **Prazos alterados**.
    - **Unidade de tarefa (decisão do proprietário):** cada item de checklist vale 1, e o cartão sem checklist vale 1. Cartão concluído resolve todos os seus itens.
-   - **Crédito do item:** por decisão do proprietário, vai para o responsável pelo cartão enquanto ele alinha a regra com a equipe. Quem marcou cada item já fica guardado, e a troca é a constante `CREDITO_POR_QUEM_MARCOU`.
+   - **Crédito (decisão do proprietário):** a tarefa resolvida vai inteira para quem marcou no Trello, e a equipe combina que cada um marca o que resolveu. A pendente, ou sem esse registro, é dividida entre os responsáveis do cartão, para um cartão com vários membros não contar várias vezes. Marcar não prova quem executou. A constante `CREDITO_POR_QUEM_MARCOU` volta o crédito aos responsáveis.
    - **Sem responsável:** fica no fim da lista, sem posição, e fora dos totais e das listas, para não mascarar a eficiência da equipe.
    - **Ranking:** pela **taxa de resolução** (RN-49c), que cobre todo o trabalho, porque a base de prazo é pequena. No empate, fica à frente quem carrega mais tarefas.
    - **Tempo médio:** da criação à conclusão, em todos os concluídos.
