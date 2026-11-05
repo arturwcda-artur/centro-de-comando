@@ -53,10 +53,12 @@ export type LinhaEquipe = {
   /** Cartões no prazo menos cartões atrasados: positivo é bom, negativo pede atenção. */
   saldoPrazo: number | null;
   diasMedios: number | null;
+  /** Tempo da criação à resolução, em todas as tarefas resolvidas: itens e cartões sem checklist. */
+  diasPorTarefa: number | null;
   prazosAlterados: number;
 };
 
-type Acumulador = LinhaEquipe & { somaDias: number; comTempo: number; somaDiasItem: number; itensComTempo: number };
+type Acumulador = LinhaEquipe & { somaDias: number; comTempo: number; somaDiasItem: number; itensComTempo: number; somaDiasTarefa: number; tarefasComTempo: number };
 
 const DIA_MS = 86400000;
 const diasEntre = (de: string, ate: string) => Math.max(Date.parse(ate) - Date.parse(de), 0) / DIA_MS;
@@ -64,7 +66,7 @@ const listaDe = (categoria: string | null) => categoria?.split(" › ")[1] ?? "�
 const quem = (nomes: string[]) => (nomes.length ? nomes : [SEM_RESPONSAVEL]);
 
 function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
-  const nova: Acumulador = { nome, atribuidas: 0, abertas: 0, concluidas: 0, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, saldoPrazo: null, diasMedios: null, prazosAlterados: 0, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
+  const nova: Acumulador = { nome, atribuidas: 0, abertas: 0, concluidas: 0, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, saldoPrazo: null, diasMedios: null, diasPorTarefa: null, prazosAlterados: 0, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0, somaDiasTarefa: 0, tarefasComTempo: 0 };
   const l = linhas.get(nome) ?? nova;
   linhas.set(nome, l);
   return l;
@@ -102,13 +104,14 @@ function somarTarefa(l: Acumulador, resolvida: boolean, parte: number) {
 /** Sem posições: a ordem é por entregas, para ter mais tarefas não parecer pior. Sem responsável vai para o fim. */
 function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
   return [...linhas.values()]
-    .map(({ somaDias, comTempo, somaDiasItem, itensComTempo, ...l }) => ({
+    .map(({ somaDias, comTempo, somaDiasItem, itensComTempo, somaDiasTarefa, tarefasComTempo, ...l }) => ({
       ...l,
       resolucao: l.sobResponsabilidade ? (l.resolvidas / l.sobResponsabilidade) * 100 : null,
       eficiencia: l.cobraveis ? (l.noPrazo / l.cobraveis) * 100 : null,
       saldoPrazo: l.cobraveis ? l.noPrazo - (l.cobraveis - l.noPrazo) : null,
       diasMedios: comTempo ? somaDias / comTempo : null,
       diasPorItem: itensComTempo ? somaDiasItem / itensComTempo : null,
+      diasPorTarefa: tarefasComTempo ? somaDiasTarefa / tarefasComTempo : null,
     }))
     .sort((a, b) => Number(a.nome === SEM_RESPONSAVEL) - Number(b.nome === SEM_RESPONSAVEL) || b.resolvidas - a.resolvidas || b.pendentes - a.pendentes || a.nome.localeCompare(b.nome, "pt-BR"));
 }
@@ -129,15 +132,20 @@ function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean, porQuem
 /**
  * Cartão com checklist vale pelos itens; sem checklist, vale 1 (RN-49c). Cartão concluído resolve
  * todos os seus itens, mesmo os não marcados. Tarefa com dois responsáveis vale metade para cada um,
- * então a soma das pessoas bate com o total. Com `desde`, resolvidas antes da data ficam de fora.
+ * então a soma das pessoas bate com o total. Com `desde` e `ate`, resolvidas fora do intervalo ficam de fora.
  * Sem responsável fica no fim e fora do total e das listas, para não mascarar a eficiência da equipe.
  */
-export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU) {
+export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU, ate?: string) {
   const total = new Map<string, Acumulador>();
   const porLista = new Map<string, Acumulador>();
   const porResponsavel = new Map<string, Acumulador>();
   const destinos = (c: CartaoEquipe, nomes: string[]) => [...(nomes.length ? [linha(total, QUADRO_EQUIPE), linha(porLista, listaDe(c.categoria))] : []), ...quem(nomes).map((n) => linha(porResponsavel, n))];
-  const foraDoPeriodo = (data: string | null) => !!desde && (data ?? "") < desde;
+  const foraDoPeriodo = (data: string | null) => (!!desde && (data ?? "") < desde) || (!!ate && (data ?? "") >= ate);
+  const somarTempo = (l: Acumulador, parte: number, criado: string | null, resolvido: string | null) => {
+    if (!criado || !resolvido) return;
+    l.somaDiasTarefa += diasEntre(criado, resolvido) * parte;
+    l.tarefasComTempo += parte;
+  };
 
   for (const c of cartoes) {
     if (c.status === "cancelada") continue;
@@ -161,7 +169,9 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
 
     if (!c.itens?.length) {
       if (cartaoConcluido && foraDoPeriodo(c.concluido_em)) continue;
-      contar(c.membros, cartaoConcluido);
+      contar(c.membros, cartaoConcluido, (l, parte) => {
+        if (cartaoConcluido) somarTempo(l, parte, c.criado_em, c.concluido_em);
+      });
       continue;
     }
     for (const i of c.itens) {
@@ -171,6 +181,7 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
       contar(donosDoItem(i, c, resolvido, porQuemMarcou), resolvido, (l, parte) => {
         if (!resolvido) return;
         l.itensResolvidos += parte;
+        somarTempo(l, parte, i.criado_em, data);
         if (i.criado_em && data) {
           l.somaDiasItem += diasEntre(i.criado_em, data) * parte;
           l.itensComTempo += parte;
@@ -179,6 +190,41 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
     }
   }
   return { total: fechar(total)[0] ?? null, porLista: fechar(porLista), porResponsavel: fechar(porResponsavel) };
+}
+
+const segundaDaSemana = (dia: string) => {
+  const d = new Date(`${dia}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+};
+
+/** Tarefas resolvidas pela equipe por semana, de segunda a domingo, em ordem do tempo. Sem responsável fica de fora. */
+export function entregasPorSemana(cartoes: CartaoEquipe[], hoje: string, semanas = 8, porQuemMarcou = CREDITO_POR_QUEM_MARCOU) {
+  const atual = segundaDaSemana(hoje);
+  const inicios = Array.from({ length: semanas }, (_, n) => {
+    const d = new Date(`${atual}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 7 * (semanas - 1 - n));
+    return d.toISOString().slice(0, 10);
+  });
+  const contagem = new Map(inicios.map((i) => [i, 0]));
+  const somar = (data: string | null) => {
+    if (!data) return;
+    const semana = segundaDaSemana(hojeSP(new Date(data)));
+    if (contagem.has(semana)) contagem.set(semana, (contagem.get(semana) ?? 0) + 1);
+  };
+  for (const c of cartoes) {
+    if (c.status === "cancelada") continue;
+    const cartaoConcluido = c.status === "concluida";
+    if (!c.itens?.length) {
+      if (cartaoConcluido && c.membros.length) somar(c.concluido_em);
+      continue;
+    }
+    for (const i of c.itens) {
+      const resolvido = i.concluido || cartaoConcluido;
+      if (resolvido && donosDoItem(i, c, resolvido, porQuemMarcou).length) somar(i.concluido_em ?? c.concluido_em);
+    }
+  }
+  return inicios.map((inicio) => ({ inicio, entregas: contagem.get(inicio) ?? 0 }));
 }
 
 /** Título sugerido para o cartão criado a partir de um comentário: a primeira linha, sem exagero. */

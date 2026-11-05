@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL, resumirEquipe, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, entregasPorSemana, resumirEquipe, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
 
 const hoje = "2026-11-05";
 const cartao = (extra: Partial<CartaoEquipe> = {}): CartaoEquipe => ({ status: "a_fazer", prazo: null, concluido_em: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › CEF-01`, membros: ["Ana"], ...extra });
@@ -234,7 +234,41 @@ describe("ordem do painel", () => {
   });
 });
 
+describe("período anterior", () => {
+  it("com data final, conta só o intervalo", () => {
+    const lista = [concluido({ concluido_em: "2026-10-02T12:00:00Z" }), concluido({ concluido_em: "2026-10-20T12:00:00Z" })];
+    expect(resumirEquipe(lista, hoje, "2026-10-01", undefined, "2026-10-10").total?.resolvidas).toBe(1);
+  });
+});
+
+describe("entregas por semana", () => {
+  it("agrupa de segunda a domingo e termina na semana atual", () => {
+    const r = entregasPorSemana([concluido({ concluido_em: "2026-11-02T12:00:00Z" }), concluido({ concluido_em: "2026-11-05T12:00:00Z" }), concluido({ concluido_em: "2026-11-01T12:00:00Z" })], hoje, 2);
+    expect(r).toEqual([{ inicio: "2026-10-26", entregas: 1 }, { inicio: "2026-11-02", entregas: 2 }]);
+  });
+
+  it("cartão com checklist conta pelos itens", () => {
+    const r = entregasPorSemana([cartao({ itens: [item({ concluido_em: "2026-11-03T12:00:00Z" }), item({ concluido_em: "2026-11-03T12:00:00Z" }), pendente()] })], hoje, 1);
+    expect(r[0].entregas).toBe(2);
+  });
+
+  it("não conta cancelados, abertos nem tarefas sem responsável", () => {
+    const r = entregasPorSemana([cartao(), concluido({ status: "cancelada", concluido_em: "2026-11-03T12:00:00Z" }), concluido({ membros: [], concluido_em: "2026-11-03T12:00:00Z" })], hoje, 1);
+    expect(r[0].entregas).toBe(0);
+  });
+});
+
 describe("tempos", () => {
+  it("tempo por tarefa junta itens e cartões sem checklist", () => {
+    const r = resumirEquipe([concluido(), cartao({ itens: [item()] })], hoje).total;
+    expect(r?.diasPorTarefa).toBe(6);
+  });
+
+  it("com dois responsáveis, cada um recebe o tempo da tarefa", () => {
+    const r = resumirEquipe([concluido({ membros: ["Ana", "Bia"] })], hoje).porResponsavel;
+    expect(r.map((l) => l.diasPorTarefa)).toEqual([10, 10]);
+  });
+
   it("tempo médio vai da criação à conclusão do cartão", () => {
     expect(resumirEquipe([concluido(), concluido({ concluido_em: "2026-10-21T12:00:00Z" })], hoje).total?.diasMedios).toBe(15);
   });
