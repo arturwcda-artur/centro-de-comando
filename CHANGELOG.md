@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.15.0] — 2026-11-05 — Fase 10: alertas
+### Adicionado
+- Tela **Alertas**: contratos, prazos, riscos, equipe e integrações que pedem atenção, com regras fixas e sem IA (RN-83).
+
 ## [0.14.0] — 2026-11-05 — Fase 9: integrações completas
 ### Adicionado
 - Tela **Integrações**: botões **Sincronizar agora** e **Pausar leitura**, histórico de gravações e estado de MS Project, Excel e Pastas das obras.
