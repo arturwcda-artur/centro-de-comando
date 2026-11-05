@@ -16,7 +16,7 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | ✅ aprovada em 05/11/2026, piloto PRF-Recanto |
 | 9 — Integrações completas | painel de conectores e escrita autorizada; tela de conflitos ficou de fora, sem casos reais | ✅ aprovada em 05/11/2026 |
 | 10 — IA e automações | alertas com regras fixas e assistente pelo Claude, só leitura; teto de custo saiu, sem gasto por uso | ✅ aprovada em 05/11/2026 |
-| 11 — Testes e implantação | conferência diária da produção, desempenho, teste de restauração, manual e recuperação; domínio próprio ficou de fora, por ser pago | 🔶 em implantação |
+| 11 — Testes e implantação | conferência diária da produção, desempenho, teste de restauração, manual e recuperação; domínio próprio ficou de fora, por ser pago | ✅ aprovada em 05/11/2026 |
 
 ## Decisões da Fase 0 assumidas na aprovação de 03/11/2026
 O proprietário aprovou com "Aprovo, seguir". Foram adotadas as recomendações D1–D7. Qualquer uma pode ser revista:
