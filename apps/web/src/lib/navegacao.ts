@@ -7,6 +7,7 @@ export type Modulo = {
   icone:
     | "painel"
     | "dia"
+    | "alertas"
     | "obras"
     | "tarefas"
     | "equipe"
@@ -25,6 +26,7 @@ export type Modulo = {
 export const MODULOS: Modulo[] = [
   { slug: "", href: "/", titulo: "Painel", descricao: "Visão executiva consolidada", icone: "painel", fase: 3, grupo: "Visão geral" },
   { slug: "meu-dia", href: "/meu-dia", titulo: "Meu dia", descricao: "Prioridades, compromissos e pendências do dia", icone: "dia", fase: 5, grupo: "Visão geral" },
+  { slug: "alertas", href: "/alertas", titulo: "Alertas", descricao: "O que precisa de atenção agora", icone: "alertas", fase: 10, grupo: "Visão geral" },
   { slug: "obras", href: "/obras", titulo: "Obras", descricao: "Cadastro e ambiente individual de cada obra", icone: "obras", fase: 4, grupo: "Gestão" },
   { slug: "tarefas", href: "/tarefas", titulo: "Tarefas", descricao: "Atribuições, cobranças e vencimentos", icone: "tarefas", fase: 5, grupo: "Gestão" },
   { slug: "equipe", href: "/equipe", titulo: "Equipe", descricao: "Cartões por lista e por responsável no Trello", icone: "equipe", fase: 5, grupo: "Gestão" },
@@ -39,7 +41,7 @@ export const MODULOS: Modulo[] = [
 ];
 
 /** Última fase entregue: módulos de fases posteriores aparecem marcados como "em breve". */
-export const FASE_ATUAL = 9;
+export const FASE_ATUAL = 10;
 
 export function moduloPorSlug(slug: string): Modulo | undefined {
   return MODULOS.find((m) => m.slug === slug);

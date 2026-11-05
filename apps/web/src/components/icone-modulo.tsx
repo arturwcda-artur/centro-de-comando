@@ -1,4 +1,5 @@
 import {
+  Bell,
   Building2,
   CalendarDays,
   CalendarRange,
@@ -19,6 +20,7 @@ import type { Modulo } from "@/lib/navegacao";
 const ICONES: Record<Modulo["icone"], LucideIcon> = {
   painel: LayoutDashboard,
   dia: Sun,
+  alertas: Bell,
   obras: Building2,
   tarefas: ListChecks,
   equipe: UsersRound,

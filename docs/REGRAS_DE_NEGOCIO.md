@@ -98,3 +98,4 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-80** A IA responde só com base nas views de leitura, indicando fonte e data de atualização.
 - **RN-81** Cada resposta separa **confirmado**, **estimado** e **recomendação**.
 - **RN-82** A IA não executa alteração externa sem autorização.
+- **RN-83** Alertas automáticos usam regras fixas, sem IA: contrato que vence em até 60 dias, venceu com saldo a medir ou termina antes do cronograma; última medição há mais de 35 dias com saldo a medir; marco, recebimento ou decisão em até 7 dias ou vencidos; tarefas vencidas; riscos críticos; cartões parados; integrações com problema.
