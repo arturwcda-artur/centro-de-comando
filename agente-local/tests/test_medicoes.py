@@ -129,3 +129,26 @@ def test_modelo_desconhecido_vira_erro(tmp_path):
     banco = BancoFalso()
     m.processar([registro(planilha(tmp_path / "a.xlsx"), modelo="outro")], banco)
     assert "Modelo" in banco.erros[0][1]
+
+
+def alterar(caminho, celulas):
+    wb = openpyxl.load_workbook(caminho)
+    for (linha, coluna), valor in celulas.items():
+        wb["Medições"].cell(linha, coluna).value = valor
+    wb.save(caminho)
+    return caminho
+
+
+def test_data_digitada_como_texto_e_aceita(tmp_path):
+    r = m.ler_mascara_medicoes(alterar(planilha(tmp_path / "a.xlsx"), {(5, 11): "06/04/2026"}))
+    assert r["medicoes"][0]["periodo_inicio"] == "2026-04-06"
+
+
+def test_medicao_com_valor_e_sem_periodo_recusa(tmp_path):
+    with pytest.raises(ValueError, match="sem período"):
+        m.ler_mascara_medicoes(alterar(planilha(tmp_path / "a.xlsx"), {(5, 11): None}))
+
+
+def test_medicao_com_fim_antes_do_inicio_recusa(tmp_path):
+    with pytest.raises(ValueError, match="termina antes"):
+        m.ler_mascara_medicoes(alterar(planilha(tmp_path / "a.xlsx"), {(6, 11): datetime(2025, 4, 15)}))

@@ -35,7 +35,13 @@ def _numero(valor) -> float:
 
 
 def _data(valor) -> str | None:
-    return valor.strftime("%Y-%m-%d") if isinstance(valor, (datetime, date)) else None
+    if isinstance(valor, (datetime, date)):
+        return valor.strftime("%Y-%m-%d")
+    # Data digitada como texto na planilha
+    try:
+        return datetime.strptime(str(valor).strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        return None
 
 
 def _celula(linha, coluna):
@@ -90,7 +96,7 @@ def ler_mascara_medicoes(caminho: Path | str) -> dict:
             continue
         numero = _celula(linhas[LINHA_NUMERO], coluna)
         inicio, fim = _data(_celula(linhas[LINHA_INICIO], coluna)), _data(_celula(linhas[LINHA_FIM], coluna))
-        if not inicio or not fim or not _numero(numero):
+        if not _numero(numero):
             continue
         medidos = []
         bruto = 0.0
@@ -101,6 +107,13 @@ def ler_mascara_medicoes(caminho: Path | str) -> dict:
                 valor = round(quantidade * _numero(s[COL_PRECO]), 2)
                 bruto += valor
                 medidos.append({"item": _codigo(s[COL_ITEM]), "quantidade": quantidade if quantidade % 1 else int(quantidade), "valor": valor})
+        if not inicio or not fim:
+            # Pular em silêncio deixaria o total medido menor que o real
+            if medidos:
+                raise ValueError(f"Medição {int(numero)} tem valores, mas está sem período")
+            continue
+        if fim < inicio:
+            raise ValueError(f"Medição {int(numero)} termina antes de começar: confira as datas")
         conteudo = json.dumps(medidos, sort_keys=True).encode()
         medicoes.append({
             "numero": int(numero),
