@@ -39,10 +39,12 @@ async function principal() {
     resultados.push(
       await executarConector(supabase, { ferramenta: 'trello', nome: 'Trello', gatilho }, async () => {
         const idEquipe = await trello.idPessoaEquipe(supabase);
-        const { registros, quadros } = await trello.lerTrello({ chave: env.TRELLO_API_KEY, token: env.TRELLO_TOKEN }, { idEquipe });
+        const { registros, quadros, detalhes } = await trello.lerTrello({ chave: env.TRELLO_API_KEY, token: env.TRELLO_TOKEN }, { idEquipe });
         const r = await aplicar(supabase, { tabela: 'tarefas', fonte: 'trello', registros });
         const canceladas = await trello.cancelarAusentes(supabase, registros.map((x) => x.id_externo));
-        return { ...r, mensagem: `${quadros} quadros, ${registros.length} cartões abertos, ${canceladas} arquivados/excluídos marcados como cancelados` };
+        const d = detalhes ? await trello.aplicarDetalhes(supabase, detalhes) : null;
+        const extra = d ? `; ${trello.QUADRO_DETALHADO}: ${d.membros} membros, ${d.comentarios} comentários, ${d.itens} itens de checklist` : '';
+        return { ...r, mensagem: `${quadros} quadros, ${registros.length} cartões, ${canceladas} arquivados/excluídos marcados como cancelados${extra}` };
       }),
     );
   } else console.log('Trello: sem segredos, ignorado.');

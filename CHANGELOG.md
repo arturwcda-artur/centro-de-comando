@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.11.0] — 2026-11-05 — Equipe e detalhes do Trello
+### Adicionado
+- Tela **Equipe**: cartões por lista e por responsável no quadro Obras do Grupo - C.SALLES, com filtro de período (ADR 0017).
+- Membros, checklists e comentários dos cartões desse quadro no detalhe da tarefa.
+- **Transformar em cartão**: cria um cartão novo no Trello a partir de um comentário, sem alterar a origem.
+- Migration `0021_trello_equipe.sql`.
+
 ## [0.10.0] — 2026-11-04 — Fase 7: contratos e financeiro
 ### Adicionado
 - Tela **Contratos e financeiro**: contrato, aditivos, medições, saldo por serviço e lançamentos (ADR 0016).

@@ -58,6 +58,7 @@ Para cada ferramenta o painel mostra:
   - A situação "concluído", "feito" ou "resolvido" → `concluida`.
 - **Tarefas importadas não são editadas no sistema** (RN-47), exceto a conclusão.
 - **Agenda pelo sistema (ADR 0014):** criar, alterar e excluir ficam em `packages/integrations/src/google.js`, chamados pela aplicação. Cada gravação fica em `operacoes_externas` (RN-67).
+- **Quadro detalhado (ADR 0017):** só em Obras do Grupo - C.SALLES, o sincronizador lê também membros, checklists, comentários e cartões arquivados que estavam concluídos.
 - **Concluir na origem (ADR 0013):** `packages/integrations/src/escrita.js`, chamado pela aplicação. Cada gravação fica em `operacoes_externas`. Cartões de terceiros são só leitura (RN-48).
 
 ## MS Project (Fase 6)

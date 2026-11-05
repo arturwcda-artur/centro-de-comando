@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 import { BotaoConcluir } from "@/components/botao-concluir";
 import { Aviso, Cartao } from "@/components/ui";
 import { podeConcluir, rotuloDe, STATUS_TAREFA } from "@/lib/dominio";
+import { QUADRO_EQUIPE } from "@/lib/equipe";
 import { dataCivil, dataHora } from "@/lib/formato";
 import { carregarOpcoes, UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { salvarTarefa } from "../acoes";
+import { DetalhesTrello } from "./detalhes-trello";
 import { FormularioTarefa } from "../formulario-tarefa";
 
 export const metadata: Metadata = { title: "Tarefa" };
@@ -71,6 +73,7 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
           <FormularioTarefa acao={salvarTarefa.bind(null, id)} tarefa={t} obras={listaObras} pessoas={opcoes.pessoas} />
         </Cartao>
       )}
+      {t.fonte === "trello" && t.id_externo && t.categoria?.startsWith(`${QUADRO_EQUIPE} › `) && <DetalhesTrello tarefaId={t.id} idCartao={t.id_externo} />}
     </div>
   );
 }

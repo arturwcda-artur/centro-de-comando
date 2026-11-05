@@ -18,6 +18,7 @@
 | Conexão com o Google | Só com sessão completa. Um valor aleatório em cookie protegido, conferido no retorno, impede que outro site conclua a conexão |
 | Agente local | chave em arquivo fora do repositório, protegido por permissão de usuário do Windows |
 | Agente de cronogramas e medições | Papel `agente_cronograma`, que só executa seis funções e não lê nenhuma tabela. A senha fica em `agente.env`, fora do repositório |
+| Comentários e checklists do Trello | Texto com credencial não é copiado. As tabelas ficam fora da auditoria, para um texto sensível não ficar guardado se passar pelo filtro (ADR 0017) |
 | Sincronizador (GitHub Actions) | `SUPABASE_SERVICE_ROLE_KEY` e os tokens/iCal só como *Actions secrets*. O workflow tem `permissions: contents: read`, e o código nunca imprime segredos nem URLs |
 
 ## Auditoria

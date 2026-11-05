@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   Sun,
   Users,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 import type { Modulo } from "@/lib/navegacao";
@@ -20,6 +21,7 @@ const ICONES: Record<Modulo["icone"], LucideIcon> = {
   dia: Sun,
   obras: Building2,
   tarefas: ListChecks,
+  equipe: UsersRound,
   agenda: CalendarDays,
   planejamento: CalendarRange,
   contratos: Landmark,

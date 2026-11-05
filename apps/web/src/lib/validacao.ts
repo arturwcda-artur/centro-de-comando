@@ -247,6 +247,11 @@ export const lancamentoSchema = z
   })
   .refine((l) => l.data_prevista || l.data_efetiva, { message: "Informe a data prevista ou a efetiva.", path: ["data_prevista"] });
 
+export const cartaoDeComentarioSchema = z.object({
+  titulo: texto("Título", 300),
+  lista: texto("Lista", 40),
+});
+
 export const aprovacaoSchema = z.object({
   proposta_id: z.uuid(),
   codigo,
