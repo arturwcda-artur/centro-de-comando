@@ -15,7 +15,7 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | ✅ aprovada em 04/11/2026 |
 | 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | ✅ aprovada em 05/11/2026, piloto PRF-Recanto |
 | 9 — Integrações completas | painel de conectores e escrita autorizada; tela de conflitos ficou de fora, sem casos reais | ✅ aprovada em 05/11/2026 |
-| 10 — IA e automações | alertas com regras fixas e assistente pelo Claude, só leitura; teto de custo saiu, sem gasto por uso | 🔶 em implantação |
+| 10 — IA e automações | alertas com regras fixas e assistente pelo Claude, só leitura; teto de custo saiu, sem gasto por uso | ✅ aprovada em 05/11/2026 |
 | 11 — Testes e implantação | E2E, desempenho, domínio, teste de restauração | |
 
 ## Decisões da Fase 0 assumidas na aprovação de 03/11/2026
