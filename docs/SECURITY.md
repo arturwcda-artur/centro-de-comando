@@ -35,7 +35,7 @@ Exigem sessão com segundo fator e são gerados na hora, sem guardar arquivo. Te
 |---|---|---|
 | `pg_dump` pelo agente local → pasta no Google Drive | semanal (diário depois da Fase 5) | 2 |
 | Backup diário gerenciado (Supabase Pro) | diário, retenção de 7 dias | 5 |
-| Teste de restauração em banco descartável | antes da implantação final | 11 |
+| Teste de restauração em banco descartável | feito em 05/11/2026; repetir a cada 3 meses com `testar-restauracao.cmd` | 11 |
 
 ## Transporte e aplicação
 - HTTPS obrigatório (Vercel), com HSTS.
