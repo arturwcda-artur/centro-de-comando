@@ -11,7 +11,7 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 4 — Obras | cadastros, importação assistida, ambiente da obra, riscos e decisões | ✅ entregue em 03/11/2026. Importação revisada pelo proprietário: 23 propostas, 8 obras aprovadas (7 em andamento, 1 aguardando), 15 descartadas. Aprovada em 03/11/2026 |
 | 5 — Tarefas e agenda | "Meu dia", 6 visões, conectores de leitura Trello, Agenda e Notion — **primeiro uso real** | ✅ aprovada em 04/11/2026 |
 | 6 — Planejamento | agente local MS Project, versões, Curva S (piloto: PRF-Recanto) | ✅ aprovada em 04/11/2026 |
-| 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | 🔶 em implantação |
+| 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | ✅ aprovada em 04/11/2026 |
 | 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | |
 | 9 — Integrações completas | painel de conectores, conflitos, escrita opt-in | |
 | 10 — IA e automações | assistente com fonte e data, alertas, teto de custo | |
