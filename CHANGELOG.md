@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.12.6] — 2026-11-05 — Evolução da equipe
+### Alterado
+- A tela **Equipe** mostra só Tarefas resolvidas, Tempo médio e Evolução, com gráfico por semana. Cartões e prazos ficam em seção recolhida.
+
 ## [0.12.5] — 2026-11-05 — Painel sem posições
 ### Alterado
 - A tela **Equipe** deixa de ter ranking: ordena pelas entregas, sem posições, e mostra Atribuídas, Abertas, Concluídas, Itens resolvidos, Entregas, Vencidas e No prazo. A taxa de resolução saiu da tela.
