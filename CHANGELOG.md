@@ -4,7 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 
 ## [0.11.2] — 2026-11-05 — Todas as tarefas
 ### Adicionado
-- Visão **Todas** e filtro por quadro do Trello na tela Tarefas. Os cartões de outros membros só apareciam em Críticas e Vencimentos.
+- A tela Tarefas abre em **Todas**, com a equipe inteira, e ganha filtros por quadro e por responsável. Os cartões de outros membros só apareciam em Críticas e Vencimentos.
+- Responsáveis aparecem na lista de tarefas, e cada nome do ranking da Equipe abre os cartões da pessoa.
+
+### Corrigido
+- Resultados da busca agora abrem a tarefa e a obra.
 
 ## [0.11.1] — 2026-11-05 — Eficiência da equipe
 ### Alterado

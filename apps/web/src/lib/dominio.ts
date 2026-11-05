@@ -42,8 +42,8 @@ export const TIPOS_TAREFA = [
 
 /** RN-45: visões de tarefas. */
 export const VISOES_TAREFA = [
-  { valor: "minhas", rotulo: "Minhas atribuições" },
   { valor: "todas", rotulo: "Todas" },
+  { valor: "minhas", rotulo: "Minhas atribuições" },
   { valor: "aguardando", rotulo: "Aguardando terceiros" },
   { valor: "cobrancas", rotulo: "Cobranças" },
   { valor: "criticas", rotulo: "Críticas" },

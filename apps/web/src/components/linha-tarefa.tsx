@@ -29,7 +29,7 @@ export type LinhaTarefaDados = {
 };
 
 /** Uma tarefa na lista: escore, motivos da prioridade, obra, prazo e ação rápida de concluir/reabrir. */
-export function LinhaTarefa({ t, nomeObra, mostrarMotivos = true }: { t: LinhaTarefaDados; nomeObra?: string; mostrarMotivos?: boolean }) {
+export function LinhaTarefa({ t, nomeObra, mostrarMotivos = true, responsaveis = [] }: { t: LinhaTarefaDados; nomeObra?: string; mostrarMotivos?: boolean; responsaveis?: string[] }) {
   if (!t.id) return null;
   const concluida = t.status === "concluida";
   const manual = t.fonte === "manual";
@@ -64,7 +64,7 @@ export function LinhaTarefa({ t, nomeObra, mostrarMotivos = true }: { t: LinhaTa
           {t.titulo}
         </Link>
         <span className="block truncate text-xs text-suave">
-          {[nomeObra, t.fonte !== "manual" ? t.categoria : null, t.tipo !== "acao" ? rotuloDe(TIPOS_TAREFA, t.tipo) : null, t.status === "aguardando_terceiro" ? rotuloDe(STATUS_TAREFA, t.status) : null, ...motivos]
+          {[responsaveis.join(", "), nomeObra, t.fonte !== "manual" ? t.categoria : null, t.tipo !== "acao" ? rotuloDe(TIPOS_TAREFA, t.tipo) : null, t.status === "aguardando_terceiro" ? rotuloDe(STATUS_TAREFA, t.status) : null, ...motivos]
             .filter(Boolean)
             .join(" · ")}
         </span>
