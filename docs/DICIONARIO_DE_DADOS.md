@@ -719,6 +719,7 @@ Criação, conclusão real e prazo original do cartão, lidos do histórico do T
 | membro_id | uuid |  | trello_membros | Membro atribuído ao item. Sem ele, o crédito vai para os membros do cartão. |
 | criado_no_trello | timestamp with time zone |  |  |  |
 | concluido_em | timestamp with time zone |  |  |  |
+| concluido_por_id | uuid |  | trello_membros | Membro que marcou o item como concluído no Trello. Quem recebe o crédito na tela Equipe. |
 
 ## Tabela `trello_comentarios`
 

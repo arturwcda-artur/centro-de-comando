@@ -91,11 +91,11 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const hoje = hojeSP();
   const ids = (data ?? []).map((t) => t.id);
   const { data: itensChecklist } = ids.length
-    ? await supabase.from("trello_checklist_itens").select("tarefa_id, concluido, criado_no_trello, concluido_em, trello_membros(nome)").in("tarefa_id", ids).limit(5000)
+    ? await supabase.from("trello_checklist_itens").select("tarefa_id, concluido, criado_no_trello, concluido_em, atribuido:trello_membros!trello_checklist_itens_membro_id_fkey(nome), resolvedor:trello_membros!trello_checklist_itens_concluido_por_id_fkey(nome)").in("tarefa_id", ids).limit(5000)
     : { data: [] };
   const itensDoCartao = new Map<string, ItemCartao[]>();
   for (const i of itensChecklist ?? []) {
-    const item = { concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, responsaveis: i.trello_membros ? [i.trello_membros.nome] : [] };
+    const item = { concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, resolvido_por: i.resolvedor?.nome ?? null, responsaveis: i.atribuido ? [i.atribuido.nome] : [] };
     itensDoCartao.set(i.tarefa_id, [...(itensDoCartao.get(i.tarefa_id) ?? []), item]);
   }
   const cartoes = (data ?? []).map((t) => ({
@@ -155,7 +155,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
       <Tabela titulo="Ranking por lista" coluna="Lista" linhas={porLista} destino={() => null} />
 
       <p className="text-xs text-suave">
-        Sob responsabilidade: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens. Resolução: resolvidas divididas pelo que está sob responsabilidade, e define o ranking. Eficiência no prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa. Tempo médio: da criação à conclusão do cartão. Tarefa com dois membros conta para os dois. Nos períodos, o que está pendente sempre aparece.
+        Sob responsabilidade: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens. O item resolvido conta para quem o marcou no Trello. Resolução: resolvidas divididas pelo que está sob responsabilidade, e define o ranking. Eficiência no prazo: só cartões com data e que não são de rotina, concluídos até a primeira data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto. Adiar a data não melhora essa taxa. Tempo médio: da criação à conclusão do cartão. Tarefa com dois membros conta para os dois. Nos períodos, o que está pendente sempre aparece.
       </p>
     </div>
   );

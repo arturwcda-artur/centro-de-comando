@@ -72,7 +72,7 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-49** No quadro Obras do Grupo - C.SALLES, um comentário pode virar cartão novo no mesmo quadro, uma única vez. O comentário e o cartão de origem não mudam, mesmo em cartões de terceiros (ADR 0017).
 - **RN-49a** Taxa de eficiência da equipe = cartões concluídos até a primeira data de entrega ÷ (concluídos com prazo + vencidos em aberto). Adiar a data não melhora a taxa. Cartões sem prazo entram só no tempo médio, da criação à conclusão.
 - **RN-49b** Cartão de rotina é marcado pelo proprietário no sistema e fica fora da eficiência no prazo e dos vencidos, mesmo com data.
-- **RN-49c** Tarefa da equipe: cada item de checklist vale 1, e o cartão sem checklist vale 1. Cartão concluído resolve todos os seus itens. Taxa de resolução = tarefas resolvidas ÷ tarefas sob responsabilidade, e é ela que define o ranking.
+- **RN-49c** Tarefa da equipe: cada item de checklist vale 1, e o cartão sem checklist vale 1. Cartão concluído resolve todos os seus itens. O item resolvido conta para quem o marcou no Trello; o pendente, para o membro do item ou, sem ele, os do cartão. Taxa de resolução = tarefas resolvidas ÷ tarefas sob responsabilidade, e é ela que define o ranking.
 
 ## 5. Riscos e decisões
 - **RN-50** Severidade = probabilidade × impacto (1 a 25). **Crítico** quando ≥ 15, **alto** de 8 a 14, **moderado** até 7.

@@ -72,7 +72,7 @@ async function lerAcoes(credenciais, idQuadro, filter) {
   const acoes = [];
   let antes;
   for (;;) {
-    const params = { filter, limit: '1000', fields: 'data,date', memberCreator_fields: 'fullName', ...(antes ? { before: antes } : {}) };
+    const params = { filter, limit: '1000', fields: 'data,date,idMemberCreator', memberCreator_fields: 'fullName', ...(antes ? { before: antes } : {}) };
     const pagina = await chamar(`/boards/${idQuadro}/actions`, credenciais, params);
     acoes.push(...pagina);
     if (pagina.length < 1000) return acoes;
@@ -124,15 +124,16 @@ export function datasDoCartao(cartao, lista, conclusoes, prazos = new Map()) {
   };
 }
 
-/** Última vez que cada item de checklist foi marcado como concluído. */
+/** Última vez que cada item de checklist foi marcado como concluído, e por quem. */
 export function conclusoesDeItens(acoes) {
-  const datas = new Map();
+  const marcados = new Map();
   for (const a of acoes) {
     const item = a.data?.checkItem;
     if (item?.state !== 'complete') continue;
-    if (!datas.has(item.id) || a.date > datas.get(item.id)) datas.set(item.id, a.date);
+    const atual = marcados.get(item.id);
+    if (!atual || a.date > atual.data) marcados.set(item.id, { data: a.date, membro: a.idMemberCreator ?? null });
   }
-  return datas;
+  return marcados;
 }
 
 /** Lê por quadro, sem uma chamada por cartão. Texto com credencial fica de fora (RN-66). */
@@ -160,7 +161,8 @@ export async function lerDetalhes(credenciais, idQuadro) {
             posicao: i.pos ?? 0,
             membro: i.idMember ?? null,
             criado_no_trello: criacaoDoCartao(i.id),
-            concluido_em: concluido ? (concluidos.get(i.id) ?? null) : null,
+            concluido_em: concluido ? (concluidos.get(i.id)?.data ?? null) : null,
+            concluido_por: concluido ? (concluidos.get(i.id)?.membro ?? null) : null,
           };
         }),
     ),
@@ -226,7 +228,7 @@ export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios
 
   const ligar = (lista) => lista.filter((x) => idTarefa.has(x.cartao)).map(({ cartao, ...resto }) => ({ ...resto, tarefa_id: idTarefa.get(cartao) }));
   const linhasComentarios = ligar(comentarios);
-  const linhasItens = ligar(itens).map(({ membro, ...resto }) => ({ ...resto, membro_id: idMembro.get(membro) ?? null }));
+  const linhasItens = ligar(itens).map(({ membro, concluido_por, ...resto }) => ({ ...resto, membro_id: idMembro.get(membro) ?? null, concluido_por_id: idMembro.get(concluido_por) ?? null }));
   const linhasDatas = datas.filter((d) => idTarefa.has(d.cartao)).map(({ cartao, ...resto }) => ({ ...resto, tarefa_id: idTarefa.get(cartao) }));
   await gravarLotes(supabase, 'trello_cartao_datas', linhasDatas, 'tarefa_id');
   await gravarLotes(supabase, 'trello_comentarios', linhasComentarios, 'id_externo');
