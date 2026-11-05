@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.12.7] — 2026-11-05 — Fluxo da equipe
+### Adicionado
+- Tela **Equipe**: Entraram, Saldo, gráfico de entraram × resolvidas por semana e cartões parados há 14 dias ou mais.
+
 ## [0.12.6] — 2026-11-05 — Evolução da equipe
 ### Alterado
 - A tela **Equipe** mostra só Tarefas resolvidas, Tempo médio e Evolução, com gráfico por semana. Cartões e prazos ficam em seção recolhida.

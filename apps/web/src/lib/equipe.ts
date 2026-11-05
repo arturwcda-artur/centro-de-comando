@@ -198,33 +198,57 @@ const segundaDaSemana = (dia: string) => {
   return d.toISOString().slice(0, 10);
 };
 
-/** Tarefas resolvidas pela equipe por semana, de segunda a domingo, em ordem do tempo. Sem responsável fica de fora. */
-export function entregasPorSemana(cartoes: CartaoEquipe[], hoje: string, semanas = 8, porQuemMarcou = CREDITO_POR_QUEM_MARCOU) {
+/** Cada tarefa do quadro, com responsável: item de checklist ou cartão sem checklist. */
+function tarefasDaEquipe(cartoes: CartaoEquipe[], porQuemMarcou: boolean) {
+  const tarefas: { criada_em: string | null; resolvida_em: string | null }[] = [];
+  for (const c of cartoes) {
+    if (c.status === "cancelada") continue;
+    const cartaoConcluido = c.status === "concluida";
+    if (!c.itens?.length) {
+      if (c.membros.length) tarefas.push({ criada_em: c.criado_em, resolvida_em: cartaoConcluido ? c.concluido_em : null });
+      continue;
+    }
+    for (const i of c.itens) {
+      const resolvido = i.concluido || cartaoConcluido;
+      if (donosDoItem(i, c, resolvido, porQuemMarcou).length) tarefas.push({ criada_em: i.criado_em, resolvida_em: resolvido ? (i.concluido_em ?? c.concluido_em) : null });
+    }
+  }
+  return tarefas;
+}
+
+/** Tarefas que entraram e que foram resolvidas por semana, de segunda a domingo, em ordem do tempo. */
+export function fluxoPorSemana(cartoes: CartaoEquipe[], hoje: string, semanas = 8, porQuemMarcou = CREDITO_POR_QUEM_MARCOU) {
   const atual = segundaDaSemana(hoje);
   const inicios = Array.from({ length: semanas }, (_, n) => {
     const d = new Date(`${atual}T12:00:00Z`);
     d.setUTCDate(d.getUTCDate() - 7 * (semanas - 1 - n));
     return d.toISOString().slice(0, 10);
   });
-  const contagem = new Map(inicios.map((i) => [i, 0]));
-  const somar = (data: string | null) => {
-    if (!data) return;
-    const semana = segundaDaSemana(hojeSP(new Date(data)));
-    if (contagem.has(semana)) contagem.set(semana, (contagem.get(semana) ?? 0) + 1);
-  };
-  for (const c of cartoes) {
-    if (c.status === "cancelada") continue;
-    const cartaoConcluido = c.status === "concluida";
-    if (!c.itens?.length) {
-      if (cartaoConcluido && c.membros.length) somar(c.concluido_em);
-      continue;
-    }
-    for (const i of c.itens) {
-      const resolvido = i.concluido || cartaoConcluido;
-      if (resolvido && donosDoItem(i, c, resolvido, porQuemMarcou).length) somar(i.concluido_em ?? c.concluido_em);
-    }
+  const linhas = new Map(inicios.map((inicio) => [inicio, { inicio, entraram: 0, resolvidas: 0 }]));
+  const semanaDe = (data: string | null) => (data ? linhas.get(segundaDaSemana(hojeSP(new Date(data)))) : undefined);
+  for (const t of tarefasDaEquipe(cartoes, porQuemMarcou)) {
+    const entrou = semanaDe(t.criada_em);
+    if (entrou) entrou.entraram += 1;
+    const saiu = semanaDe(t.resolvida_em);
+    if (saiu) saiu.resolvidas += 1;
   }
-  return inicios.map((inicio) => ({ inicio, entregas: contagem.get(inicio) ?? 0 }));
+  return [...linhas.values()];
+}
+
+/** Tarefas que entraram a partir da data. Sem data, conta todas. */
+export function tarefasQueEntraram(cartoes: CartaoEquipe[], desde?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU): number {
+  return tarefasDaEquipe(cartoes, porQuemMarcou).filter((t) => !desde || (t.criada_em ?? "") >= desde).length;
+}
+
+export const DIAS_PARADA = 14;
+
+/** Cartões abertos sem nenhuma movimentação no Trello, do mais antigo para o mais novo. Rotina fica de fora. */
+export function cartoesParados(cartoes: (CartaoEquipe & { id: string; titulo: string; ultima_atividade: string | null })[], agora: Date, dias = DIAS_PARADA) {
+  return cartoes
+    .filter((c) => c.status !== "concluida" && c.status !== "cancelada" && !c.rotina && c.ultima_atividade)
+    .map((c) => ({ id: c.id, titulo: c.titulo, membros: c.membros, dias: Math.floor((agora.getTime() - Date.parse(c.ultima_atividade as string)) / DIA_MS) }))
+    .filter((c) => c.dias >= dias)
+    .sort((x, y) => y.dias - x.dias);
 }
 
 /** Título sugerido para o cartão criado a partir de um comentário: a primeira linha, sem exagero. */
