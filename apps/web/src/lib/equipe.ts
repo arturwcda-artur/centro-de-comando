@@ -35,6 +35,10 @@ export type CartaoEquipe = {
 
 export type LinhaEquipe = {
   nome: string;
+  /** Cartões de que a pessoa é responsável. Cartão de rotina fica de fora. */
+  atribuidas: number;
+  abertas: number;
+  concluidas: number;
   /** Tarefas: os itens de cada cartão com checklist, ou 1 pelo cartão sem checklist (RN-49c). */
   sobResponsabilidade: number;
   resolvidas: number;
@@ -62,7 +66,7 @@ const listaDe = (categoria: string | null) => categoria?.split(" › ")[1] ?? "�
 const quem = (nomes: string[]) => (nomes.length ? nomes : [SEM_RESPONSAVEL]);
 
 function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
-  const nova: Acumulador = { nome, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, saldoPrazo: null, diasMedios: null, prazosAlterados: 0, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
+  const nova: Acumulador = { nome, atribuidas: 0, abertas: 0, concluidas: 0, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, saldoPrazo: null, diasMedios: null, prazosAlterados: 0, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
   const l = linhas.get(nome) ?? nova;
   linhas.set(nome, l);
   return l;
@@ -72,8 +76,10 @@ function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
 function somarPrazo(l: Acumulador, c: CartaoEquipe, hoje: string, noPeriodo: boolean) {
   const referencia = c.prazo_original ?? c.prazo;
   l.prazosAlterados += c.prazo_alteracoes;
+  l.atribuidas += 1;
   if (c.status === "concluida") {
     if (!noPeriodo) return;
+    l.concluidas += 1;
     if (referencia) {
       l.cobraveis += 1;
       if (c.concluido_em && hojeSP(new Date(c.concluido_em)) <= referencia) l.noPrazo += 1;
@@ -83,6 +89,7 @@ function somarPrazo(l: Acumulador, c: CartaoEquipe, hoje: string, noPeriodo: boo
       l.comTempo += 1;
     }
   } else {
+    l.abertas += 1;
     if (c.prazo && c.prazo < hoje) l.vencidas += 1;
     if (referencia && referencia < hoje) l.cobraveis += 1; // vencido em aberto conta contra a eficiência
   }

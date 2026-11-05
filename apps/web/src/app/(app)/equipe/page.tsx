@@ -26,12 +26,16 @@ function Painel({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEqui
   if (linhas.length === 0) return <EstadoVazio>Nenhuma tarefa neste período.</EstadoVazio>;
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] text-sm">
+      <table className="w-full min-w-[720px] text-sm">
         <thead className="text-left text-xs text-suave">
           <tr>
             <th className="py-2 font-medium">{coluna}</th>
-            <th className={CABECALHO}>Resolvidas</th>
-            <th className={CABECALHO}>Pendentes</th>
+            <th className={CABECALHO}>Atribuídas</th>
+            <th className={CABECALHO}>Abertas</th>
+            <th className={CABECALHO}>Concluídas</th>
+            <th className={CABECALHO}>Itens resolvidos</th>
+            <th className={CABECALHO}>Entregas</th>
+            <th className={CABECALHO}>Vencidas</th>
             <th className={CABECALHO}>No prazo</th>
           </tr>
         </thead>
@@ -50,8 +54,12 @@ function Painel({ coluna, linhas, destino }: { coluna: string; linhas: LinhaEqui
                     l.nome
                   )}
                 </td>
+                <td className={NUMERO}>{l.atribuidas}</td>
+                <td className={NUMERO}>{l.abertas}</td>
+                <td className={NUMERO}>{l.concluidas}</td>
+                <td className={NUMERO}>{quantidade(l.itensResolvidos)}</td>
                 <td className={`${NUMERO} ${semDono ? "" : "font-semibold"}`}>{quantidade(l.resolvidas)}</td>
-                <td className={NUMERO}>{quantidade(l.pendentes)}</td>
+                <td className={`${NUMERO} ${l.vencidas > 0 ? "font-medium text-alerta" : ""}`}>{l.vencidas}</td>
                 <td className={`${NUMERO} font-medium ${corDoSaldo(l.saldoPrazo)}`} title={l.cobraveis > 0 ? `${l.noPrazo} no prazo e ${l.cobraveis - l.noPrazo} atrasados` : "Sem cartões com prazo cobrável"}>
                   {saldo(l.saldoPrazo)}
                 </td>
@@ -73,7 +81,6 @@ function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
           <tr>
             <th className="py-2 font-medium">Responsável</th>
             <th className={CABECALHO}>Eficiência no prazo</th>
-            <th className={CABECALHO}>Vencidas</th>
             <th className={CABECALHO}>Tempo médio</th>
             <th className={CABECALHO}>Tempo por item</th>
             <th className={CABECALHO}>Prazos alterados</th>
@@ -84,7 +91,6 @@ function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
             <tr key={l.nome}>
               <td className="py-2 pr-3">{l.nome}</td>
               <td className="py-2 text-right tabular-nums">{l.cobraveis > 0 ? `${pct(l.eficiencia)} (${l.noPrazo} de ${l.cobraveis})` : "—"}</td>
-              <td className={`py-2 text-right tabular-nums ${l.vencidas > 0 ? "font-medium text-alerta" : ""}`}>{l.vencidas}</td>
               <td className="py-2 text-right tabular-nums">{dias(l.diasMedios)}</td>
               <td className="py-2 text-right tabular-nums">{dias(l.diasPorItem)}</td>
               <td className="py-2 text-right tabular-nums">{l.prazosAlterados}</td>
@@ -134,8 +140,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, periodo.dias ? somarDias(hoje, -periodo.dias) : undefined);
 
   const indicadores = [
-    ["Resolvidas pela equipe", quantidade(total?.resolvidas ?? 0)],
-    ["Pendentes", quantidade(total?.pendentes ?? 0)],
+    ["Entregas da equipe", quantidade(total?.resolvidas ?? 0)],
+    ["Cartões abertos", total?.abertas ?? 0],
     ["No prazo", saldo(total?.saldoPrazo ?? null)],
   ] as const;
 
@@ -194,8 +200,9 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         <details>
           <summary className="cursor-pointer text-sm font-medium">Como os números são calculados</summary>
           <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-suave">
-            <li>Tarefas: cada item de checklist conta 1, e o cartão sem checklist conta 1. Cartão concluído resolve todos os seus itens.</li>
-            <li>A ordem é pelas entregas, sem posições. Pendente é carga de trabalho, não falha.</li>
+            <li>Atribuídas, Abertas e Concluídas: cartões de cada responsável, sem os de rotina.</li>
+            <li>Entregas: cada item de checklist resolvido conta 1, e o cartão sem checklist concluído conta 1. Cartão concluído resolve todos os seus itens.</li>
+            <li>A ordem é pelas entregas, sem posições. Cartão aberto é carga de trabalho, não falha.</li>
             <li>No prazo: cartões entregues até a primeira data de entrega, menos os atrasados, que incluem os vencidos em aberto. Positivo é bom, negativo pede atenção. Vale só para cartões com data e que não são de rotina, e adiar a data não melhora.</li>
             <li>Tarefa resolvida conta para quem marcou no Trello: o item ou, sem checklist, o cartão. Por isso, cada um deve marcar o que resolveu.</li>
             <li>Tarefa pendente, ou sem registro de quem marcou, é dividida entre os responsáveis do cartão.</li>

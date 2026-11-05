@@ -211,6 +211,18 @@ describe("cartão de rotina", () => {
   });
 });
 
+describe("cartões e entregas", () => {
+  it("mostra os cartões e, à parte, os itens resolvidos", () => {
+    const r = resumirEquipe([cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Ana" }), item({ resolvido_por: "Ana" }), pendente()] }), concluido({ membros: ["Ana"], resolvido_por: "Ana" })], hoje).porResponsavel[0];
+    expect(r).toMatchObject({ atribuidas: 2, abertas: 1, concluidas: 1, itensResolvidos: 2, resolvidas: 3 });
+  });
+
+  it("quem resolve itens em cartão de rotina aparece com as entregas, sem cartões", () => {
+    const r = resumirEquipe([cartao({ rotina: true, membros: ["Ana"], itens: [item({ resolvido_por: "Bia" })] })], hoje).porResponsavel;
+    expect(r.find((l) => l.nome === "Bia")).toMatchObject({ atribuidas: 0, itensResolvidos: 1, resolvidas: 1 });
+  });
+});
+
 describe("ordem do painel", () => {
   const aberto = (membro: string) => cartao({ membros: [membro] });
   const feito = (membro: string) => concluido({ membros: [membro] });
