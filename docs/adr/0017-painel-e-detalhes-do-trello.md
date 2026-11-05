@@ -11,9 +11,9 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 4. **Contagem:**
    - **Taxa de eficiência:** concluídos até a **primeira** data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto (decisão do proprietário). Adiar a data não melhora a taxa, e cada mudança aparece em **Prazos alterados**.
    - **Unidade de tarefa (decisão do proprietário):** cada item de checklist vale 1, e o cartão sem checklist vale 1. Cartão concluído resolve todos os seus itens.
-   - **Crédito (decisão do proprietário):** a tarefa resolvida vai inteira para quem marcou no Trello, e a equipe combina que cada um marca o que resolveu. A pendente, ou sem esse registro, é dividida entre os responsáveis do cartão, para um cartão com vários membros não contar várias vezes. Marcar não prova quem executou. A constante `CREDITO_POR_QUEM_MARCOU` volta o crédito aos responsáveis.
+   - **Crédito (decisão do proprietário):** o item resolvido vai inteiro para quem marcou no Trello, e a equipe combina que cada um marca o que resolveu. O cartão sem checklist, e o item sem esse registro, são divididos entre os responsáveis do cartão, para um cartão com vários membros não contar várias vezes. O cartão não vai para quem o concluiu, porque encerrar cartão costuma ser ato de gestão: 12 cartões encerrados pelo proprietário iriam para ele. Quem concluiu fica guardado em `concluido_por_id`. Marcar não prova quem executou. A constante `CREDITO_POR_QUEM_MARCOU` devolve os itens aos responsáveis.
    - **Sem responsável:** fica no fim da lista, sem posição, e fora dos totais e das listas, para não mascarar a eficiência da equipe.
-   - **Ranking:** pela **taxa de resolução** (RN-49c), que cobre todo o trabalho, porque a base de prazo é pequena. No empate, fica à frente quem carrega mais tarefas.
+   - **Painel sem posições (decisão do proprietário):** a ordem é pelas tarefas resolvidas. A taxa de resolução foi testada e descartada: percentual sobre a carga premia quem tem pouca tarefa, e quem mais entregava aparecia atrás. Pendente é carga, não falha. O objetivo é estimular sem criar disputa. A coluna **No prazo** mostra um saldo, cartões no prazo menos atrasados, para cada um avaliar a própria situação sem comparar percentuais.
    - **Tempo médio:** da criação à conclusão, em todos os concluídos.
    - **Datas reais:** a conclusão vem do histórico do Trello, em `trello_cartao_datas`, porque `concluida_em` guarda a última atividade. A criação vem do id do cartão.
 5. **Leitura:** por quadro, sem uma chamada por cartão.
@@ -28,8 +28,7 @@ Cartões renovados sempre, como pedidos de compra, não têm fim nem prazo. O pr
 ## Consequências
 - O filtro reconhece padrões como `senha:`. Outro formato de credencial pode passar.
 - O cartão novo aparece no sistema na sincronização seguinte.
-- Este painel mede volume, não dificuldade: um cartão simples, um complexo e um item de checklist pesam igual. Quem cuida de rotina tende a subir no ranking, por isso a eficiência no prazo fica ao lado.
-- A taxa de resolução não penaliza atraso.
+- Este painel mede volume, não dificuldade: um cartão simples, um complexo e um item de checklist pesam igual. Quem cuida de rotina tende a aparecer mais, por isso **No prazo** fica ao lado.
 - Um adiamento legítimo, pedido pelo cliente ou por outra equipe, também conta contra a taxa. O sistema não sabe o motivo da mudança.
-- O ranking é calculado na hora e varia conforme o período. O histórico da posição de cada pessoa não fica guardado.
+- O painel é calculado na hora e varia conforme o período.
 - Estender a outro quadro exige alterar `QUADRO_DETALHADO` e `QUADRO_EQUIPE`.

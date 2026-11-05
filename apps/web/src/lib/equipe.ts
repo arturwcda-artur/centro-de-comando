@@ -26,8 +26,6 @@ export type CartaoEquipe = {
   prazo_alteracoes: number;
   categoria: string | null;
   membros: string[];
-  /** Quem concluiu o cartão no Trello. */
-  resolvido_por?: string | null;
   /** Cartão de rotina: fica fora da eficiência no prazo (RN-49b). */
   rotina?: boolean;
   itens?: ItemCartao[];
@@ -35,6 +33,10 @@ export type CartaoEquipe = {
 
 export type LinhaEquipe = {
   nome: string;
+  /** Cartões de que a pessoa é responsável. Cartão de rotina fica de fora. */
+  atribuidas: number;
+  abertas: number;
+  concluidas: number;
   /** Tarefas: os itens de cada cartão com checklist, ou 1 pelo cartão sem checklist (RN-49c). */
   sobResponsabilidade: number;
   resolvidas: number;
@@ -48,10 +50,10 @@ export type LinhaEquipe = {
   /** Cartões com prazo já cobrável: concluídos com prazo mais vencidos em aberto. */
   cobraveis: number;
   eficiencia: number | null;
+  /** Cartões no prazo menos cartões atrasados: positivo é bom, negativo pede atenção. */
+  saldoPrazo: number | null;
   diasMedios: number | null;
   prazosAlterados: number;
-  /** Posição no ranking, pela taxa de resolução. */
-  posicao: number | null;
 };
 
 type Acumulador = LinhaEquipe & { somaDias: number; comTempo: number; somaDiasItem: number; itensComTempo: number };
@@ -62,7 +64,7 @@ const listaDe = (categoria: string | null) => categoria?.split(" › ")[1] ?? "�
 const quem = (nomes: string[]) => (nomes.length ? nomes : [SEM_RESPONSAVEL]);
 
 function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
-  const nova: Acumulador = { nome, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, diasMedios: null, prazosAlterados: 0, posicao: null, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
+  const nova: Acumulador = { nome, atribuidas: 0, abertas: 0, concluidas: 0, sobResponsabilidade: 0, resolvidas: 0, pendentes: 0, resolucao: null, itensResolvidos: 0, diasPorItem: null, vencidas: 0, noPrazo: 0, cobraveis: 0, eficiencia: null, saldoPrazo: null, diasMedios: null, prazosAlterados: 0, somaDias: 0, comTempo: 0, somaDiasItem: 0, itensComTempo: 0 };
   const l = linhas.get(nome) ?? nova;
   linhas.set(nome, l);
   return l;
@@ -72,8 +74,10 @@ function linha(linhas: Map<string, Acumulador>, nome: string): Acumulador {
 function somarPrazo(l: Acumulador, c: CartaoEquipe, hoje: string, noPeriodo: boolean) {
   const referencia = c.prazo_original ?? c.prazo;
   l.prazosAlterados += c.prazo_alteracoes;
+  l.atribuidas += 1;
   if (c.status === "concluida") {
     if (!noPeriodo) return;
+    l.concluidas += 1;
     if (referencia) {
       l.cobraveis += 1;
       if (c.concluido_em && hojeSP(new Date(c.concluido_em)) <= referencia) l.noPrazo += 1;
@@ -83,6 +87,7 @@ function somarPrazo(l: Acumulador, c: CartaoEquipe, hoje: string, noPeriodo: boo
       l.comTempo += 1;
     }
   } else {
+    l.abertas += 1;
     if (c.prazo && c.prazo < hoje) l.vencidas += 1;
     if (referencia && referencia < hoje) l.cobraveis += 1; // vencido em aberto conta contra a eficiência
   }
@@ -94,34 +99,30 @@ function somarTarefa(l: Acumulador, resolvida: boolean, parte: number) {
   else l.pendentes += parte;
 }
 
+/** Sem posições: a ordem é por entregas, para ter mais tarefas não parecer pior. Sem responsável vai para o fim. */
 function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
-  const ordenadas = [...linhas.values()]
+  return [...linhas.values()]
     .map(({ somaDias, comTempo, somaDiasItem, itensComTempo, ...l }) => ({
       ...l,
       resolucao: l.sobResponsabilidade ? (l.resolvidas / l.sobResponsabilidade) * 100 : null,
       eficiencia: l.cobraveis ? (l.noPrazo / l.cobraveis) * 100 : null,
+      saldoPrazo: l.cobraveis ? l.noPrazo - (l.cobraveis - l.noPrazo) : null,
       diasMedios: comTempo ? somaDias / comTempo : null,
       diasPorItem: itensComTempo ? somaDiasItem / itensComTempo : null,
     }))
-    .sort((a, b) => Number(a.nome === SEM_RESPONSAVEL) - Number(b.nome === SEM_RESPONSAVEL) || (b.resolucao ?? -1) - (a.resolucao ?? -1) || b.sobResponsabilidade - a.sobResponsabilidade || a.nome.localeCompare(b.nome, "pt-BR"));
-  let posicao = 0;
-  return ordenadas.map((l) => ({ ...l, posicao: l.resolucao === null || l.nome === SEM_RESPONSAVEL ? null : ++posicao }));
+    .sort((a, b) => Number(a.nome === SEM_RESPONSAVEL) - Number(b.nome === SEM_RESPONSAVEL) || b.resolvidas - a.resolvidas || b.pendentes - a.pendentes || a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
 /**
- * Decisão do proprietário em 05/11/2026: quem marca no Trello recebe o crédito, e a equipe combina
- * que cada um marca o que resolveu. Com false, o crédito volta aos responsáveis pelo cartão.
+ * Decisão do proprietário em 05/11/2026: o item resolvido é de quem marcou no Trello, e a equipe
+ * combina que cada um marca o que resolveu. O cartão é sempre dos responsáveis, porque encerrar um
+ * cartão costuma ser ato de gestão. Com false, os itens também voltam aos responsáveis.
  */
 export const CREDITO_POR_QUEM_MARCOU = true;
-
-function donosDoCartao(c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
-  return porQuemMarcou && resolvido && c.resolvido_por ? [c.resolvido_por] : c.membros;
-}
 
 function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
   if (!porQuemMarcou) return c.membros;
   if (resolvido && i.resolvido_por) return [i.resolvido_por];
-  if (resolvido && c.resolvido_por) return [c.resolvido_por]; // cartão concluído com item não marcado
   return i.responsaveis.length ? i.responsaveis : c.membros;
 }
 
@@ -160,7 +161,7 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
 
     if (!c.itens?.length) {
       if (cartaoConcluido && foraDoPeriodo(c.concluido_em)) continue;
-      contar(donosDoCartao(c, cartaoConcluido, porQuemMarcou), cartaoConcluido);
+      contar(c.membros, cartaoConcluido);
       continue;
     }
     for (const i of c.itens) {

@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.12.5] — 2026-11-05 — Painel sem posições
+### Alterado
+- A tela **Equipe** deixa de ter ranking: ordena pelas entregas, sem posições, e mostra Atribuídas, Abertas, Concluídas, Itens resolvidos, Entregas, Vencidas e No prazo. A taxa de resolução saiu da tela.
+- Cartão sem checklist conta para os responsáveis, não para quem o encerrou.
+- **No prazo** passa a ser um saldo com sinal: cartões no prazo menos atrasados. O percentual fica em Prazos e tempos.
+
 ## [0.12.4] — 2026-11-05 — Crédito dividido
 ### Alterado
 - A tarefa resolvida conta para quem marcou no Trello, item ou cartão. A pendente é dividida entre os responsáveis do cartão.
