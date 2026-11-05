@@ -18,19 +18,21 @@ const ORIGENS = [
 
 export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefas">) {
   const params = await searchParams;
-  const visao = (VISOES_TAREFA.find((v) => v.valor === params.visao)?.valor ?? "minhas") as VisaoTarefa;
+  const quadro = typeof params.quadro === "string" && params.quadro ? params.quadro : null;
+  // Com um quadro escolhido, abre em Todas: em Minhas atribuições os cartões de outros membros não aparecem
+  const visao = (VISOES_TAREFA.find((v) => v.valor === params.visao)?.valor ?? (quadro ? "todas" : "minhas")) as VisaoTarefa;
   const obraId = typeof params.obra === "string" && UUID.test(params.obra) ? params.obra : null;
   const fonte = ORIGENS.some((o) => o.valor === params.origem) ? (params.origem as string) : null;
   const { supabase } = await exigirSessaoCompleta();
 
   const [lista, contagem, obras] = await Promise.all([
-    tarefasDaVisao(supabase, visao, obraId, fonte),
+    tarefasDaVisao(supabase, visao, obraId, fonte, quadro),
     contarVisoes(supabase),
     supabase.from("obras").select("id, codigo, nome").is("arquivado_em", null).order("codigo"),
   ]);
   const nomeObra = new Map((obras.data ?? []).map((o) => [o.id, o.codigo]));
   const itens = visao === "concluidas" ? lista.concluidas : lista.abertas;
-  const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}`;
+  const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}${quadro ? `&quadro=${encodeURIComponent(quadro)}` : ""}`;
 
   return (
     <div className="space-y-5">
@@ -40,8 +42,8 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
           <p className="text-sm text-suave">Ordenadas pela prioridade: 3·urgência + 2·importância + 2·impacto. Os prazos nunca são alterados.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <form method="get" className="flex gap-2">
-            <input type="hidden" name="visao" value={visao} />
+          <form method="get" className="flex flex-wrap gap-2">
+            {visao !== "minhas" && <input type="hidden" name="visao" value={visao} />}
             <select name="obra" defaultValue={obraId ?? ""} aria-label="Filtrar por obra" className="h-10 rounded-lg border border-borda bg-superficie px-2 text-sm">
               <option value="">Todas as obras</option>
               {(obras.data ?? []).map((o) => (
@@ -55,6 +57,14 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
               {ORIGENS.map((o) => (
                 <option key={o.valor} value={o.valor}>
                   {o.rotulo}
+                </option>
+              ))}
+            </select>
+            <select name="quadro" defaultValue={quadro ?? ""} aria-label="Filtrar por quadro do Trello" className="h-10 max-w-48 rounded-lg border border-borda bg-superficie px-2 text-sm">
+              <option value="">Todos os quadros</option>
+              {contagem.quadros.map((q) => (
+                <option key={q} value={q}>
+                  {q}
                 </option>
               ))}
             </select>

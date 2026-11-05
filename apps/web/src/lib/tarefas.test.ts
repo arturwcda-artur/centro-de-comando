@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { motivosPrioridade, podeConcluir } from "./dominio";
+import { motivosPrioridade, podeConcluir, quadrosDoTrello } from "./dominio";
 import { tarefaRapidaSchema, tarefaSchema, validar } from "./validacao";
 
 describe("validação de tarefas", () => {
@@ -50,5 +50,18 @@ describe("motivos da prioridade (recomendação, não altera prazos)", () => {
     expect(motivosPrioridade({ vence_hoje: true, dias_para_prazo: 0 })).toEqual(["vence hoje"]);
     expect(motivosPrioridade({ dias_para_prazo: 2 })).toEqual(["vence em 2 dia(s)"]);
     expect(motivosPrioridade({ dias_para_prazo: 10, impacto: 3 })).toEqual([]);
+  });
+});
+
+describe("quadrosDoTrello", () => {
+  it("lista os quadros do Trello sem repetir, ignorando outras origens", () => {
+    const lista = [
+      { fonte: "trello", categoria: "Obras do Grupo - C.SALLES › CEF-01" },
+      { fonte: "trello", categoria: "Obras do Grupo - C.SALLES › NILLS" },
+      { fonte: "trello", categoria: "C.SALLES-ENGENHARIA › ANP" },
+      { fonte: "notion", categoria: "Demandas" },
+      { fonte: "manual", categoria: null },
+    ];
+    expect(quadrosDoTrello(lista)).toEqual(["C.SALLES-ENGENHARIA", "Obras do Grupo - C.SALLES"]);
   });
 });

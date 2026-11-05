@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.11.2] — 2026-11-05 — Todas as tarefas
+### Adicionado
+- Visão **Todas** e filtro por quadro do Trello na tela Tarefas. Os cartões de outros membros só apareciam em Críticas e Vencimentos.
+
 ## [0.11.1] — 2026-11-05 — Eficiência da equipe
 ### Alterado
 - A tela **Equipe** troca o percentual concluído pela **taxa de eficiência** e pelo **tempo médio de conclusão**, com a base do cálculo (RN-49a).

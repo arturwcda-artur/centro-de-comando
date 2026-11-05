@@ -65,6 +65,7 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
   | Vencimentos | prazo nos próximos 15 dias ou vencido |
   | Concluídas | status `concluida` |
 
+- **RN-45a** A visão **Todas** mostra todas as tarefas abertas, inclusive cartões de outros membros, e aceita filtro por quadro do Trello. Escolher um quadro abre nessa visão.
 - **RN-46** **Meu dia** mostra em "foco" as minhas tarefas vencidas, de hoje, críticas ou com escore ≥ 27 (até 8), seguidas das 5 próximas por escore. Cada tarefa vem com o motivo da posição (vencida, vence hoje, crítica, impacto alto…). É uma recomendação: nada é reagendado.
 - **RN-47** Tarefas importadas (Trello, Notion) não são editadas no sistema, exceto a conclusão (RN-48) e a criação de cartão a partir de comentário (RN-49). Para as demais alterações, a fonte oficial é a ferramenta de origem.
 - **RN-48** Podem ser concluídas pelo sistema: tarefas manuais, do Notion e cartões do Trello do proprietário. **Cartões de terceiros são só leitura.** A conclusão é gravada primeiro na origem; se a origem recusar, a tarefa continua aberta e o erro aparece na tela. No Trello e no Notion nada é excluído (ADR 0013).
