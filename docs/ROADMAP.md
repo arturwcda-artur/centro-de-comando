@@ -14,7 +14,7 @@ Cada fase termina com código no GitHub, testes passando, documentação atualiz
 | 6 — Planejamento | agente local MS Project, versões, Curva S (piloto: PRF-Recanto) | ✅ aprovada em 04/11/2026 |
 | 7 — Contratos e financeiro | contratos, aditivos, medições, importador de planilha | ✅ aprovada em 04/11/2026 |
 | 8 — Documentos e relatórios | índice do Drive, busca, relatórios Excel/PDF | ✅ aprovada em 05/11/2026, piloto PRF-Recanto |
-| 9 — Integrações completas | painel de conectores e escrita autorizada; tela de conflitos ficou de fora, sem casos reais | 🔶 em implantação |
+| 9 — Integrações completas | painel de conectores e escrita autorizada; tela de conflitos ficou de fora, sem casos reais | ✅ aprovada em 05/11/2026 |
 | 10 — IA e automações | assistente com fonte e data, alertas, teto de custo | |
 | 11 — Testes e implantação | E2E, desempenho, domínio, teste de restauração | |
 
