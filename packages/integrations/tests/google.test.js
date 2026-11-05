@@ -81,9 +81,9 @@ describe('autorização', () => {
     await expect(tokenDeAcesso({ clienteId: 'a', segredo: 'b', tokenLongo: 'c' })).rejects.toThrow(/HTTP 401/);
   });
 
-  it('pede só eventos da agenda e acesso de longa duração', () => {
+  it('pede eventos da agenda, dados dos arquivos do Drive e acesso de longa duração', () => {
     const u = new URL(urlAutorizacao({ clienteId: 'id', retorno: 'https://x/retorno', estado: 'abc' }));
-    expect(u.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/calendar.events');
+    expect(u.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.metadata.readonly');
     expect(u.searchParams.get('access_type')).toBe('offline');
     expect(u.searchParams.get('state')).toBe('abc');
   });

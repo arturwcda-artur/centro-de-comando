@@ -806,6 +806,73 @@ export type Database = {
           },
         ]
       }
+      documento_links: {
+        Row: {
+          atualizado_em: string
+          documento_id: string
+          drive_file_id: string
+          url: string
+        }
+        Insert: {
+          atualizado_em?: string
+          documento_id: string
+          drive_file_id: string
+          url: string
+        }
+        Update: {
+          atualizado_em?: string
+          documento_id?: string
+          drive_file_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_links_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: true
+            referencedRelation: "documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento_pastas: {
+        Row: {
+          atualizado_em: string
+          caminho: string
+          criado_em: string
+          id: string
+          obra_id: string
+          ultima_leitura_em: string | null
+          ultimo_erro: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          caminho: string
+          criado_em?: string
+          id?: string
+          obra_id: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          caminho?: string
+          criado_em?: string
+          id?: string
+          obra_id?: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_pastas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: true
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documento_versoes: {
         Row: {
           atualizado_em: string
@@ -857,6 +924,9 @@ export type Database = {
           caminho_local: string | null
           categoria: string
           criado_em: string
+          obsoleto: boolean
+          pasta: string | null
+          sem_texto: boolean
           data_documento: string | null
           drive_file_id: string | null
           fonte: string
@@ -881,6 +951,9 @@ export type Database = {
           caminho_local?: string | null
           categoria?: string
           criado_em?: string
+          obsoleto?: boolean
+          pasta?: string | null
+          sem_texto?: boolean
           data_documento?: string | null
           drive_file_id?: string | null
           fonte?: string
@@ -905,6 +978,9 @@ export type Database = {
           caminho_local?: string | null
           categoria?: string
           criado_em?: string
+          obsoleto?: boolean
+          pasta?: string | null
+          sem_texto?: boolean
           data_documento?: string | null
           drive_file_id?: string | null
           fonte?: string
@@ -2630,6 +2706,23 @@ export type Database = {
       }
     }
     Functions: {
+      buscar_documentos: {
+        Args: { p_busca?: string; p_categoria?: string; p_obra?: string; p_obsoletos?: boolean }
+        Returns: {
+          caminho_local: string | null
+          categoria: string
+          data_documento: string | null
+          id: string
+          obra_id: string | null
+          obsoleto: boolean
+          pasta: string | null
+          sem_texto: boolean
+          titulo: string
+          trecho: string | null
+          url: string | null
+        }[]
+      }
+      tamanho_do_banco: { Args: never; Returns: number }
       tornar_linha_base: { Args: { p_versao: string }; Returns: undefined }
       ler_credencial: { Args: { p_ferramenta: string }; Returns: string }
       ler_credencial_servico: { Args: { p_ferramenta: string }; Returns: string }
