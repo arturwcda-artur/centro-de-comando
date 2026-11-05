@@ -130,3 +130,7 @@ export function quadrosDoTrello(lista: { fonte: string | null; categoria: string
   const nomes = lista.filter((t) => t.fonte === "trello" && t.categoria).map((t) => (t.categoria as string).split(" › ")[0]);
   return [...new Set(nomes)].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
+
+/** Opções da base Demandas Ativas no Notion. */
+export const PRIORIDADES_NOTION = ["🔴 Crítica", "🟠 Alta", "🟡 Média", "🟢 Baixa"].map((p) => ({ valor: p, rotulo: p }));
+export const CATEGORIAS_NOTION = ["Estratégico", "Financeiro", "Contratos", "Jurídico", "Obras", "Marketing", "Operacional", "Infraestrutura"].map((c) => ({ valor: c, rotulo: c }));

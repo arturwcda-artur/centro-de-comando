@@ -169,6 +169,15 @@ class Banco:
             cur.execute("select public.registrar_erro_cronograma(%s, %s)", (arquivo_id, mensagem))
 
 
+def registrar_execucao(conexao, ferramenta: str, lidos: int, ignorados: int, erros: int, mensagem: str) -> None:
+    """Mostra a leitura na tela Integrações. Falhar aqui não pode derrubar a leitura."""
+    try:
+        with conexao.cursor() as cur:
+            cur.execute("select public.registrar_execucao_agente(%s, %s, %s, %s, %s)", (ferramenta, lidos, ignorados, erros, mensagem))
+    except Exception as e:  # noqa: BLE001
+        log.warning("Não registrou a execução em Integrações: %s", e)
+
+
 def validar_config(config: dict[str, str]) -> None:
     if not config.get("CRONOGRAMA_DB_URL"):
         raise ValueError("Falta CRONOGRAMA_DB_URL em agente.env")
@@ -194,6 +203,8 @@ def main() -> int:
         with conectar(config) as conexao:
             banco = Banco(conexao)
             resumo = processar(banco.listar(), banco, abrir_project=abrir_project_oculto, fechar_project=fechar_project_oculto, project_aberto=project_aberto_no_windows)
+            adiado = "Project aberto: leitura adiada. " if resumo["adiado"] else ""
+            registrar_execucao(conexao, "msproject", resumo["lidos"], resumo["iguais"], resumo["erros"], f"{adiado}{resumo['lidos']} lidos, {resumo['iguais']} sem mudança")
     except Exception as e:  # noqa: BLE001 - a mensagem final precisa aparecer para o usuário
         log.error("Falha: %s", e)
         return 1

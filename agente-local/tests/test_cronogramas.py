@@ -173,3 +173,11 @@ def test_falha_de_um_arquivo_nao_para_os_outros(tmp_path):
 def test_config_exige_endereco_do_banco():
     with pytest.raises(ValueError, match="CRONOGRAMA_DB_URL"):
         c.validar_config({})
+
+
+def test_registrar_execucao_nao_derruba_a_leitura():
+    class Quebrada:
+        def cursor(self):
+            raise RuntimeError("sem conexão")
+
+    c.registrar_execucao(Quebrada(), "msproject", 1, 0, 0, "ok")

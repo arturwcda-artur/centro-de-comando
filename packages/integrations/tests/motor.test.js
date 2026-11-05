@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aplicar } from '../src/motor.js';
+import { aplicar, executarConector } from '../src/motor.js';
 
 /** Banco falso mínimo: só o que o motor usa (select…eq…range e upsert por fonte+id_externo). */
 function bancoFalso() {
@@ -57,5 +57,20 @@ describe('motor de sincronização', () => {
     await aplicar(cliente, { tabela: 'tarefas', fonte: 'trello', registros: [{ id_externo: 'x', titulo: 'T' }] });
     const r = await aplicar(cliente, { tabela: 'tarefas', fonte: 'notion', registros: [{ id_externo: 'x', titulo: 'N' }] });
     expect(r.criados).toBe(1);
+  });
+});
+
+describe('conector pausado', () => {
+  const cliente = (pausado_ate) => ({
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { pausado_ate } }) }) }) }),
+  });
+
+  it('não executa a leitura', async () => {
+    let executou = false;
+    const r = await executarConector(cliente('2100-01-01T00:00:00Z'), { ferramenta: 'trello', nome: 'Trello' }, async () => {
+      executou = true;
+    });
+    expect(executou).toBe(false);
+    expect(r).toMatchObject({ ok: true, lidos: 0 });
   });
 });

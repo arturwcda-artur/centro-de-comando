@@ -18,7 +18,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from cc_agente.backup import caminho_config, ler_config
-from cc_agente.cronogramas import conectar, sha256_arquivo, validar_config
+from cc_agente.cronogramas import conectar, registrar_execucao, sha256_arquivo, validar_config
 
 LINHA_NUMERO, LINHA_DATA, LINHA_INICIO, LINHA_FIM, LINHA_CABECALHO = 2, 3, 4, 5, 12  # índices a partir de zero
 COL_ITEM, COL_DESCRICAO, COL_QTD, COL_UN, COL_PRECO, COL_TOTAL, COL_MED = 0, 2, 3, 4, 5, 6, 9
@@ -182,6 +182,7 @@ def main() -> int:
         with conectar(config) as conexao:
             banco = Banco(conexao)
             resumo = processar(banco.listar(), banco)
+            registrar_execucao(conexao, "excel", resumo["lidos"], resumo["iguais"], resumo["erros"], f"{resumo['lidos']} planilhas lidas, {resumo['iguais']} sem mudança")
     except Exception as e:  # noqa: BLE001 - a mensagem final precisa aparecer para o usuário
         log.error("Falha: %s", e)
         return 1
