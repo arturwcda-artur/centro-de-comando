@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.12.3] — 2026-11-05 — Tela Equipe mais simples
+### Alterado
+- O crédito dos itens volta ao responsável pelo cartão. Quem marcou continua guardado para uso futuro.
+- Sem responsável fica no fim do ranking e fora dos totais e das listas.
+- O ranking mostra só tarefas, resolvidas, pendentes, resolução e no prazo. Por lista, prazos e tempos ficam em seções recolhidas.
+
 ## [0.12.2] — 2026-11-05 — Ajustes
 ### Corrigido
 - O cartão do Google Drive mostra erro de autorização quando falta a permissão, em vez de Conectado.

@@ -11,7 +11,8 @@ O proprietário quer medir a eficiência da equipe, ver checklists e comentário
 4. **Contagem:** cartão com dois membros conta para os dois. A conclusão conta para quem estava atribuído.
    - **Taxa de eficiência:** concluídos até a **primeira** data de entrega, divididos pelos concluídos com prazo mais os vencidos em aberto (decisão do proprietário). Adiar a data não melhora a taxa, e cada mudança aparece em **Prazos alterados**.
    - **Unidade de tarefa (decisão do proprietário):** cada item de checklist vale 1, e o cartão sem checklist vale 1. Cartão concluído resolve todos os seus itens.
-   - **Crédito do item:** vai para quem o marcou no Trello. Sem esse registro, fica com o membro do item e, depois, com os membros do cartão. Marcar não prova quem executou: quem marca por outra pessoa leva o crédito.
+   - **Crédito do item:** por decisão do proprietário, vai para o responsável pelo cartão enquanto ele alinha a regra com a equipe. Quem marcou cada item já fica guardado, e a troca é a constante `CREDITO_POR_QUEM_MARCOU`.
+   - **Sem responsável:** fica no fim da lista, sem posição, e fora dos totais e das listas, para não mascarar a eficiência da equipe.
    - **Ranking:** pela **taxa de resolução** (RN-49c), que cobre todo o trabalho, porque a base de prazo é pequena. No empate, fica à frente quem carrega mais tarefas.
    - **Tempo médio:** da criação à conclusão, em todos os concluídos.
    - **Datas reais:** a conclusão vem do histórico do Trello, em `trello_cartao_datas`, porque `concluida_em` guarda a última atividade. A criação vem do id do cartão.

@@ -101,13 +101,19 @@ function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
       diasMedios: comTempo ? somaDias / comTempo : null,
       diasPorItem: itensComTempo ? somaDiasItem / itensComTempo : null,
     }))
-    .sort((a, b) => (b.resolucao ?? -1) - (a.resolucao ?? -1) || b.sobResponsabilidade - a.sobResponsabilidade || a.nome.localeCompare(b.nome, "pt-BR"));
+    .sort((a, b) => Number(a.nome === SEM_RESPONSAVEL) - Number(b.nome === SEM_RESPONSAVEL) || (b.resolucao ?? -1) - (a.resolucao ?? -1) || b.sobResponsabilidade - a.sobResponsabilidade || a.nome.localeCompare(b.nome, "pt-BR"));
   let posicao = 0;
   return ordenadas.map((l) => ({ ...l, posicao: l.resolucao === null || l.nome === SEM_RESPONSAVEL ? null : ++posicao }));
 }
 
-/** Item resolvido vai para quem marcou; pendente, para o membro do item ou, sem ele, os do cartão. */
-function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean): string[] {
+/**
+ * Decisão do proprietário em 05/11/2026: por enquanto, o crédito do item é do responsável pelo cartão.
+ * Quem marcou cada item já fica guardado. Para passar a usar, troque para true depois de alinhar com a equipe.
+ */
+export const CREDITO_POR_QUEM_MARCOU = false;
+
+function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
+  if (!porQuemMarcou) return c.membros;
   if (resolvido && i.resolvido_por) return [i.resolvido_por];
   return i.responsaveis.length ? i.responsaveis : c.membros;
 }
@@ -116,12 +122,13 @@ function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean): string
  * Cartão com checklist vale pelos itens; sem checklist, vale 1 (RN-49c). Cartão concluído resolve
  * todos os seus itens, mesmo os não marcados. Tarefa com dois responsáveis conta para os dois, então
  * a soma por pessoa pode passar do total. Com `desde`, resolvidas antes da data ficam de fora.
+ * Sem responsável fica no fim e fora do total e das listas, para não mascarar a eficiência da equipe.
  */
-export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: string) {
+export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU) {
   const total = new Map<string, Acumulador>();
   const porLista = new Map<string, Acumulador>();
   const porResponsavel = new Map<string, Acumulador>();
-  const destinos = (c: CartaoEquipe, nomes: string[]) => [linha(total, QUADRO_EQUIPE), linha(porLista, listaDe(c.categoria)), ...quem(nomes).map((n) => linha(porResponsavel, n))];
+  const destinos = (c: CartaoEquipe, nomes: string[]) => [...(nomes.length ? [linha(total, QUADRO_EQUIPE), linha(porLista, listaDe(c.categoria))] : []), ...quem(nomes).map((n) => linha(porResponsavel, n))];
   const foraDoPeriodo = (data: string | null) => !!desde && (data ?? "") < desde;
 
   for (const c of cartoes) {
@@ -142,7 +149,7 @@ export function resumirEquipe(cartoes: CartaoEquipe[], hoje: string, desde?: str
       const resolvido = i.concluido || cartaoConcluido;
       const data = i.concluido_em ?? c.concluido_em;
       if (resolvido && foraDoPeriodo(data)) continue;
-      for (const l of destinos(c, donosDoItem(i, c, resolvido))) {
+      for (const l of destinos(c, donosDoItem(i, c, resolvido, porQuemMarcou))) {
         somarTarefa(l, resolvido);
         if (!resolvido) continue;
         l.itensResolvidos += 1;
