@@ -2,6 +2,14 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.12.0] — 2026-11-05 — Fase 8: documentos
+### Adicionado
+- Tela **Documentos**: busca por nome e conteúdo, filtros e abertura pelo Google Drive (ADR 0018).
+- Agente indexa a pasta da obra sem alterar nada e entra no atalho e na rotina semanal.
+- O sincronizador liga cada documento ao Drive, lendo só os dados dos arquivos.
+- Migration `0023_documentos_indice.sql`.
+- A tela Integrações mostra o espaço usado no banco.
+
 ## [0.11.2] — 2026-11-05 — Todas as tarefas
 ### Adicionado
 - A tela Tarefas abre em **Todas**, com a equipe inteira, e ganha filtros por quadro e por responsável. Os cartões de outros membros só apareciam em Críticas e Vencimentos.

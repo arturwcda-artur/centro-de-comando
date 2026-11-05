@@ -6,7 +6,8 @@ import { buscar, cortar, somarDias } from './util.js';
 
 const API = 'https://www.googleapis.com/calendar/v3';
 const TOKEN = 'https://oauth2.googleapis.com/token';
-export const ESCOPO = 'https://www.googleapis.com/auth/calendar.events';
+// O Drive é só para os dados dos arquivos, nunca o conteúdo (ADR 0018)
+export const ESCOPO = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.metadata.readonly';
 export const AGENDA = 'primary';
 export const FUSO = 'America/Sao_Paulo';
 

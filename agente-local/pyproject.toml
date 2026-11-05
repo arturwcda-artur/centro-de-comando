@@ -5,7 +5,7 @@ description = "Agente local do Centro de Comando Gerencial (backup, MS Project, 
 requires-python = ">=3.11"
 
 [project.optional-dependencies]
-cronogramas = ["pywin32; sys_platform == 'win32'", "psycopg[binary]", "openpyxl"]
+cronogramas = ["pywin32; sys_platform == 'win32'", "psycopg[binary]", "openpyxl", "pypdf"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

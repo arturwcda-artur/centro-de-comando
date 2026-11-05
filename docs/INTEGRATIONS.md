@@ -37,7 +37,7 @@ Para cada ferramenta o painel mostra:
 | Notion | API REST (integração interna, só leitura), a cada hora ✅ | 5 | histórico (Central de Gestão) |
 | MS Project | agente local, COM via pywin32, somente leitura ✅ (ADR 0015) | 6 | cronograma, linha de base |
 | Excel | agente local, openpyxl, somente leitura, um modelo por tipo de planilha ✅ (ADR 0016) | 7 | itens e quantidades das medições |
-| Google Drive | API Drive v3, `drive.readonly` (nuvem) | 8 | arquivos (por referência) |
+| Google Drive | API Drive v3, `drive.metadata.readonly`, só dados dos arquivos ✅ (ADR 0018) | 8 | link dos arquivos (por referência) |
 | GitHub | API REST | 9 | código do próprio sistema |
 | Gmail, Todoist | a decidir | 9+ | — |
 
@@ -71,6 +71,11 @@ Para cada ferramenta o painel mostra:
 - O agente `cc_agente.medicoes` lê a planilha cadastrada em cada contrato e só relê a que mudou.
 - A planilha só atualiza medições **elaboradas**. A partir do envio, a diferença aparece na tela.
 - Para incluir um novo modelo, crie a função em `cc_agente/medicoes.py`, registre em `MODELOS` e libere o nome em `medicao_arquivos.modelo`.
+
+## Documentos (Fase 8)
+- O agente `cc_agente.documentos` percorre as pastas de `documento_pastas` e só relê o arquivo que mudou.
+- O sincronizador liga cada documento ao Drive pelo caminho, em `documento_links`.
+- Para incluir outra obra, cadastre a pasta em `documento_pastas`. Não é preciso programar.
 
 ## Segredos (o proprietário cadastra no GitHub; nunca vão para o Git nem para o banco)
 Em **GitHub → repositório → Settings → Secrets and variables → Actions → New repository secret**, ou pelo terminal com `gh secret set NOME`, que pede o valor sem mostrá-lo:

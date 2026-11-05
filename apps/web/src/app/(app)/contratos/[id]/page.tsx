@@ -80,9 +80,14 @@ export default async function PaginaContrato({ params, searchParams }: PageProps
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{contrato.data.obras?.codigo}</h1>
           <p className="text-sm text-suave">Contrato {contrato.data.numero}</p>
         </div>
-        <Link href={`/contratos/${id}/editar`} className="inline-flex h-10 items-center rounded-lg border border-borda bg-superficie px-3 text-sm font-medium hover:bg-superficie-2">
-          Editar contrato
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/documentos?obra=${contrato.data.obra_id}&categoria=medicoes`} className="inline-flex h-10 items-center rounded-lg border border-borda bg-superficie px-3 text-sm font-medium hover:bg-superficie-2">
+            Documentos de medição
+          </Link>
+          <Link href={`/contratos/${id}/editar`} className="inline-flex h-10 items-center rounded-lg border border-borda bg-superficie px-3 text-sm font-medium hover:bg-superficie-2">
+            Editar contrato
+          </Link>
+        </div>
       </div>
 
       {avisos.map((a) => (

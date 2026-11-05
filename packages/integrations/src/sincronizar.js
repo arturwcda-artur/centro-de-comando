@@ -13,6 +13,7 @@ import { aplicar, executarConector, somar } from './motor.js';
 import * as trello from './trello.js';
 import * as google from './google-ical.js';
 import * as agenda from './google.js';
+import { vincularDocumentos } from './google-drive.js';
 import { lerNotion } from './notion.js';
 import { hojeSP, somarDias } from './util.js';
 
@@ -64,6 +65,19 @@ async function principal() {
         const cancelados = await google.cancelarAusentes(supabase, { calendario: agenda.AGENDA, inicioISO, fimISO, idsPresentes: registros.map((x) => x.id_externo) });
         const substituidos = await google.cancelarLeituraIcal(supabase, agenda.AGENDA);
         return { ...r, mensagem: `API oficial, janela ${janela.inicio} a ${janela.fim}, ${cancelados} removidos na origem, ${substituidos} cópias do iCal substituídas` };
+      }),
+    );
+    resultados.push(
+      await executarConector(supabase, { ferramenta: 'google_drive', nome: 'Google Drive', gatilho }, async () => {
+        const acesso = await agenda.tokenDeAcesso({ clienteId: env.GOOGLE_CLIENT_ID, segredo: env.GOOGLE_CLIENT_SECRET, tokenLongo });
+        try {
+          const r = await vincularDocumentos(supabase, acesso);
+          return { ...r, mensagem: `${r.lidos} documentos, ${r.semLink} sem link no Drive` };
+        } catch (e) {
+          // Sem a permissão nova, a agenda continua funcionando e a tela de Documentos usa o caminho
+          if (!/HTTP 403/.test(e.message)) throw e;
+          return { lidos: 0, criados: 0, atualizados: 0, ignorados: 0, itens: [], mensagem: 'Falta aceitar a permissão do Drive: use Reconectar Google' };
+        }
       }),
     );
   } else if (urls.length) {

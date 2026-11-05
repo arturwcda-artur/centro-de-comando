@@ -34,7 +34,7 @@ export default async function PaginaBusca({ searchParams }: PageProps<"/busca">)
       <h1 className="text-xl font-semibold tracking-tight">
         Resultados para “{q}” <span className="text-sm font-normal text-suave">({total})</span>
       </h1>
-      {total === 0 && <EstadoVazio>Nada encontrado. Os dados das obras, tarefas e documentos chegam nas Fases 4, 5 e 8.</EstadoVazio>}
+      {total === 0 && <EstadoVazio>Nada encontrado.</EstadoVazio>}
       {!!obras.data?.length && (
         <Cartao titulo="Obras">
           <ul className="space-y-2">
@@ -71,7 +71,9 @@ export default async function PaginaBusca({ searchParams }: PageProps<"/busca">)
             {documentos.data.map((d) => (
               <li key={d.id} className="flex items-center gap-2 text-sm">
                 <FileText className="size-4 text-suave" aria-hidden="true" />
-                <span className="flex-1">{d.titulo}</span>
+                <Link href={`/documentos?q=${encodeURIComponent(q)}`} className="flex-1 hover:text-marca hover:underline">
+                  {d.titulo}
+                </Link>
                 <span className="text-xs text-suave">{dataCivil(d.data_documento)}</span>
               </li>
             ))}

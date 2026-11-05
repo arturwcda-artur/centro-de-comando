@@ -69,6 +69,7 @@ Ver [docs/adr](adr). Índice:
 | [0015](adr/0015-leitura-do-ms-project.md) | Leitura do MS Project com papel restrito e Curva S em reais |
 | [0016](adr/0016-medicoes-item-por-item.md) | Medições item por item, lidas da planilha, com a situação decidida pelo proprietário |
 | [0017](adr/0017-painel-e-detalhes-do-trello.md) | Painel da equipe, detalhes do cartão e criação de cartão a partir de comentário |
+| [0018](adr/0018-indice-de-documentos.md) | Índice local de documentos e abertura pelo Google Drive |
 
 ## Aplicação web (`apps/web`, Fase 3)
 | Peça | Arquivo | Papel |

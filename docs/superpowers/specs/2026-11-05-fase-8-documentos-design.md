@@ -59,7 +59,7 @@ Entra no atalho **Atualizar cronogramas** e na rotina semanal.
 - **Quando:** na sincronização de hora em hora, depois da agenda.
 - **Como:** procura no Drive a pasta com o nome da pasta da obra, percorre as subpastas e monta o mapa de caminho relativo para id e link.
 - **Pastas com o mesmo nome:** usa a que tiver mais caminhos iguais aos do índice.
-- **Gravação:** só atualiza `drive_file_id` e `url` em `documentos`, e só quando mudaram.
+- **Gravação:** só grava em `documento_links`, e só o que mudou. A tabela fica fora de `documentos` para não copiar o texto para a auditoria a cada link.
 - **Sem a permissão:** a etapa é ignorada com aviso, e a agenda continua funcionando.
 
 O conector continua sem nenhuma gravação no Drive.

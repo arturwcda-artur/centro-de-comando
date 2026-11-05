@@ -115,6 +115,9 @@ export default async function PaginaPlanejamentoObra({ params, searchParams }: P
         </Link>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">{obra.data.codigo}</h1>
         <p className="text-sm text-suave">{vigente ? `Cronograma vigente: ${vigente.nome}` : "Aguardando a primeira leitura dos cronogramas."}</p>
+        <Link href={`/documentos?obra=${id}&categoria=planejamento`} className="text-sm text-marca hover:underline">
+          Documentos de planejamento
+        </Link>
       </div>
 
       {avisos.map((a) => (
