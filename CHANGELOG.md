@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.17.0] — 2026-11-05 — Fase 11: testes e implantação
+### Adicionado
+- Teste de restauração do backup em banco descartável (`cc_agente.restauracao`).
+- Conferência diária da produção, sem login (`conferir-producao.yml`).
+- Manual de uso, roteiro de conferência e plano de recuperação.
+
 ## [0.16.0] — 2026-11-05 — Fase 10: assistente no Claude
 ### Adicionado
 - Conector só de leitura para o Claude, com autorização por login completo e revogação em Integrações.
