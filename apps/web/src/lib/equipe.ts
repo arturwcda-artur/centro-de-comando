@@ -240,6 +240,27 @@ export function tarefasQueEntraram(cartoes: CartaoEquipe[], desde?: string, porQ
   return tarefasDaEquipe(cartoes, porQuemMarcou).filter((t) => !desde || (t.criada_em ?? "") >= desde).length;
 }
 
+export type PosicaoEvolucao = { posicao: number; nome: string; anterior: number; atual: number; evolucao: number };
+
+/**
+ * Ranking de evolução (pedido do proprietário em 09/11/2026): tarefas resolvidas no período menos as do
+ * período anterior de mesmo tamanho. Em tarefas, não em porcentagem, porque quem começa do zero teria
+ * porcentagem infinita. Ninguém fica de fora, nem quem caiu. Empate divide a posição.
+ */
+export function rankingEvolucao(atual: LinhaEquipe[], anterior: LinhaEquipe[]): PosicaoEvolucao[] {
+  const resolvidas = (linhas: LinhaEquipe[], nome: string) => linhas.find((l) => l.nome === nome)?.resolvidas ?? 0;
+  const nomes = new Set([...atual, ...anterior].map((l) => l.nome).filter((n) => n !== SEM_RESPONSAVEL));
+  const linhas = [...nomes]
+    .map((nome) => {
+      const a = resolvidas(atual, nome);
+      const b = resolvidas(anterior, nome);
+      // Arredondado como aparece na tela, para o empate ser o que a pessoa vê
+      return { nome, anterior: b, atual: a, evolucao: Math.round((a - b) * 10) / 10 };
+    })
+    .sort((x, y) => y.evolucao - x.evolucao || y.atual - x.atual || x.nome.localeCompare(y.nome, "pt-BR"));
+  return linhas.map((l, i) => ({ ...l, posicao: linhas.findIndex((o) => o.evolucao === l.evolucao) + 1 }));
+}
+
 export const DIAS_PARADA = 14;
 
 /** Cartões abertos sem nenhuma movimentação no Trello, do mais antigo para o mais novo. Rotina fica de fora. */

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
 import { GraficoSemanas } from "@/components/grafico-semanas";
-import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type LinhaEquipe } from "@/lib/equipe";
+import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type LinhaEquipe, type PosicaoEvolucao } from "@/lib/equipe";
 import { PERIODOS, carregarCartoesEquipe, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -58,6 +58,36 @@ function Painel({ coluna, linhas, evolucao, destino }: { coluna: string; linhas:
   );
 }
 
+/** Quem mais evoluiu em relação ao período anterior. Todos aparecem, inclusive quem caiu. */
+function RankingEvolucao({ linhas, periodo }: { linhas: PosicaoEvolucao[]; periodo: string }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[480px] text-sm">
+        <thead className="text-left text-xs text-suave">
+          <tr>
+            <th className="w-10 py-2 font-medium">#</th>
+            <th className="py-2 font-medium">Responsável</th>
+            <th className={CABECALHO}>{periodo === "7" ? "Semana anterior" : "Mês anterior"}</th>
+            <th className={CABECALHO}>{periodo === "7" ? "Esta semana" : "Este mês"}</th>
+            <th className={CABECALHO}>Evolução</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-borda">
+          {linhas.map((l) => (
+            <tr key={l.nome}>
+              <td className="py-2.5 font-semibold tabular-nums">{l.posicao}º</td>
+              <td className="py-2.5 pr-3">{l.nome}</td>
+              <td className={`${NUMERO} text-suave`}>{quantidade(l.anterior)}</td>
+              <td className={NUMERO}>{quantidade(l.atual)}</td>
+              <td className={`${NUMERO} font-semibold ${corDoSinal(l.evolucao)}`}>{comSinal(l.evolucao)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /** O restante fica à parte, para a tela principal continuar simples. */
 function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
   return (
@@ -101,7 +131,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const periodo = periodoDe(bruto);
   const { supabase } = await exigirSessaoCompleta();
   const { cartoes, idMembro } = await carregarCartoesEquipe(supabase);
-  const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
+  const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, ranking, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
 
   const indicadores = [
     ["Tarefas resolvidas", quantidade(total?.resolvidas ?? 0), ""],
@@ -142,6 +172,14 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
 
       <Cartao titulo="Quem resolveu">
         <Painel coluna="Responsável" linhas={porResponsavel} evolucao={evolucaoPessoa} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
+      </Cartao>
+
+      <Cartao titulo="Quem mais evoluiu">
+        {ranking ? (
+          <RankingEvolucao linhas={ranking} periodo={periodo.valor} />
+        ) : (
+          <EstadoVazio>{periodo.dias ? "Ainda não há resolvidas no período anterior para comparar." : "Escolha Última semana ou Último mês para comparar com o período anterior."}</EstadoVazio>
+        )}
       </Cartao>
 
       <Cartao titulo="Entraram × resolvidas por semana">
