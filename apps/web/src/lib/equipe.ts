@@ -258,7 +258,7 @@ export function rankingEvolucao(atual: LinhaEquipe[], anterior: LinhaEquipe[]): 
       return { nome, anterior: b, atual: a, evolucao: Math.round((a - b) * 10) / 10 };
     })
     .sort((x, y) => y.evolucao - x.evolucao || y.atual - x.atual || x.nome.localeCompare(y.nome, "pt-BR"));
-  return linhas.map((l, i) => ({ ...l, posicao: linhas.findIndex((o) => o.evolucao === l.evolucao) + 1 }));
+  return linhas.map((l) => ({ ...l, posicao: linhas.findIndex((o) => o.evolucao === l.evolucao) + 1 }));
 }
 
 export const DIAS_PARADA = 14;
