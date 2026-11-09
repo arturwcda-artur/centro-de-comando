@@ -6,6 +6,8 @@ export const SEM_RESPONSAVEL = "Sem responsável";
 
 /** Item de checklist de um cartão. */
 export type ItemCartao = {
+  /** Texto do item, para mostrar o que foi resolvido. */
+  nome?: string;
   concluido: boolean;
   criado_em: string | null;
   concluido_em: string | null;
@@ -16,6 +18,7 @@ export type ItemCartao = {
 };
 
 export type CartaoEquipe = {
+  titulo?: string;
   status: string;
   prazo: string | null;
   /** Data real da conclusão, lida do histórico do Trello. */
@@ -259,6 +262,38 @@ export function rankingEvolucao(atual: LinhaEquipe[], anterior: LinhaEquipe[]): 
     })
     .sort((x, y) => y.evolucao - x.evolucao || y.atual - x.atual || x.nome.localeCompare(y.nome, "pt-BR"));
   return linhas.map((l) => ({ ...l, posicao: linhas.findIndex((o) => o.evolucao === l.evolucao) + 1 }));
+}
+
+export type Resolvida = { cartao: string; item: string | null; data: string | null; parte: number };
+
+/**
+ * O que cada pessoa resolveu no período, com as mesmas regras de resumirEquipe: é a explicação do
+ * número de "Tarefas resolvidas" e da evolução. A soma das partes de cada pessoa bate com a tela.
+ */
+export function detalharResolvidas(cartoes: CartaoEquipe[], desde?: string, ate?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU) {
+  const porPessoa = new Map<string, Resolvida[]>();
+  const foraDoPeriodo = (data: string | null) => (!!desde && (data ?? "") < desde) || (!!ate && (data ?? "") >= ate);
+  const anotar = (nomes: string[], r: Omit<Resolvida, "parte">) => {
+    const donos = quem(nomes);
+    for (const nome of donos) porPessoa.set(nome, [...(porPessoa.get(nome) ?? []), { ...r, parte: 1 / donos.length }]);
+  };
+  for (const c of cartoes) {
+    if (c.status === "cancelada") continue;
+    const cartaoConcluido = c.status === "concluida";
+    const titulo = c.titulo ?? "Cartão";
+    if (!c.itens?.length) {
+      if (cartaoConcluido && !foraDoPeriodo(c.concluido_em)) anotar(c.membros, { cartao: titulo, item: null, data: c.concluido_em });
+      continue;
+    }
+    for (const i of c.itens) {
+      const resolvido = i.concluido || cartaoConcluido;
+      const data = i.concluido_em ?? c.concluido_em;
+      if (!resolvido || foraDoPeriodo(data)) continue;
+      anotar(donosDoItem(i, c, true, porQuemMarcou), { cartao: titulo, item: i.nome ?? "Item", data });
+    }
+  }
+  for (const lista of porPessoa.values()) lista.sort((a, b) => (b.data ?? "").localeCompare(a.data ?? ""));
+  return porPessoa;
 }
 
 export const DIAS_PARADA = 14;

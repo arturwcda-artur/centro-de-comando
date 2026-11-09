@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.17.2] — 2026-11-09 — Causa da evolução
+### Adicionado
+- **Quem mais evoluiu** mostra, para cada pessoa, os itens e cartões resolvidos no período e quantos foram no período anterior.
+
 ## [0.17.1] — 2026-11-09 — Ranking de evolução
 ### Adicionado
 - Tela **Equipe**: cartão **Quem mais evoluiu**, comparando com o período anterior (RN-49d).

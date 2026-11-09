@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, detalharResolvidas, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
 
 const hoje = "2026-11-05";
 const cartao = (extra: Partial<CartaoEquipe> = {}): CartaoEquipe => ({ status: "a_fazer", prazo: null, concluido_em: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › CEF-01`, membros: ["Ana"], ...extra });
@@ -341,5 +341,30 @@ describe("ranking de evolução", () => {
 
   it("sem responsável não entra", () => {
     expect(rankingEvolucao([linha(SEM_RESPONSAVEL, 3)], [])).toEqual([]);
+  });
+});
+
+describe("o que cada um resolveu", () => {
+  const base = { prazo: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › Obras` };
+  const item = (extra = {}) => ({ nome: "Item", concluido: true, criado_em: null, concluido_em: "2026-11-06T12:00:00Z", resolvido_por: "Ana", responsaveis: [], ...extra });
+  const cartoes: CartaoEquipe[] = [
+    { ...base, titulo: "Cartão A", status: "a_fazer", concluido_em: null, membros: ["Ana", "Bia"], itens: [item({ nome: "Pintar" }), item({ nome: "Antigo", concluido_em: "2026-10-01T12:00:00Z" }), item({ nome: "Aberto", concluido: false })] },
+    { ...base, titulo: "Cartão B", status: "concluida", concluido_em: "2026-11-07T12:00:00Z", membros: ["Ana", "Bia"] },
+    { ...base, titulo: "Cancelado", status: "cancelada", concluido_em: "2026-11-07T12:00:00Z", membros: ["Ana"] },
+  ];
+
+  it("lista itens e cartões do período, com a parte de cada um", () => {
+    const r = detalharResolvidas(cartoes, "2026-11-02");
+    expect(r.get("Ana")).toEqual([
+      { cartao: "Cartão B", item: null, data: "2026-11-07T12:00:00Z", parte: 0.5 },
+      { cartao: "Cartão A", item: "Pintar", data: "2026-11-06T12:00:00Z", parte: 1 },
+    ]);
+    expect(r.get("Bia")?.map((x) => x.parte)).toEqual([0.5]);
+  });
+
+  it("a soma bate com o número de resolvidas da tela", () => {
+    const resumo = resumirEquipe(cartoes, "2026-11-09", "2026-11-02");
+    const detalhe = detalharResolvidas(cartoes, "2026-11-02");
+    for (const l of resumo.porResponsavel) expect((detalhe.get(l.nome) ?? []).reduce((s, x) => s + x.parte, 0)).toBeCloseTo(l.resolvidas);
   });
 });
