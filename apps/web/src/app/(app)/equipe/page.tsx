@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
 import { GraficoSemanas } from "@/components/grafico-semanas";
-import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type LinhaEquipe, type PosicaoEvolucao } from "@/lib/equipe";
+import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type LinhaEquipe, type PosicaoEvolucao, type Resolvida } from "@/lib/equipe";
 import { PERIODOS, carregarCartoesEquipe, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -59,8 +59,20 @@ function Painel({ coluna, linhas, evolucao, destino }: { coluna: string; linhas:
 }
 
 /** Quem mais evoluiu em relação ao período anterior. Todos aparecem, inclusive quem caiu. */
-function RankingEvolucao({ linhas, periodo }: { linhas: PosicaoEvolucao[]; periodo: string }) {
+/** Separa itens de checklist e cartões, que é o que explica o número. */
+const composicao = (lista: Resolvida[] = []) => {
+  const itens = lista.filter((r) => r.item).reduce((s, r) => s + r.parte, 0);
+  const cartoes = lista.filter((r) => !r.item).reduce((s, r) => s + r.parte, 0);
+  return `${quantidade(itens)} ${itens === 1 ? "item" : "itens"} de checklist e ${quantidade(cartoes)} ${cartoes === 1 ? "cartão" : "cartões"}`;
+};
+const dataCurta = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" }) : "—");
+const LIMITE_LISTA = 60;
+
+function RankingEvolucao({ linhas, periodo, atual, antes }: { linhas: PosicaoEvolucao[]; periodo: string; atual: Map<string, Resolvida[]>; antes: Map<string, Resolvida[]> | null }) {
+  const nomeAntes = periodo === "7" ? "Na semana anterior" : "No mês anterior";
+  const nomeAgora = periodo === "7" ? "Nesta semana" : "Neste mês";
   return (
+    <div className="space-y-4">
     <div className="overflow-x-auto">
       <table className="w-full min-w-[480px] text-sm">
         <thead className="text-left text-xs text-suave">
@@ -84,6 +96,44 @@ function RankingEvolucao({ linhas, periodo }: { linhas: PosicaoEvolucao[]; perio
           ))}
         </tbody>
       </table>
+    </div>
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-suave">O que explica a evolução de cada um</p>
+        {linhas.map((l) => {
+          const lista = atual.get(l.nome) ?? [];
+          return (
+            <details key={l.nome} className="rounded-lg border border-borda px-3 py-2 text-sm">
+              <summary className="cursor-pointer">
+                <span className="font-medium">{l.nome}</span>: {quantidade(l.anterior)} → {quantidade(l.atual)}
+              </summary>
+              <div className="mt-2 space-y-2">
+                <p className="text-xs text-suave">
+                  {nomeAntes}: {composicao(antes?.get(l.nome))}. {nomeAgora}: {composicao(lista)}.
+                </p>
+                {lista.length === 0 ? (
+                  <p className="text-xs text-suave">Nada resolvido {nomeAgora.toLowerCase()}.</p>
+                ) : (
+                  <ul className="divide-y divide-borda">
+                    {lista.slice(0, LIMITE_LISTA).map((r, i) => (
+                      <li key={i} className="flex items-start justify-between gap-3 py-1.5">
+                        <span className="min-w-0">
+                          <span className="block truncate">{r.item ?? r.cartao}</span>
+                          <span className="block truncate text-xs text-suave">{r.item ? r.cartao : "Cartão concluído"}</span>
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-suave">
+                          {dataCurta(r.data)}
+                          {r.parte < 1 ? ` · ${quantidade(r.parte)}` : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {lista.length > LIMITE_LISTA && <p className="text-xs text-suave">E mais {lista.length - LIMITE_LISTA}.</p>}
+              </div>
+            </details>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -131,7 +181,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const periodo = periodoDe(bruto);
   const { supabase } = await exigirSessaoCompleta();
   const { cartoes, idMembro } = await carregarCartoesEquipe(supabase);
-  const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, ranking, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
+  const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, ranking, resolvidasNoPeriodo, resolvidasAntes, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
 
   const indicadores = [
     ["Tarefas resolvidas", quantidade(total?.resolvidas ?? 0), ""],
@@ -176,7 +226,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
 
       <Cartao titulo="Quem mais evoluiu">
         {ranking ? (
-          <RankingEvolucao linhas={ranking} periodo={periodo.valor} />
+          <RankingEvolucao linhas={ranking} periodo={periodo.valor} atual={resolvidasNoPeriodo} antes={resolvidasAntes} />
         ) : (
           <EstadoVazio>{periodo.dias ? "Ainda não há resolvidas no período anterior para comparar." : "Escolha Última semana ou Último mês para comparar com o período anterior."}</EstadoVazio>
         )}

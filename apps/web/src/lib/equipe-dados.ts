@@ -1,5 +1,5 @@
 import "server-only";
-import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, fluxoPorSemana, rankingEvolucao, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
+import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, detalharResolvidas, fluxoPorSemana, rankingEvolucao, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
 import { hojeSP, somarDias } from "@/lib/formato";
 import type { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -28,11 +28,11 @@ export async function carregarCartoesEquipe(supabase: Cliente) {
   const lista = tarefas.data ?? [];
   const ids = lista.map((t) => t.id);
   const { data: itensChecklist } = ids.length
-    ? await supabase.from("trello_checklist_itens").select("tarefa_id, concluido, criado_no_trello, concluido_em, atribuido:trello_membros!trello_checklist_itens_membro_id_fkey(nome), resolvedor:trello_membros!trello_checklist_itens_concluido_por_id_fkey(nome)").in("tarefa_id", ids).limit(5000)
+    ? await supabase.from("trello_checklist_itens").select("tarefa_id, nome, concluido, criado_no_trello, concluido_em, atribuido:trello_membros!trello_checklist_itens_membro_id_fkey(nome), resolvedor:trello_membros!trello_checklist_itens_concluido_por_id_fkey(nome)").in("tarefa_id", ids).limit(5000)
     : { data: [] };
   const itensDoCartao = new Map<string, ItemCartao[]>();
   for (const i of itensChecklist ?? []) {
-    const item = { concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, resolvido_por: i.resolvedor?.nome ?? null, responsaveis: i.atribuido ? [i.atribuido.nome] : [] };
+    const item = { nome: i.nome, concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, resolvido_por: i.resolvedor?.nome ?? null, responsaveis: i.atribuido ? [i.atribuido.nome] : [] };
     itensDoCartao.set(i.tarefa_id, [...(itensDoCartao.get(i.tarefa_id) ?? []), item]);
   }
   const cartoes = lista.map((t) => ({
@@ -75,6 +75,8 @@ export function montarPainelEquipe(cartoes: Awaited<ReturnType<typeof carregarCa
     evolucaoPessoa: variacao(anterior?.porResponsavel),
     evolucaoLista: variacao(anterior?.porLista),
     ranking: temHistorico && anterior ? rankingEvolucao(porResponsavel, anterior.porResponsavel) : null,
+    resolvidasNoPeriodo: detalharResolvidas(cartoes, desde),
+    resolvidasAntes: dias && desde ? detalharResolvidas(cartoes, somarDias(hoje, -2 * dias), desde) : null,
     parados: cartoesParados(cartoes, new Date()),
     semanas: fluxoPorSemana(cartoes, hoje),
   };
