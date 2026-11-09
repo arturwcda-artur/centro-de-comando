@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
 
 const hoje = "2026-11-05";
 const cartao = (extra: Partial<CartaoEquipe> = {}): CartaoEquipe => ({ status: "a_fazer", prazo: null, concluido_em: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › CEF-01`, membros: ["Ana"], ...extra });
@@ -310,5 +310,36 @@ describe("tituloDoComentario", () => {
   it("usa a primeira linha e limita o tamanho", () => {
     expect(tituloDoComentario("  Trocar fôrma\nDetalhe")).toBe("Trocar fôrma");
     expect(tituloDoComentario("x".repeat(100))).toHaveLength(80);
+  });
+});
+
+describe("ranking de evolução", () => {
+  const linha = (nome: string, resolvidas: number) => ({ nome, resolvidas }) as Parameters<typeof rankingEvolucao>[0][number];
+
+  it("ordena pela diferença em tarefas e mostra quem caiu", () => {
+    const r = rankingEvolucao([linha("Ana", 36.3), linha("Bia", 38.3), linha("Caio", 11.3)], [linha("Bia", 17), linha("Caio", 18.1)]);
+    expect(r.map((l) => [l.posicao, l.nome, l.evolucao])).toEqual([
+      [1, "Ana", 36.3],
+      [2, "Bia", 21.3],
+      [3, "Caio", -6.8],
+    ]);
+  });
+
+  it("quem só resolveu no período anterior também aparece", () => {
+    const r = rankingEvolucao([linha("Ana", 2)], [linha("Ana", 1), linha("Davi", 4)]);
+    expect(r.find((l) => l.nome === "Davi")).toMatchObject({ atual: 0, anterior: 4, evolucao: -4 });
+  });
+
+  it("empate divide a posição", () => {
+    const r = rankingEvolucao([linha("Ana", 3), linha("Bia", 5), linha("Caio", 1)], [linha("Bia", 2)]);
+    expect(r.map((l) => [l.nome, l.posicao])).toEqual([
+      ["Bia", 1],
+      ["Ana", 1],
+      ["Caio", 3],
+    ]);
+  });
+
+  it("sem responsável não entra", () => {
+    expect(rankingEvolucao([linha(SEM_RESPONSAVEL, 3)], [])).toEqual([]);
   });
 });

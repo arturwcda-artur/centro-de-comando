@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.17.1] — 2026-11-09 — Ranking de evolução
+### Adicionado
+- Tela **Equipe**: cartão **Quem mais evoluiu**, comparando com o período anterior (RN-49d).
+
 ## [0.17.0] — 2026-11-05 — Fase 11: testes e implantação
 ### Adicionado
 - Teste de restauração do backup em banco descartável (`cc_agente.restauracao`).

@@ -1,5 +1,5 @@
 import "server-only";
-import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
+import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, fluxoPorSemana, rankingEvolucao, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
 import { hojeSP, somarDias } from "@/lib/formato";
 import type { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -74,6 +74,7 @@ export function montarPainelEquipe(cartoes: Awaited<ReturnType<typeof carregarCa
     evolucaoEquipe: temHistorico ? (total?.resolvidas ?? 0) - (anterior?.total?.resolvidas ?? 0) : null,
     evolucaoPessoa: variacao(anterior?.porResponsavel),
     evolucaoLista: variacao(anterior?.porLista),
+    ranking: temHistorico && anterior ? rankingEvolucao(porResponsavel, anterior.porResponsavel) : null,
     parados: cartoesParados(cartoes, new Date()),
     semanas: fluxoPorSemana(cartoes, hoje),
   };
