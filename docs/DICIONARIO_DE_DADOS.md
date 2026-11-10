@@ -2,6 +2,21 @@
 
 > Gerado automaticamente por `packages/db/scripts/gerar-dicionario.js` a partir das migrations. Não edite à mão.
 
+## Tabela `acoes_planilhas`
+
+Planilha da Central de Gestão (aba AÇÕES) acompanhada pelo agente local, uma por obra.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| obra_id | uuid | sim | obras |  |
+| caminho | text | sim |  |  |
+| ultimo_hash | text |  |  |  |
+| ultima_leitura_em | timestamp with time zone |  |  |  |
+| ultimo_erro | text |  |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `aditivos`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |

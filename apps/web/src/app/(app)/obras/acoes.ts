@@ -18,11 +18,20 @@ export async function salvarObra(id: string | null, _: EstadoFormulario, fd: For
   const { supabase } = await exigirSessaoCompleta();
   const { dados, erros } = validar(obraSchema, fd);
   if (!dados) return { erros };
+  const { planilha_acoes, ...obra } = dados;
 
   const resposta = id
-    ? await supabase.from("obras").update(dados).eq("id", id).select("id").single()
-    : await supabase.from("obras").insert(dados).select("id").single();
+    ? await supabase.from("obras").update(obra).eq("id", id).select("id").single()
+    : await supabase.from("obras").insert(obra).select("id").single();
   if (resposta.error) return { erro: mensagemDoBanco(resposta.error) };
+
+  // Plano de ações (RN-49e): o agente local passa a ler esta planilha. Trocar o caminho força nova leitura.
+  if (planilha_acoes) {
+    const { error } = await supabase
+      .from("acoes_planilhas")
+      .upsert({ obra_id: resposta.data.id, caminho: planilha_acoes, ultimo_hash: null }, { onConflict: "obra_id" });
+    if (error) return { erro: mensagemDoBanco(error) };
+  }
 
   revalidatePath("/obras");
   revalidatePath("/");

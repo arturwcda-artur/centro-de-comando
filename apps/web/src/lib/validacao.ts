@@ -50,6 +50,7 @@ export const obraSchema = z
     data_inicio: dataOpcional,
     data_termino_prevista: dataOpcional,
     pasta_local: textoOpcional(500),
+    planilha_acoes: textoOpcional(500),
     observacoes: textoOpcional(),
   })
   .refine((o) => !o.data_inicio || !o.data_termino_prevista || o.data_termino_prevista >= o.data_inicio, {

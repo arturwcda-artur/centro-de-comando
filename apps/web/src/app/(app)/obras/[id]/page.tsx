@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { AlterarStatus } from "@/components/alterar-status";
-import { Cartao, EstadoVazio, Etiqueta } from "@/components/ui";
+import { Aviso, Cartao, EstadoVazio, Etiqueta } from "@/components/ui";
 import { STATUS_DECISAO, STATUS_RISCO, nivelSeveridade, rotuloSituacao } from "@/lib/dominio";
 import { brl, dataCivil, dataHora, pct } from "@/lib/formato";
 import { carregarOpcoes, UUID } from "@/lib/obras";
@@ -40,12 +40,14 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
   const aba = ABAS.find((a) => a.id === abaPedida)?.id ?? "visao";
   const { supabase } = await exigirSessaoCompleta();
 
-  const [obra, resumo, riscos, decisoes, opcoes] = await Promise.all([
+  const [obra, resumo, riscos, decisoes, opcoes, plano, acoes] = await Promise.all([
     supabase.from("obras").select("*, empresas(razao_social, nome_fantasia), contratantes(nome)").eq("id", id).is("arquivado_em", null).maybeSingle(),
     supabase.from("v_obra_resumo").select("*").eq("obra_id", id).maybeSingle(),
     supabase.from("riscos").select("*, pessoas(nome)").eq("obra_id", id).order("severidade", { ascending: false }),
     supabase.from("decisoes").select("*, pessoas(nome)").eq("obra_id", id).order("criado_em", { ascending: false }),
     carregarOpcoes(supabase),
+    supabase.from("acoes_planilhas").select("caminho, ultima_leitura_em, ultimo_erro").eq("obra_id", id).maybeSingle(),
+    supabase.from("v_tarefas_priorizadas").select("vencida, critica, escore, status_sync").eq("obra_id", id).eq("fonte", "planilha"),
   ]);
   if (!obra.data) notFound();
   const o = obra.data;
@@ -53,6 +55,10 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
   const s = rotuloSituacao(o.situacao);
   const riscosAbertos = (riscos.data ?? []).filter((x) => x.status === "aberto" || x.status === "em_tratamento");
   const decisoesPendentes = (decisoes.data ?? []).filter((x) => x.status === "pendente");
+  const acoesAbertas = acoes.data ?? [];
+  const acoesVencidas = acoesAbertas.filter((x) => x.vencida).length;
+  const acoesCriticas = acoesAbertas.filter((x) => x.critica).length;
+  const acoesForaDaPlanilha = acoesAbertas.filter((x) => x.status_sync === "pendente").length;
 
   return (
     <div className="space-y-5">
@@ -123,6 +129,32 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
             </dl>
             <p className="mt-3 text-xs text-suave">Contratos e medições entram na Fase 7; avanço físico, na Fase 6.</p>
           </Cartao>
+          {plano.data && (
+            <Cartao titulo="Plano de ações" className="lg:col-span-3">
+              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Dado rotulo="Ações abertas" valor={String(acoesAbertas.length)} />
+                <Dado rotulo="Vencidas" valor={String(acoesVencidas)} />
+                <Dado rotulo="Críticas (GUT ≥ 64)" valor={String(acoesCriticas)} />
+                <Dado rotulo="Última leitura da planilha" valor={dataHora(plano.data.ultima_leitura_em)} />
+              </dl>
+              {plano.data.ultimo_erro && (
+                <div className="mt-3">
+                  <Aviso>Erro na última leitura: {plano.data.ultimo_erro}</Aviso>
+                </div>
+              )}
+              {acoesForaDaPlanilha > 0 && (
+                <div className="mt-3">
+                  <Aviso>{acoesForaDaPlanilha} ação(ões) abertas aqui não estão mais na planilha: confira se alguma linha foi apagada ou movida.</Aviso>
+                </div>
+              )}
+              <p className="mt-3 text-xs text-suave">
+                Fonte: <code className="break-all font-mono">{plano.data.caminho}</code>. As ações são atualizadas na planilha; aqui só são mostradas.{" "}
+                <Link href={`/tarefas?obra=${id}`} className="underline hover:text-texto">
+                  Ver as ações
+                </Link>
+              </p>
+            </Cartao>
+          )}
         </div>
       )}
 

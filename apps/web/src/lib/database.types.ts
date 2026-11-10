@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      acoes_planilhas: {
+        Row: {
+          atualizado_em: string
+          caminho: string
+          criado_em: string
+          id: string
+          obra_id: string
+          ultima_leitura_em: string | null
+          ultimo_erro: string | null
+          ultimo_hash: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          caminho: string
+          criado_em?: string
+          id?: string
+          obra_id: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          caminho?: string
+          criado_em?: string
+          id?: string
+          obra_id?: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acoes_planilhas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: true
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aditivos: {
         Row: {
           atualizado_em: string
