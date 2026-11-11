@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { criarCartaoDeComentario, listasDoCartao } from '../src/escrita.js';
-import { QUADRO_DETALHADO, aplicarDetalhes, cartaoImportavel, conclusoesDeItens, conclusoesDoHistorico, criacaoDoCartao, datasDoCartao, lerDetalhes, prazosDoHistorico, textoSensivel } from '../src/trello.js';
+import { QUADRO_DETALHADO, aplicarDetalhes, cartaoImportavel, criacoesDoHistorico, conclusoesDeItens, conclusoesDoHistorico, criacaoDoCartao, datasDoCartao, lerDetalhes, prazosDoHistorico, textoSensivel } from '../src/trello.js';
 
 // Dados de TESTE no formato da API. Nenhuma chamada real é feita.
 const cred = { chave: 'k', token: 't' };
@@ -209,7 +209,7 @@ describe('aplicarDetalhes', () => {
     expect(t.trello_checklist_itens[0].concluido_por_id).toBe(t.trello_membros[0].id);
     expect(t.trello_cartao_datas.map((d) => d.tarefa_id)).toEqual(['t1']);
     expect(t.trello_cartao_datas[0].concluido_por_id).toBe(t.trello_membros[0].id);
-    expect(r).toEqual({ membros: 1, comentarios: 1, itens: 1 });
+    expect(r).toEqual({ membros: 1, comentarios: 1, itens: 1, criacoes: 0 });
   });
 
   it('rodar de novo não duplica', async () => {
@@ -255,5 +255,22 @@ describe('criar cartão a partir de comentário', () => {
     const c = apiFalsa(rotas);
     await expect(criarCartaoDeComentario(cred, { idCartaoOrigem: 'c1', idLista: 'outra', titulo: 'X', texto: 'Y' })).rejects.toThrow(/lista/i);
     expect(c.every((x) => x.metodo === 'GET')).toBe(true);
+  });
+});
+
+describe('quem gera atividade', () => {
+  it('conta cartões criados, copiados e checklists, e ignora o resto', () => {
+    const acoes = [
+      { id: 'x1', type: 'createCard', date: '2026-11-10T12:00:00.000Z', idMemberCreator: 'm1', data: { card: { id: 'c1' } } },
+      { id: 'x2', type: 'copyCard', date: '2026-11-10T13:00:00.000Z', idMemberCreator: 'm2', data: { card: { id: 'c2' } } },
+      { id: 'x3', type: 'addChecklistToCard', date: '2026-11-10T14:00:00.000Z', idMemberCreator: 'm1', data: { card: { id: 'c1' } } },
+      { id: 'x4', type: 'commentCard', date: '2026-11-10T15:00:00.000Z', idMemberCreator: 'm1', data: { card: { id: 'c1' } } },
+      { id: 'x5', type: 'createCard', date: '2026-11-10T16:00:00.000Z', idMemberCreator: 'm1', data: {} },
+    ];
+    expect(criacoesDoHistorico(acoes)).toEqual([
+      { id_externo: 'x1', cartao: 'c1', tipo: 'cartao', membro: 'm1', data: '2026-11-10T12:00:00.000Z' },
+      { id_externo: 'x2', cartao: 'c2', tipo: 'cartao', membro: 'm2', data: '2026-11-10T13:00:00.000Z' },
+      { id_externo: 'x3', cartao: 'c1', tipo: 'checklist', membro: 'm1', data: '2026-11-10T14:00:00.000Z' },
+    ]);
   });
 });

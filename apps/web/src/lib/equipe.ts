@@ -296,6 +296,34 @@ export function detalharResolvidas(cartoes: CartaoEquipe[], desde?: string, ate?
   return porPessoa;
 }
 
+export type Geracao = { nome: string; cartoes: number; checklists: number; comentarios: number; total: number };
+type Evento = { nome: string | null; data: string };
+
+/**
+ * Quem gera atividade no Trello (pedido do proprietário em 11/11/2026): cartões criados, checklists
+ * adicionados e comentários. Estimula a equipe a abrir tarefas, não só resolver. Sem posições, como
+ * "Quem resolveu". Itens de checklist não entram: o Trello não registra quem cria cada item.
+ */
+export function geracaoPorPessoa(criacoes: (Evento & { tipo: string })[], comentarios: Evento[], desde?: string, ate?: string): Geracao[] {
+  const noPeriodo = (data: string) => (!desde || data >= desde) && (!ate || data < ate);
+  const linhas = new Map<string, Geracao>();
+  const linhaDe = (nome: string) => linhas.get(nome) ?? linhas.set(nome, { nome, cartoes: 0, checklists: 0, comentarios: 0, total: 0 }).get(nome)!;
+  for (const c of criacoes) {
+    if (!c.nome || !noPeriodo(c.data)) continue;
+    const l = linhaDe(c.nome);
+    if (c.tipo === "checklist") l.checklists += 1;
+    else l.cartoes += 1;
+    l.total += 1;
+  }
+  for (const c of comentarios) {
+    if (!c.nome || !noPeriodo(c.data)) continue;
+    const l = linhaDe(c.nome);
+    l.comentarios += 1;
+    l.total += 1;
+  }
+  return [...linhas.values()].sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
 export const DIAS_PARADA = 14;
 
 /** Cartões abertos sem nenhuma movimentação no Trello, do mais antigo para o mais novo. Rotina fica de fora. */

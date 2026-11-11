@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
 import { GraficoSemanas } from "@/components/grafico-semanas";
-import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type LinhaEquipe, type PosicaoEvolucao, type Resolvida } from "@/lib/equipe";
-import { PERIODOS, carregarCartoesEquipe, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
+import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type Geracao, type LinhaEquipe, type PosicaoEvolucao, type Resolvida } from "@/lib/equipe";
+import { PERIODOS, carregarCartoesEquipe, carregarGeracaoEquipe, montarGeracao, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
 export const metadata: Metadata = { title: "Equipe" };
@@ -138,6 +138,45 @@ function RankingEvolucao({ linhas, periodo, atual, antes }: { linhas: PosicaoEvo
   );
 }
 
+/** Quem abre trabalho no Trello: cartões, checklists e comentários. Sem posições. */
+function QuemGerou({ linhas, evolucao }: { linhas: Geracao[]; evolucao: (nome: string, total: number) => number | null }) {
+  if (linhas.length === 0) return <EstadoVazio>Ninguém criou cartão, checklist ou comentário no período.</EstadoVazio>;
+  return (
+    <div className="space-y-2">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px] text-sm">
+          <thead className="text-left text-xs text-suave">
+            <tr>
+              <th className="py-2 font-medium">Pessoa</th>
+              <th className={CABECALHO}>Cartões criados</th>
+              <th className={CABECALHO}>Checklists</th>
+              <th className={CABECALHO}>Comentários</th>
+              <th className={CABECALHO}>Total</th>
+              <th className={CABECALHO}>Evolução</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-borda">
+            {linhas.map((l) => {
+              const variacao = evolucao(l.nome, l.total);
+              return (
+                <tr key={l.nome}>
+                  <td className="py-2.5 pr-3">{l.nome}</td>
+                  <td className={NUMERO}>{l.cartoes}</td>
+                  <td className={NUMERO}>{l.checklists}</td>
+                  <td className={NUMERO}>{l.comentarios}</td>
+                  <td className={`${NUMERO} font-semibold`}>{l.total}</td>
+                  <td className={`${NUMERO} font-medium ${corDoSinal(variacao)}`}>{comSinal(variacao)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-suave">Itens de checklist não entram: o Trello não registra quem cria cada item.</p>
+    </div>
+  );
+}
+
 /** O restante fica à parte, para a tela principal continuar simples. */
 function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
   return (
@@ -180,7 +219,8 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
   const { periodo: bruto } = await searchParams;
   const periodo = periodoDe(bruto);
   const { supabase } = await exigirSessaoCompleta();
-  const { cartoes, idMembro } = await carregarCartoesEquipe(supabase);
+  const [{ cartoes, idMembro }, dadosGeracao] = await Promise.all([carregarCartoesEquipe(supabase), carregarGeracaoEquipe(supabase)]);
+  const geracao = montarGeracao(dadosGeracao, periodo.dias);
   const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, ranking, resolvidasNoPeriodo, resolvidasAntes, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
 
   const indicadores = [
@@ -230,6 +270,10 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ) : (
           <EstadoVazio>{periodo.dias ? "Ainda não há resolvidas no período anterior para comparar." : "Escolha Última semana ou Último mês para comparar com o período anterior."}</EstadoVazio>
         )}
+      </Cartao>
+
+      <Cartao titulo="Quem gerou atividade no Trello">
+        <QuemGerou linhas={geracao.atual} evolucao={geracao.evolucao} />
       </Cartao>
 
       <Cartao titulo="Entraram × resolvidas por semana">
