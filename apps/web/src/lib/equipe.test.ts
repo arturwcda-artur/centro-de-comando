@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, detalharResolvidas, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, detalharResolvidas, geracaoPorPessoa, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
 
 const hoje = "2026-11-05";
 const cartao = (extra: Partial<CartaoEquipe> = {}): CartaoEquipe => ({ status: "a_fazer", prazo: null, concluido_em: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › CEF-01`, membros: ["Ana"], ...extra });
@@ -366,5 +366,33 @@ describe("o que cada um resolveu", () => {
     const resumo = resumirEquipe(cartoes, "2026-11-09", "2026-11-02");
     const detalhe = detalharResolvidas(cartoes, "2026-11-02");
     for (const l of resumo.porResponsavel) expect((detalhe.get(l.nome) ?? []).reduce((s, x) => s + x.parte, 0)).toBeCloseTo(l.resolvidas);
+  });
+});
+
+describe("quem gera atividade", () => {
+  const criacoes = [
+    { nome: "Ana", tipo: "cartao", data: "2026-11-10T12:00:00Z" },
+    { nome: "Ana", tipo: "checklist", data: "2026-11-10T12:00:00Z" },
+    { nome: "Bia", tipo: "cartao", data: "2026-10-01T12:00:00Z" },
+    { nome: null, tipo: "cartao", data: "2026-11-10T12:00:00Z" },
+  ];
+  const comentarios = [
+    { nome: "Bia", data: "2026-11-09T12:00:00Z" },
+    { nome: "Bia", data: "2026-11-10T12:00:00Z" },
+  ];
+
+  it("soma cartões, checklists e comentários do período", () => {
+    expect(geracaoPorPessoa(criacoes, comentarios, "2026-11-04")).toEqual([
+      { nome: "Ana", cartoes: 1, checklists: 1, comentarios: 0, total: 2 },
+      { nome: "Bia", cartoes: 0, checklists: 0, comentarios: 2, total: 2 },
+    ]);
+  });
+
+  it("sem período, conta tudo, e autor desconhecido fica de fora", () => {
+    expect(geracaoPorPessoa(criacoes, comentarios).find((l) => l.nome === "Bia")).toMatchObject({ cartoes: 1, total: 3 });
+  });
+
+  it("respeita o fim do período anterior", () => {
+    expect(geracaoPorPessoa(criacoes, comentarios, "2026-11-04", "2026-11-10")).toEqual([{ nome: "Bia", cartoes: 0, checklists: 0, comentarios: 1, total: 1 }]);
   });
 });

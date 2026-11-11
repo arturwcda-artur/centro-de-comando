@@ -44,7 +44,7 @@ async function principal() {
         const r = await aplicar(supabase, { tabela: 'tarefas', fonte: 'trello', registros });
         const canceladas = await trello.cancelarAusentes(supabase, registros.map((x) => x.id_externo));
         const d = detalhes ? await trello.aplicarDetalhes(supabase, detalhes) : null;
-        const extra = d ? `; ${trello.QUADRO_DETALHADO}: ${d.membros} membros, ${d.comentarios} comentários, ${d.itens} itens de checklist` : '';
+        const extra = d ? `; ${trello.QUADRO_DETALHADO}: ${d.membros} membros, ${d.comentarios} comentários, ${d.itens} itens de checklist, ${d.criacoes} cartões e checklists criados` : '';
         return { ...r, mensagem: `${quadros} quadros, ${registros.length} cartões, ${canceladas} arquivados/excluídos marcados como cancelados${extra}` };
       }),
     );
