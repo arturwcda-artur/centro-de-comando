@@ -44,12 +44,23 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
       {t.fonte !== "manual" ? (
         <Cartao>
           <Aviso tipo="info">
+            {t.fonte === "planilha" ? (
+              <>
+                Ação do <strong>plano de ações da obra</strong> (Central de Gestão, aba AÇÕES). Aqui ela só é mostrada e
+                priorizada: status, prazo e responsável são atualizados na planilha, e o agente local traz a mudança na
+                próxima leitura.
+                {t.status_sync === "pendente" && " Atenção: esta ação não está mais na planilha. Confira se a linha foi apagada ou trocada de lugar."}
+              </>
+            ) : (
+              <>
             Tarefa importada do <strong>{t.fonte}</strong>.{" "}
             {podeConcluir(t)
               ? "Ao concluir aqui, ela é concluída também na origem. Outras alterações são feitas na ferramenta de origem."
               : t.status === "concluida" || t.status === "cancelada"
                 ? "Já encerrada."
                 : "É uma tarefa de terceiros: só leitura, controlada na ferramenta de origem."}
+              </>
+            )}
           </Aviso>
           {podeConcluir(t) && (
             <div className="mt-3 flex items-center gap-2 text-sm">

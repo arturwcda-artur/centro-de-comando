@@ -21,6 +21,7 @@ Guia curto do Centro de Comando. Endereço: https://centro-de-comando-chi.vercel
 | Conferência do sistema publicado | Todo dia, cerca de 07:17 | Não |
 | Backup do banco | Segunda, 08:00 | Sim. Se estiver desligado, roda ao ligar |
 | Leitura de cronogramas, medições e pastas | Segunda, 08:30 | Sim. Se estiver desligado, roda ao ligar |
+| Leitura do plano de ações das obras | De hora em hora | Sim |
 
 ## Onde cada dado é mantido
 
@@ -31,6 +32,7 @@ Guia curto do Centro de Comando. Endereço: https://centro-de-comando-chi.vercel
 | Demandas | Notion ou **Tarefas > Demanda no Notion** |
 | Cronograma | MS Project |
 | Medição | Planilha Excel da obra |
+| Plano de ações da obra | Central de Gestão da obra, aba AÇÕES (caminho em **Obras > Editar**) |
 | Obras, contratos, riscos e decisões | Centro de Comando |
 
 Depois de mudar um dado fora do sistema, espere a próxima sincronização. Em **Integrações**, **Sincronizar agora** antecipa a leitura.
