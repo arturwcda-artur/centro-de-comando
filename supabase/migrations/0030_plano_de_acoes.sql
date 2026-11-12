@@ -15,6 +15,27 @@ comment on table public.acoes_planilhas is 'Planilha da Central de Gestão (aba 
 
 select app.aplicar_padroes('public.acoes_planilhas');
 
+-- Notas GUT e 5W2H de cada ação, separados, para a Matriz GUT. "Quando" é o prazo da tarefa.
+create table public.acoes_detalhes (
+  tarefa_id      uuid primary key references public.tarefas(id) on delete cascade,
+  gravidade      smallint check (gravidade between 1 and 5),
+  urgencia       smallint check (urgencia between 1 and 5),
+  tendencia      smallint check (tendencia between 1 and 5),
+  gut            smallint generated always as (gravidade * urgencia * tendencia) stored,
+  o_que          text,
+  por_que        text,
+  onde           text,
+  quem           text,
+  como           text,
+  quanto         text,
+  criado_em      timestamptz not null default now(),
+  atualizado_em  timestamptz not null default now()
+);
+comment on table public.acoes_detalhes is 'Notas GUT e 5W2H das ações lidas da planilha. Só leitura no sistema: a fonte é a planilha.';
+create index acoes_detalhes_gut_idx on public.acoes_detalhes (gut desc nulls last);
+
+select app.aplicar_padroes('public.acoes_detalhes', false);
+
 create function public.listar_acoes_agente()
 returns table (id uuid, caminho text, ultimo_hash text)
 language sql
@@ -115,6 +136,19 @@ begin
      and not (id_externo = any (coalesce(v_numeros, '{}')))
      and status_sync <> 'pendente';
   get diagnostics v_ausentes = row_count;
+
+  -- Notas e 5W2H separados (Matriz GUT)
+  insert into public.acoes_detalhes as d (tarefa_id, gravidade, urgencia, tendencia, o_que, por_que, onde, quem, como, quanto)
+  select t.id, (x->'gut'->>'gravidade')::smallint, (x->'gut'->>'urgencia')::smallint, (x->'gut'->>'tendencia')::smallint,
+         nullif(x->'w5h2'->>'o_que', ''), nullif(x->'w5h2'->>'por_que', ''), nullif(x->'w5h2'->>'onde', ''),
+         nullif(x->'w5h2'->>'quem', ''), nullif(x->'w5h2'->>'como', ''), nullif(x->'w5h2'->>'quanto', '')
+    from jsonb_array_elements(payload->'acoes') x
+    join public.tarefas t on t.fonte = 'planilha' and t.id_externo = v_arquivo.obra_id::text || ':' || (x->>'numero')
+  on conflict (tarefa_id) do update
+    set gravidade = excluded.gravidade, urgencia = excluded.urgencia, tendencia = excluded.tendencia, o_que = excluded.o_que,
+        por_que = excluded.por_que, onde = excluded.onde, quem = excluded.quem, como = excluded.como, quanto = excluded.quanto
+    where (d.gravidade, d.urgencia, d.tendencia, d.o_que, d.por_que, d.onde, d.quem, d.como, d.quanto)
+          is distinct from (excluded.gravidade, excluded.urgencia, excluded.tendencia, excluded.o_que, excluded.por_que, excluded.onde, excluded.quem, excluded.como, excluded.quanto);
 
   -- Dependências refeitas a partir da coluna "Depende das ações Nº"
   delete from public.tarefa_dependencias d

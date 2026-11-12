@@ -60,6 +60,25 @@ describe('importar_acoes', () => {
     expect((await tarefa(3)).status_sync).toBe('sincronizado');
   });
 
+  it('guarda notas GUT e 5W2H separados, e atualiza quando mudam', async () => {
+    const w = { o_que: 'Ação 1', por_que: 'Motivo', onde: 'Bloco A', quem: 'Fulano', como: 'Assim', quanto: 'R$ 100' };
+    const comDetalhe = (gut) => acao(1, { status: 'concluida', concluida_em: '2026-11-12', hash: `d${gut.urgencia}`, gut, w5h2: w });
+    const lista = (gut) => [comDetalhe(gut), acao(2, { status: 'aguardando_terceiro', responsavel_chave: 'ninguem', hash: 'c2' }), acao(3)];
+    await importar(carga(lista({ gravidade: 5, urgencia: 4, tendencia: 3 }), 'arquivo-8'));
+    const id = (await tarefa(1)).id;
+    const d = async () => (await db.query(`select * from public.acoes_detalhes where tarefa_id = $1`, [id])).rows[0];
+    expect(await d()).toMatchObject({ gravidade: 5, urgencia: 4, tendencia: 3, gut: 60, por_que: 'Motivo', quanto: 'R$ 100' });
+    await importar(carga(lista({ gravidade: 5, urgencia: 5, tendencia: 3 }), 'arquivo-9'));
+    expect((await d()).gut).toBe(75);
+    const semDetalhe = await db.query(`select count(*)::int n from public.acoes_detalhes d join public.tarefas t on t.id = d.tarefa_id where t.id_externo = $1 and d.gut is not null`, [`${OBRA}:3`]);
+    expect(semDetalhe.rows[0].n).toBe(0);
+  });
+
+  it('usuário logado lê os detalhes', async () => {
+    const n = await como(db, 'authenticated', PROPRIETARIO, async (tx) => (await tx.query(`select count(*)::int n from public.acoes_detalhes`)).rows[0].n);
+    expect(n).toBeGreaterThan(0);
+  });
+
   it('planilha não cadastrada é recusada', async () => {
     await expect(importar({ arquivo_id: '55555555-0000-4000-8000-000000000099', hash: 'x', acoes: [] })).rejects.toThrow(/não cadastrada/);
   });

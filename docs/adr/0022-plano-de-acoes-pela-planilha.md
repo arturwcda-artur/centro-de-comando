@@ -9,6 +9,7 @@ O plano de ações de cada obra (5W2H, GUT, PDCA, dependências e gates de liber
 2. **Leitura:** `cc_agente.acoes`, no agente local, com openpyxl, sem abrir o Excel. Só relê a planilha que mudou (hash). Colunas achadas pelo nome do cabeçalho na linha 5.
 3. **Destino:** tabela `tarefas` com `fonte = 'planilha'` e `id_externo = <obra>:<Nº>`. O Nº é a linha da ação (regra `=ROW()-5` da planilha).
 4. **Mapeamento:** Restrição → `pendencia`, demais tipos → `acao`; G → `importancia`, T → `impacto`; GUT ≥ 64 → `critica`; Frente e responsável da planilha → `categoria`; Por quê, Onde, Como, Quanto, Evidência, PDCA e Prazo original → `descricao`; "Depende das ações Nº" → `tarefa_dependencias`. O responsável é ligado à pessoa cadastrada pelo primeiro nome, só quando há uma única correspondência; sem ela, a ação fica sem responsável e entra em "Minhas atribuições" (RN-45).
+4a. **Notas e 5W2H separados:** G, U, T e as respostas do 5W2H também ficam em `acoes_detalhes`, um registro por ação, para a Matriz GUT. O GUT é calculado no banco.
 5. **Ação que sai da planilha** não é apagada: fica com `status_sync = 'pendente'` e é sinalizada na obra e na tarefa.
 6. **Frequência:** de hora em hora, por tarefa própria do Agendador (`agendar-plano-de-acoes.cmd`), além da leitura semanal geral.
 

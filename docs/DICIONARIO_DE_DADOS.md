@@ -2,6 +2,26 @@
 
 > Gerado automaticamente por `packages/db/scripts/gerar-dicionario.js` a partir das migrations. Não edite à mão.
 
+## Tabela `acoes_detalhes`
+
+Notas GUT e 5W2H das ações lidas da planilha. Só leitura no sistema: a fonte é a planilha.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| tarefa_id | uuid | sim | tarefas |  |
+| gravidade | smallint |  |  |  |
+| urgencia | smallint |  |  |  |
+| tendencia | smallint |  |  |  |
+| gut | smallint |  |  |  |
+| o_que | text |  |  |  |
+| por_que | text |  |  |  |
+| onde | text |  |  |  |
+| quem | text |  |  |  |
+| como | text |  |  |  |
+| quanto | text |  |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `acoes_planilhas`
 
 Planilha da Central de Gestão (aba AÇÕES) acompanhada pelo agente local, uma por obra.

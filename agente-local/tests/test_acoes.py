@@ -42,6 +42,9 @@ def test_le_acao_com_5w2h_gut_e_dependencias(tmp_path):
     assert x["importancia"] == 5 and x["impacto"] == 3 and x["critica"] is True  # GUT 75
     assert x["depende"] == ["2", "3"]
     assert "Por quê: Sem sondagem" in x["descricao"] and "GUT: 75 (G5 × U5 × T3)" in x["descricao"] and "Prazo original: 10/11/2026" in x["descricao"]
+    assert x["gut"] == {"gravidade": 5, "urgencia": 5, "tendencia": 3}
+    assert x["w5h2"]["o_que"] == "Cobrar o relatório da sondagem" and x["w5h2"]["por_que"] == "Sem sondagem não se escolhe a fundação"
+    assert set(x["w5h2"]) == {"o_que", "por_que", "onde", "quem", "como", "quanto"}
     assert lidas[1]["depende"] == ["1"]  # a própria ação (2) não conta e repetição vale uma vez
     assert lidas[1]["numero"] == 2
 

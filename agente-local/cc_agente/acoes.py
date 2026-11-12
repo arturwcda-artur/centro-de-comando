@@ -203,6 +203,9 @@ def ler_plano_de_acoes(caminho: Path | str) -> dict:
             "impacto": t or 3,
             "critica": bool(gut and gut >= GUT_CRITICO),
             "depende": [n for n in numeros(cel(linha, "depende")) if int(n) != numero],
+            # Notas e 5W2H separados, para a Matriz GUT do sistema
+            "gut": {"gravidade": g, "urgencia": u, "tendencia": t},
+            "w5h2": {"o_que": o_que, "por_que": v["por_que"], "onde": v["onde"], "quem": responsavel, "como": v["como"], "quanto": v["quanto"]},
         }
         acao["hash"] = hashlib.sha256(json.dumps(acao, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:32]
         acoes.append(acao)
