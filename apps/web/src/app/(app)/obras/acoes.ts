@@ -25,7 +25,7 @@ export async function salvarObra(id: string | null, _: EstadoFormulario, fd: For
     : await supabase.from("obras").insert(obra).select("id").single();
   if (resposta.error) return { erro: mensagemDoBanco(resposta.error) };
 
-  // Plano de ações (RN-49e): o agente local passa a ler esta planilha. Trocar o caminho força nova leitura.
+  // Plano de ações (RN-49f): o agente local passa a ler esta planilha. Trocar o caminho força nova leitura.
   if (planilha_acoes) {
     const { error } = await supabase
       .from("acoes_planilhas")

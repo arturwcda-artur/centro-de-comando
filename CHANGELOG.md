@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 
 ## [0.18.0] — 2026-11-10 — Plano de ações da obra
 ### Adicionado
-- Leitura do plano de ações da Central de Gestão (aba AÇÕES) pelo agente local: `cc_agente.acoes`, com testes (RN-49e, ADR 0022).
+- Leitura do plano de ações da Central de Gestão (aba AÇÕES) pelo agente local: `cc_agente.acoes`, com testes (RN-49f, ADR 0022).
 - Migration `0030_plano_de_acoes.sql`: tabela `acoes_planilhas` e funções restritas `listar_acoes_agente`, `importar_acoes` e `registrar_erro_acoes`.
 - Campo **Planilha do plano de ações** no cadastro da obra e cartão **Plano de ações** na visão geral (abertas, vencidas, críticas, última leitura).
 - `atualizar-acoes.cmd` e `agendar-plano-de-acoes.cmd` (leitura de hora em hora).

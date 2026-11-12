@@ -72,7 +72,7 @@ async function lerAcoes(credenciais, idQuadro, filter) {
   const acoes = [];
   let antes;
   for (;;) {
-    const params = { filter, limit: '1000', fields: 'data,date,idMemberCreator', memberCreator_fields: 'fullName', ...(antes ? { before: antes } : {}) };
+    const params = { filter, limit: '1000', fields: 'type,data,date,idMemberCreator', memberCreator_fields: 'fullName', ...(antes ? { before: antes } : {}) };
     const pagina = await chamar(`/boards/${idQuadro}/actions`, credenciais, params);
     acoes.push(...pagina);
     if (pagina.length < 1000) return acoes;
@@ -138,13 +138,24 @@ export function conclusoesDeItens(acoes) {
   return marcados;
 }
 
+/** Ações do Trello que contam como gerar atividade. Item de checklist não tem ação própria no Trello. */
+const TIPO_CRIACAO = { createCard: 'cartao', copyCard: 'cartao', convertToCardFromCheckItem: 'cartao', addChecklistToCard: 'checklist' };
+
+/** Quem criou cartões e adicionou checklists no quadro. */
+export function criacoesDoHistorico(acoes) {
+  return acoes
+    .filter((a) => TIPO_CRIACAO[a.type] && a.data?.card?.id)
+    .map((a) => ({ id_externo: a.id, cartao: a.data.card.id, tipo: TIPO_CRIACAO[a.type], membro: a.idMemberCreator ?? null, data: a.date }));
+}
+
 /** Lê por quadro, sem uma chamada por cartão. Texto com credencial fica de fora (RN-66). */
 export async function lerDetalhes(credenciais, idQuadro) {
-  const [membros, checklists, comentarios, marcacoes] = await Promise.all([
+  const [membros, checklists, comentarios, marcacoes, acoesDeCriacao] = await Promise.all([
     chamar(`/boards/${idQuadro}/members`, credenciais, { fields: 'fullName,username' }),
     chamar(`/boards/${idQuadro}/checklists`, credenciais, { fields: 'name,idCard', checkItems: 'all', checkItem_fields: 'name,state,pos,idMember' }),
     lerAcoes(credenciais, idQuadro, 'commentCard'),
     lerAcoes(credenciais, idQuadro, 'updateCheckItemStateOnCard'),
+    lerAcoes(credenciais, idQuadro, Object.keys(TIPO_CRIACAO).join(',')),
   ]);
   const concluidos = conclusoesDeItens(marcacoes);
   return {
@@ -168,6 +179,7 @@ export async function lerDetalhes(credenciais, idQuadro) {
           };
         }),
     ),
+    criacoes: criacoesDoHistorico(acoesDeCriacao),
     comentarios: comentarios
       .filter((a) => a.data?.text && !textoSensivel(a.data.text))
       .map((a) => ({ id_externo: a.id, cartao: a.data.card?.id, autor: a.memberCreator?.fullName ?? null, texto: a.data.text, data: a.date })),
@@ -193,9 +205,9 @@ async function retirarAusentes(supabase, tabela, presentes) {
 }
 
 /** Grava membros, vínculos, comentários e checklists dos cartões já importados. */
-export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios, itens, datas = [] }) {
+export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios, itens, datas = [], criacoes }) {
   // Em lotes pelos ids: uma consulta só pararia no limite de linhas da API
-  const cartoes = [...new Set([...vinculos, ...comentarios, ...itens, ...datas].map((x) => x.cartao).filter(Boolean))];
+  const cartoes = [...new Set([...vinculos, ...comentarios, ...itens, ...datas, ...(criacoes ?? [])].map((x) => x.cartao).filter(Boolean))];
   const idTarefa = new Map();
   for (let i = 0; i < cartoes.length; i += LOTE) {
     const { data, error } = await supabase.from('tarefas').select('id, id_externo').eq('fonte', 'trello').in('id_externo', cartoes.slice(i, i + LOTE));
@@ -237,7 +249,14 @@ export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios
   await gravarLotes(supabase, 'trello_checklist_itens', linhasItens, 'id_externo');
   await retirarAusentes(supabase, 'trello_comentarios', new Set(linhasComentarios.map((c) => c.id_externo)));
   await retirarAusentes(supabase, 'trello_checklist_itens', new Set(linhasItens.map((c) => c.id_externo)));
-  return { membros: membros.length, comentarios: linhasComentarios.length, itens: linhasItens.length };
+  let quantasCriacoes = 0;
+  if (criacoes) {
+    const linhasCriacoes = ligar(criacoes).map(({ membro, ...resto }) => ({ ...resto, membro_id: idMembro.get(membro) ?? null }));
+    await gravarLotes(supabase, 'trello_criacoes', linhasCriacoes, 'id_externo');
+    await retirarAusentes(supabase, 'trello_criacoes', new Set(linhasCriacoes.map((c) => c.id_externo)));
+    quantasCriacoes = linhasCriacoes.length;
+  }
+  return { membros: membros.length, comentarios: linhasComentarios.length, itens: linhasItens.length, criacoes: quantasCriacoes };
 }
 
 /** Lê todos os quadros abertos do usuário e devolve as tarefas mapeadas. */

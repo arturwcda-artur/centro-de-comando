@@ -1,4 +1,4 @@
-"""Leitura do plano de ações da obra na Central de Gestão (ADR 0022, RN-49e).
+"""Leitura do plano de ações da obra na Central de Gestão (ADR 0022, RN-49f).
 
 Lê a aba AÇÕES com openpyxl, sem abrir o Excel e sem alterar o arquivo, e envia ao banco por funções
 restritas. Só relê a planilha que mudou. As colunas são achadas pelo nome do cabeçalho (linha 5), então

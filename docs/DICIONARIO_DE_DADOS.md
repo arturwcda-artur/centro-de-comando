@@ -770,6 +770,21 @@ Criação, conclusão real e prazo original do cartão, lidos do histórico do T
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `trello_criacoes`
+
+Cartões criados e checklists adicionados no quadro da equipe, e por quem.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| tarefa_id | uuid | sim | tarefas |  |
+| id_externo | text | sim |  |  |
+| tipo | text | sim |  |  |
+| membro_id | uuid |  | trello_membros |  |
+| data | timestamp with time zone | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `trello_membros`
 
 Membros do Trello. Ficam fora de pessoas para não misturar com o cadastro da empresa.

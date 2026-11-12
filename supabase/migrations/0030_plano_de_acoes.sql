@@ -1,4 +1,4 @@
--- 0030 — Plano de ações da obra lido da Central de Gestão (planilha) pelo agente local (ADR 0022, RN-49e)
+-- 0030 — Plano de ações da obra lido da Central de Gestão (planilha) pelo agente local (ADR 0022, RN-49f)
 -- A planilha é a fonte: aqui as ações só são mostradas e priorizadas. Nada é gravado de volta na planilha.
 
 create table public.acoes_planilhas (
@@ -129,7 +129,7 @@ begin
 
   select array_agg(v_arquivo.obra_id::text || ':' || (x->>'numero')) into v_numeros from jsonb_array_elements(payload->'acoes') x;
 
-  -- Ação que saiu da planilha não é apagada: fica marcada para conferência (RN-49e)
+  -- Ação que saiu da planilha não é apagada: fica marcada para conferência (RN-49f)
   update public.tarefas
      set status_sync = 'pendente'
    where fonte = 'planilha' and obra_id = v_arquivo.obra_id

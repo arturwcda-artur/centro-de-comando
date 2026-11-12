@@ -1,5 +1,5 @@
 import "server-only";
-import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, detalharResolvidas, fluxoPorSemana, rankingEvolucao, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
+import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, detalharResolvidas, fluxoPorSemana, geracaoPorPessoa, rankingEvolucao, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
 import { hojeSP, somarDias } from "@/lib/formato";
 import type { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -51,6 +51,30 @@ export async function carregarCartoesEquipe(supabase: Cliente) {
     itens: itensDoCartao.get(t.id),
   }));
   return { cartoes, idMembro: new Map((membros.data ?? []).map((m) => [m.nome, m.id])), ultimaSync: conector.data?.ultima_sync_em ?? null };
+}
+
+/** Cartões criados, checklists e comentários do quadro da equipe, com o autor. */
+export async function carregarGeracaoEquipe(supabase: Cliente) {
+  const [criacoes, comentarios] = await Promise.all([
+    supabase.from("trello_criacoes").select("tipo, data, membro:trello_membros(nome)"),
+    supabase.from("trello_comentarios").select("autor, data, tarefas!inner(categoria)").like("tarefas.categoria", `${QUADRO_EQUIPE} › %`),
+  ]);
+  if (criacoes.error) throw new Error(criacoes.error.message);
+  if (comentarios.error) throw new Error(comentarios.error.message);
+  return {
+    criacoes: (criacoes.data ?? []).map((c) => ({ nome: c.membro?.nome ?? null, tipo: c.tipo, data: c.data })),
+    comentarios: (comentarios.data ?? []).map((c) => ({ nome: c.autor, data: c.data })),
+  };
+}
+
+/** Quem gerou atividade no período e no período anterior, para mostrar a evolução. */
+export function montarGeracao(dados: Awaited<ReturnType<typeof carregarGeracaoEquipe>>, dias: number | null) {
+  const hoje = hojeSP();
+  const desde = dias ? somarDias(hoje, -dias) : undefined;
+  const atual = geracaoPorPessoa(dados.criacoes, dados.comentarios, desde);
+  const anterior = dias && desde ? geracaoPorPessoa(dados.criacoes, dados.comentarios, somarDias(hoje, -2 * dias), desde) : null;
+  const temHistorico = (anterior ?? []).some((l) => l.total > 0);
+  return { atual, evolucao: (nome: string, total: number) => (temHistorico ? total - (anterior?.find((l) => l.nome === nome)?.total ?? 0) : null) };
 }
 
 /** Todos os números do painel, para um período. */

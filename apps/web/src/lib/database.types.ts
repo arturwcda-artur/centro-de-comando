@@ -2349,6 +2349,15 @@ export type Database = {
           },
         ]
       }
+      trello_criacoes: {
+        Row: { atualizado_em: string; criado_em: string; data: string; id: string; id_externo: string; membro_id: string | null; tarefa_id: string; tipo: string };
+        Insert: { atualizado_em?: string; criado_em?: string; data: string; id?: string; id_externo: string; membro_id?: string | null; tarefa_id: string; tipo: string };
+        Update: { atualizado_em?: string; criado_em?: string; data?: string; id?: string; id_externo?: string; membro_id?: string | null; tarefa_id?: string; tipo?: string };
+        Relationships: [
+          { foreignKeyName: "trello_criacoes_membro_id_fkey"; columns: ["membro_id"]; isOneToOne: false; referencedRelation: "trello_membros"; referencedColumns: ["id"] },
+          { foreignKeyName: "trello_criacoes_tarefa_id_fkey"; columns: ["tarefa_id"]; isOneToOne: false; referencedRelation: "tarefas"; referencedColumns: ["id"] },
+        ];
+      };
       trello_comentarios: {
         Row: {
           atualizado_em: string
