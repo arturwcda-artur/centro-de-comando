@@ -10,6 +10,7 @@ export type Modulo = {
     | "alertas"
     | "obras"
     | "tarefas"
+    | "gut"
     | "equipe"
     | "agenda"
     | "planejamento"
@@ -29,6 +30,7 @@ export const MODULOS: Modulo[] = [
   { slug: "alertas", href: "/alertas", titulo: "Alertas", descricao: "O que precisa de atenção agora", icone: "alertas", fase: 10, grupo: "Visão geral" },
   { slug: "obras", href: "/obras", titulo: "Obras", descricao: "Cadastro e ambiente individual de cada obra", icone: "obras", fase: 4, grupo: "Gestão" },
   { slug: "tarefas", href: "/tarefas", titulo: "Tarefas", descricao: "Atribuições, cobranças e vencimentos", icone: "tarefas", fase: 5, grupo: "Gestão" },
+  { slug: "matriz-gut", href: "/matriz-gut", titulo: "Matriz GUT", descricao: "Ações das obras por gravidade, urgência e tendência", icone: "gut", fase: 10, grupo: "Gestão" },
   { slug: "equipe", href: "/equipe", titulo: "Equipe", descricao: "Cartões por lista e por responsável no Trello", icone: "equipe", fase: 5, grupo: "Gestão" },
   { slug: "agenda", href: "/agenda", titulo: "Agenda", descricao: "Compromissos e reuniões (Google Agenda)", icone: "agenda", fase: 5, grupo: "Gestão" },
   { slug: "planejamento", href: "/planejamento", titulo: "Planejamento", descricao: "Cronogramas, linha de base e Curva S", icone: "planejamento", fase: 6, grupo: "Controle" },

@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.19.0] — 2026-11-12 — Matriz GUT
+### Adicionado
+- Menu **Matriz GUT**: ações das obras por G × U × T, com o 5W2H, e botão para criar lembrete no Google Agenda (RN-49g).
+
 ## [0.18.0] — 2026-11-10 — Plano de ações da obra
 ### Adicionado
 - Leitura do plano de ações da Central de Gestão (aba AÇÕES) pelo agente local: `cc_agente.acoes`, com testes (RN-49f, ADR 0022).

@@ -14,6 +14,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      acoes_detalhes: {
+        Row: { atualizado_em: string; como: string | null; criado_em: string; gravidade: number | null; gut: number | null; o_que: string | null; onde: string | null; por_que: string | null; quanto: string | null; quem: string | null; tarefa_id: string; tendencia: number | null; urgencia: number | null };
+        Insert: { atualizado_em?: string; como?: string | null; criado_em?: string; gravidade?: number | null; o_que?: string | null; onde?: string | null; por_que?: string | null; quanto?: string | null; quem?: string | null; tarefa_id: string; tendencia?: number | null; urgencia?: number | null };
+        Update: { atualizado_em?: string; como?: string | null; criado_em?: string; gravidade?: number | null; o_que?: string | null; onde?: string | null; por_que?: string | null; quanto?: string | null; quem?: string | null; tarefa_id?: string; tendencia?: number | null; urgencia?: number | null };
+        Relationships: [{ foreignKeyName: "acoes_detalhes_tarefa_id_fkey"; columns: ["tarefa_id"]; isOneToOne: true; referencedRelation: "tarefas"; referencedColumns: ["id"] }];
+      };
       acoes_planilhas: {
         Row: {
           atualizado_em: string

@@ -1,8 +1,10 @@
 "use server";
 import { alterarEvento, criarEvento, excluirEvento } from "@cc/integrations/src/google.js";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { acessoGoogle } from "@/lib/google";
+import { textoDoLembrete, type Detalhe5w2h } from "@/lib/gut";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { compromissoSchema, mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
@@ -52,6 +54,39 @@ async function noGoogle<T>(
     await supabase.from("operacoes_externas").update({ status: "erro", erro: erro.slice(0, 500), executado_em: new Date().toISOString() }).eq("id", op.id);
     return { erro: `Não salvo: ${erro}` };
   }
+}
+
+/** Lembrete de uma ação da Matriz GUT: evento de dia inteiro com o 5W2H na descrição (RN-49g). */
+export async function criarLembreteDeAcao(tarefaId: string, _: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
+  const { supabase } = await exigirSessaoCompleta();
+  const data = String(fd.get("data") ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || Number.isNaN(Date.parse(data))) return { erros: { data: "Data inválida." } };
+  if (!UUID.test(tarefaId)) return { erro: "Ação inválida." };
+  if (!(await escritaAutorizada(supabase))) return { erro: "Conecte o Google em Integrações para gravar na agenda." };
+
+  const { data: t } = await supabase.from("tarefas").select("id, titulo, prazo, obra_id, obras(codigo), acoes_detalhes(*)").eq("id", tarefaId).eq("fonte", "planilha").maybeSingle();
+  if (!t) return { erro: "Ação não encontrada." };
+  const h = await headers();
+  const link = `https://${h.get("host")}/matriz-gut/${t.id}`;
+  const { titulo, descricao } = textoDoLembrete({ titulo: t.titulo, prazo: t.prazo, obra: t.obras?.codigo ?? null, detalhe: t.acoes_detalhes as Detalhe5w2h | null }, link);
+
+  const novoId = crypto.randomUUID();
+  const r = await noGoogle(supabase, { operacao: "criar", registro_id: novoId, id_externo: "novo" }, (acesso) =>
+    criarEvento(acesso, { titulo, data, dataFim: data, diaInteiro: true, local: "", descricao }),
+  );
+  if ("erro" in r) return { erro: r.erro };
+  await r.registrar(r.resultado.id_externo);
+  const { error } = await supabase.from("eventos").insert({
+    ...r.resultado,
+    id: novoId,
+    obra_id: t.obra_id,
+    fonte: "google_agenda",
+    status_sync: "sincronizado",
+    importado_em: new Date().toISOString(),
+  });
+  revalidarTudo();
+  if (error) return { ok: true, mensagem: "Lembrete criado no Google Agenda. Ele aparece aqui na próxima sincronização." };
+  return { ok: true, mensagem: "Lembrete criado no Google Agenda." };
 }
 
 /** Cria (id nulo) ou altera um compromisso. Em evento recorrente, altera só esta ocorrência. */
