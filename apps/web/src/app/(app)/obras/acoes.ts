@@ -31,6 +31,11 @@ export async function salvarObra(id: string | null, _: EstadoFormulario, fd: For
       .from("acoes_planilhas")
       .upsert({ obra_id: resposta.data.id, caminho: planilha_acoes, ultimo_hash: null }, { onConflict: "obra_id" });
     if (error) return { erro: mensagemDoBanco(error) };
+  } else if (id) {
+    // Campo apagado desliga a planilha. As ações já lidas ficam, marcadas para conferência (RN-49f)
+    const { error } = await supabase.from("acoes_planilhas").delete().eq("obra_id", id);
+    if (error) return { erro: mensagemDoBanco(error) };
+    await supabase.from("tarefas").update({ status_sync: "pendente" }).eq("obra_id", id).eq("fonte", "planilha");
   }
 
   revalidatePath("/obras");
