@@ -1,11 +1,11 @@
 /**
  * Sincronizador — executado pelo GitHub Actions a cada hora (ADR 0012) ou manualmente.
- * Lê Trello, Google Agenda (API oficial ou, sem ela, iCal) e Notion e grava espelhos no Supabase.
+ * Lê Trello e Google Agenda (API oficial ou, sem ela, iCal) e grava espelhos no Supabase.
  * Cada conector só roda se os seus segredos existirem; a falha de um não interrompe os outros.
  *
  * Variáveis (GitHub Actions secrets): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
  *   TRELLO_API_KEY, TRELLO_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
- *   GOOGLE_ICAL_URLS (um endereço por linha), NOTION_TOKEN.
+ *   GOOGLE_ICAL_URLS (um endereço por linha).
  * O token de longa duração do Google fica no cofre do Supabase, nunca nestas variáveis (ADR 0014).
  */
 import { createClient } from '@supabase/supabase-js';
@@ -14,7 +14,6 @@ import * as trello from './trello.js';
 import * as google from './google-ical.js';
 import * as agenda from './google.js';
 import { vincularDocumentos } from './google-drive.js';
-import { lerNotion } from './notion.js';
 import { hojeSP, somarDias } from './util.js';
 
 const env = process.env;
@@ -94,19 +93,6 @@ async function principal() {
       }),
     );
   } else console.log('Google Agenda: sem conexão nem endereços iCal, ignorado.');
-
-  if (env.NOTION_TOKEN) {
-    resultados.push(
-      await executarConector(supabase, { ferramenta: 'notion', nome: 'Notion', gatilho }, async () => {
-        const { tarefas, reunioes, bases, visiveis } = await lerNotion(env.NOTION_TOKEN);
-        const r = somar(
-          await aplicar(supabase, { tabela: 'tarefas', fonte: 'notion', registros: tarefas }),
-          await aplicar(supabase, { tabela: 'reunioes', fonte: 'notion', registros: reunioes }),
-        );
-        return { ...r, mensagem: `${visiveis} base(s) visível(is); usadas: ${bases.join(', ') || 'nenhuma'}` };
-      }),
-    );
-  } else console.log('Notion: sem token, ignorado.');
 
   for (const r of resultados) {
     console.log(r.ok ? `OK: lidos ${r.lidos}, criados ${r.criados}, atualizados ${r.atualizados}, iguais ${r.ignorados}. ${r.mensagem ?? ''}` : `ERRO: ${r.mensagem}`);

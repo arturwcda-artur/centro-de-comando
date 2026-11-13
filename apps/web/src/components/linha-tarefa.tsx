@@ -6,7 +6,7 @@ import { Etiqueta } from "@/components/ui";
 import { motivosPrioridade, podeConcluir, rotuloDe, STATUS_TAREFA, TIPOS_TAREFA } from "@/lib/dominio";
 import { dataCivil } from "@/lib/formato";
 
-const ROTULO_ORIGEM: Record<string, string> = { trello: "Trello", notion: "Notion", planilha: "Plano de ações" };
+const ROTULO_ORIGEM: Record<string, string> = { trello: "Trello" };
 
 export type LinhaTarefaDados = {
   id: string | null;

@@ -29,6 +29,7 @@ PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas
 | `0026_cartao_concluido_por.sql` | quem concluiu cada cartão do quadro detalhado (ADR 0017) |
 | `0027_leituras_do_agente.sql` | registro das leituras do agente nas integrações |
 | `0028_assistente_leitura.sql` | funções de leitura do assistente e bloqueio de tokens OAuth nas tabelas (ADR 0021) |
+| `0033_sem_notion.sql` | tarefas do Notion passam a manuais e o conector do Notion fica inativo (ADR 0024) |
 | `0032_problemas.sql` | problemas no sistema, tarefas.problema_id e importação única do plano de ações da planilha (ADR 0023) |
 | `0031_trello_criacoes.sql` | quem criou cartões e checklists no quadro da equipe (RN-49e) |
 | `0029_obras_da_varredura.sql` | pastas, cronogramas e contratos das obras, decididos pelo proprietário |

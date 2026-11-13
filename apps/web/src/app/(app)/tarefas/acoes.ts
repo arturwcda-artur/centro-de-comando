@@ -1,5 +1,5 @@
 "use server";
-import { concluirCartaoTrello, concluirPaginaNotion } from "@cc/integrations/src/escrita.js";
+import { concluirCartaoTrello } from "@cc/integrations/src/escrita.js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { podeConcluir } from "@/lib/dominio";
@@ -14,7 +14,7 @@ function revalidarTudo() {
 }
 
 /**
- * Cria (id nulo) ou atualiza uma tarefa manual. Tarefas importadas (Trello, Notion…) não são
+ * Cria (id nulo) ou atualiza uma tarefa manual. Tarefas importadas (Trello…) não são
  * editadas aqui: a fonte oficial delas é a ferramenta de origem (ADR 0004).
  */
 export async function salvarTarefa(id: string | null, _: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
@@ -56,17 +56,14 @@ export async function criarTarefaRapida(_: EstadoFormulario, fd: FormData): Prom
 
 /** Executa a conclusão na ferramenta de origem. Os tokens ficam só no servidor (variáveis da Vercel). */
 function gravarNaOrigem(fonte: string, idExterno: string): Promise<string> {
-  const { TRELLO_API_KEY, TRELLO_TOKEN, NOTION_TOKEN } = process.env;
-  if (fonte === "trello") {
-    if (!TRELLO_API_KEY || !TRELLO_TOKEN) throw new Error("Gravação no Trello ainda não configurada no servidor");
-    return concluirCartaoTrello({ chave: TRELLO_API_KEY, token: TRELLO_TOKEN }, idExterno);
-  }
-  if (!NOTION_TOKEN) throw new Error("Gravação no Notion ainda não configurada no servidor");
-  return concluirPaginaNotion(NOTION_TOKEN, idExterno);
+  const { TRELLO_API_KEY, TRELLO_TOKEN } = process.env;
+  if (fonte !== "trello") throw new Error(`Conclusão no ${fonte} não disponível`);
+  if (!TRELLO_API_KEY || !TRELLO_TOKEN) throw new Error("Gravação no Trello ainda não configurada no servidor");
+  return concluirCartaoTrello({ chave: TRELLO_API_KEY, token: TRELLO_TOKEN }, idExterno);
 }
 
 /**
- * Conclui uma tarefa (RN-48). Se ela veio do Trello ou do Notion, conclui primeiro na origem:
+ * Conclui uma tarefa (RN-48). Se ela veio do Trello, conclui primeiro na origem:
  * se a ferramenta recusar, a tarefa continua aberta aqui e o erro aparece na tela.
  */
 export async function concluirTarefa(id: string, _: EstadoFormulario): Promise<EstadoFormulario> {
