@@ -2,9 +2,26 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { UUID } from "@/lib/obras";
-import { acao5w2hSchema, problemaSchema } from "@/lib/problemas";
+import { acao5w2hSchema, problemaSchema, situacaoPelasAcoes } from "@/lib/problemas";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
+
+type Cliente = Awaited<ReturnType<typeof exigirSessaoCompleta>>["supabase"];
+
+/** Recalcula a situação do problema a partir das ações (RN-49h). */
+async function atualizarSituacao(supabase: Cliente, problemaId: string) {
+  const [{ data: p }, { data: acoes }] = await Promise.all([
+    supabase.from("problemas").select("status, resolvido_em").eq("id", problemaId).maybeSingle(),
+    supabase.from("tarefas").select("status").eq("problema_id", problemaId),
+  ]);
+  if (!p) return;
+  const nova = situacaoPelasAcoes(p.status, acoes ?? []);
+  if (nova === p.status) return;
+  await supabase
+    .from("problemas")
+    .update({ status: nova, resolvido_em: nova === "resolvido" ? (p.resolvido_em ?? new Date().toISOString()) : null })
+    .eq("id", problemaId);
+}
 
 function revalidar(id?: string) {
   revalidatePath("/problemas");
@@ -72,8 +89,8 @@ export async function salvarAcao5w2h(problemaId: string, acaoId: string | null, 
     .upsert({ tarefa_id: tarefaId as string, o_que: dados.o_que, por_que: dados.por_que, onde: dados.onde, quem: dados.quem, como: dados.como, quanto: dados.quanto }, { onConflict: "tarefa_id" });
   if (error) return { erro: mensagemDoBanco(error) };
 
-  // Problema com ação planejada sai de "aberto"
-  await supabase.from("problemas").update({ status: "em_andamento" }).eq("id", problemaId).eq("status", "aberto");
+  // Com plano, o problema sai de Pendentes e vai para Resolvendo
+  await atualizarSituacao(supabase, problemaId);
   revalidar(problemaId);
   redirect(`/problemas/${problemaId}`);
 }
@@ -87,5 +104,18 @@ export async function alternarAcao(problemaId: string, acaoId: string, concluir:
     .update(concluir ? { status: "concluida", concluida_em: new Date().toISOString() } : { status: "a_fazer", concluida_em: null })
     .eq("id", acaoId)
     .eq("problema_id", problemaId);
+  // Última ação concluída resolve o problema; reabrir uma ação volta para Resolvendo
+  await atualizarSituacao(supabase, problemaId);
   revalidar(problemaId);
+}
+
+/** Cadastro rápido na lista: problema e notas GUT, sem sair da tela. */
+export async function adicionarProblemaRapido(_: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
+  const { supabase } = await exigirSessaoCompleta();
+  const { dados, erros } = validar(problemaSchema, fd);
+  if (!dados) return { erros };
+  const { error } = await supabase.from("problemas").insert({ ...dados, status: "aberto" });
+  if (error) return { erro: mensagemDoBanco(error) };
+  revalidar();
+  return { ok: true, mensagem: "Problema adicionado." };
 }
