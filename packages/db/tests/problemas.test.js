@@ -37,3 +37,29 @@ describe('problemas', () => {
     expect(sem).toBe(0);
   });
 });
+
+describe('importação única do plano de ações da planilha', () => {
+  it('cada ação da planilha vira um problema com a sua ação, editável no sistema', async () => {
+    const banco = await criarBanco();
+    const obra = (await banco.query(`insert into public.obras (codigo, nome) values ('T-PROB', 'Teste') returning id`)).rows[0].id;
+    await banco.query(`insert into public.acoes_planilhas (obra_id, caminho) values ($1, 'C:/x.xlsx')`, [obra]);
+    const t1 = (await banco.query(`insert into public.tarefas (titulo, obra_id, fonte, id_externo, status) values ('[1] Cobrar sondagem', $1, 'planilha', 'a:1', 'a_fazer') returning id`, [obra])).rows[0].id;
+    const t2 = (await banco.query(`insert into public.tarefas (titulo, obra_id, fonte, id_externo, status, concluida_em) values ('[2] Feita', $1, 'planilha', 'a:2', 'concluida', now()) returning id`, [obra])).rows[0].id;
+    await banco.query(`insert into public.acoes_detalhes (tarefa_id, gravidade, urgencia, tendencia, o_que) values ($1, 5, 5, 3, 'Cobrar sondagem')`, [t1]);
+
+    // Reaplica só a parte de importação da migration 0032
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { pastaMigrations } = await import('./helpers.js');
+    const sql = readFileSync(join(pastaMigrations, '0032_problemas.sql'), 'utf8');
+    await banco.exec(sql.slice(sql.indexOf('-- Cada linha da planilha')));
+
+    const p = (await banco.query(`select p.titulo, p.gut, p.status, p.origem, t.fonte from public.problemas p join public.tarefas t on t.problema_id = p.id order by p.gut desc`)).rows;
+    expect(p).toEqual([
+      { titulo: 'Cobrar sondagem', gut: 75, status: 'aberto', origem: 'planilha', fonte: 'manual' },
+      { titulo: 'Feita', gut: 27, status: 'resolvido', origem: 'planilha', fonte: 'manual' },
+    ]);
+    expect((await banco.query(`select count(*)::int n from public.acoes_planilhas`)).rows[0].n).toBe(0);
+    expect(t2).toBeTruthy();
+  }, 60000);
+});

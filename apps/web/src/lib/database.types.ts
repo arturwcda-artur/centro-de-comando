@@ -14,6 +14,15 @@ export type Database = {
   }
   public: {
     Tables: {
+      problemas: {
+        Row: { atualizado_em: string; criado_em: string; descricao: string | null; gravidade: number; gut: number | null; id: string; obra_id: string | null; origem: string; resolvido_em: string | null; responsavel_id: string | null; status: string; tendencia: number; titulo: string; urgencia: number };
+        Insert: { atualizado_em?: string; criado_em?: string; descricao?: string | null; gravidade?: number; id?: string; obra_id?: string | null; origem?: string; resolvido_em?: string | null; responsavel_id?: string | null; status?: string; tendencia?: number; titulo: string; urgencia?: number };
+        Update: { atualizado_em?: string; criado_em?: string; descricao?: string | null; gravidade?: number; id?: string; obra_id?: string | null; origem?: string; resolvido_em?: string | null; responsavel_id?: string | null; status?: string; tendencia?: number; titulo?: string; urgencia?: number };
+        Relationships: [
+          { foreignKeyName: "problemas_obra_id_fkey"; columns: ["obra_id"]; isOneToOne: false; referencedRelation: "obras"; referencedColumns: ["id"] },
+          { foreignKeyName: "problemas_responsavel_id_fkey"; columns: ["responsavel_id"]; isOneToOne: false; referencedRelation: "pessoas"; referencedColumns: ["id"] },
+        ];
+      };
       acoes_detalhes: {
         Row: { atualizado_em: string; como: string | null; criado_em: string; gravidade: number | null; gut: number | null; o_que: string | null; onde: string | null; por_que: string | null; quanto: string | null; quem: string | null; tarefa_id: string; tendencia: number | null; urgencia: number | null };
         Insert: { atualizado_em?: string; como?: string | null; criado_em?: string; gravidade?: number | null; o_que?: string | null; onde?: string | null; por_que?: string | null; quanto?: string | null; quem?: string | null; tarefa_id: string; tendencia?: number | null; urgencia?: number | null };
@@ -2452,6 +2461,7 @@ export type Database = {
           importado_em: string | null
           importancia: number
           obra_id: string | null
+          problema_id: string | null
           prazo: string | null
           responsavel_id: string | null
           status: string
@@ -2478,6 +2488,7 @@ export type Database = {
           importado_em?: string | null
           importancia?: number
           obra_id?: string | null
+          problema_id?: string | null
           prazo?: string | null
           responsavel_id?: string | null
           status?: string
@@ -2504,6 +2515,7 @@ export type Database = {
           importado_em?: string | null
           importancia?: number
           obra_id?: string | null
+          problema_id?: string | null
           prazo?: string | null
           responsavel_id?: string | null
           status?: string
@@ -2513,6 +2525,7 @@ export type Database = {
           titulo?: string
         }
         Relationships: [
+          { foreignKeyName: "tarefas_problema_id_fkey"; columns: ["problema_id"]; isOneToOne: false; referencedRelation: "problemas"; referencedColumns: ["id"] },
           {
             foreignKeyName: "tarefas_aguardando_pessoa_id_fkey"
             columns: ["aguardando_pessoa_id"]
