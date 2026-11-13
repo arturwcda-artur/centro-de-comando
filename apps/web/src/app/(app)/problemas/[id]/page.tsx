@@ -20,7 +20,7 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
   const [{ data: p }, opcoes] = await Promise.all([
     supabase
       .from("problemas")
-      .select("*, obras(codigo, nome), pessoas(nome), tarefas(id, titulo, prazo, status, pessoas!tarefas_responsavel_id_fkey(nome), acoes_detalhes(*))")
+      .select("*, obras(codigo, nome), pessoas(nome), tarefas(id, titulo, prazo, status, fonte, id_externo, pessoas!tarefas_responsavel_id_fkey(nome), acoes_detalhes(*), tarefa_membros(trello_membros(nome)))")
       .eq("id", id)
       .maybeSingle(),
     carregarOpcoes(supabase),
@@ -88,11 +88,13 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
             {acoes.map((a) => {
               const d = a.acoes_detalhes;
               const feita = a.status === "concluida";
+              const noTrello = a.fonte === "trello" && a.id_externo;
+              const membrosTrello = (a.tarefa_membros ?? []).map((m) => m.trello_membros.nome).join(", ");
               const linhas: [string, string | null | undefined][] = [
                 ["Por quê", d?.por_que],
                 ["Onde", d?.onde],
                 ["Quando", a.prazo ? dataCivil(a.prazo) : null],
-                ["Quem", a.pessoas?.nome ?? d?.quem],
+                ["Quem", noTrello ? membrosTrello || d?.quem : (a.pessoas?.nome ?? d?.quem)],
                 ["Como", d?.como],
                 ["Quanto", d?.quanto],
               ];
@@ -101,12 +103,26 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
                   <div className="flex items-start justify-between gap-3">
                     <p className={`font-medium ${feita ? "line-through" : ""}`}>{d?.o_que ?? a.titulo}</p>
                     <div className="flex shrink-0 gap-2">
-                      <Link href={`/problemas/${id}/acoes/${a.id}`} className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">
-                        Editar
-                      </Link>
-                      <form action={alternarAcao.bind(null, id, a.id, !feita)}>
-                        <button className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">{feita ? "Reabrir" : "Concluir"}</button>
-                      </form>
+                      {noTrello ? (
+                        <a
+                          href={`https://trello.com/c/${a.id_externo}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="A situação desta ação acompanha o cartão no Trello"
+                          className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2"
+                        >
+                          Ver no Trello
+                        </a>
+                      ) : (
+                        <>
+                          <Link href={`/problemas/${id}/acoes/${a.id}`} className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">
+                            Editar
+                          </Link>
+                          <form action={alternarAcao.bind(null, id, a.id, !feita)}>
+                            <button className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">{feita ? "Reabrir" : "Concluir"}</button>
+                          </form>
+                        </>
+                      )}
                     </div>
                   </div>
                   <dl className="mt-2 grid gap-x-3 gap-y-1 text-sm sm:grid-cols-[5rem_1fr]">
@@ -119,6 +135,12 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
                         </div>
                       ))}
                   </dl>
+                  {!feita && a.fonte === "manual" && (
+                    <Link href={`/problemas/${id}/acoes/${a.id}/trello`} className="mt-2 inline-block text-xs font-medium text-marca hover:underline">
+                      Criar cartão no Trello →
+                    </Link>
+                  )}
+                  {noTrello && <p className="mt-2 text-xs text-suave">Cartão no Trello: a ação fica concluída quando a equipe concluir o cartão.</p>}
                   {!feita && (
                     <details className="mt-2">
                       <summary className="cursor-pointer text-xs text-marca">Criar lembrete na agenda</summary>
