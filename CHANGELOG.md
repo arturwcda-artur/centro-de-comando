@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.20.0] — 2026-11-13 — Problemas
+### Adicionado
+- Tela **Problemas** no lugar da Matriz GUT: cadastro de problemas com G, U e T, fila do mais grave para o menos grave, plano de ação 5W2H e lembrete na agenda (RN-49h, ADR 0023).
+- Migration `0032_problemas.sql`: as 48 ações da planilha da NILLS viram problemas, e a planilha deixa de ser lida.
+
 ## [0.19.1] — 2026-11-13 — Crédito da equipe
 ### Alterado
 - Tela **Equipe**: os pontos dos itens de checklist passam aos responsáveis do cartão, como os do próprio cartão (RN-49c).

@@ -56,7 +56,7 @@ async function noGoogle<T>(
   }
 }
 
-/** Lembrete de uma ação da Matriz GUT: evento de dia inteiro com o 5W2H na descrição (RN-49g). */
+/** Lembrete de uma ação 5W2H: evento de dia inteiro com o 5W2H na descrição (RN-49g, RN-49h). */
 export async function criarLembreteDeAcao(tarefaId: string, _: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
   const { supabase } = await exigirSessaoCompleta();
   const data = String(fd.get("data") ?? "");
@@ -64,11 +64,13 @@ export async function criarLembreteDeAcao(tarefaId: string, _: EstadoFormulario,
   if (!UUID.test(tarefaId)) return { erro: "Ação inválida." };
   if (!(await escritaAutorizada(supabase))) return { erro: "Conecte o Google em Integrações para gravar na agenda." };
 
-  const { data: t } = await supabase.from("tarefas").select("id, titulo, prazo, obra_id, obras(codigo), acoes_detalhes(*)").eq("id", tarefaId).eq("fonte", "planilha").maybeSingle();
+  const { data: t } = await supabase.from("tarefas").select("id, titulo, prazo, obra_id, problema_id, obras(codigo), problemas(gut), acoes_detalhes(*)").eq("id", tarefaId).maybeSingle();
   if (!t) return { erro: "Ação não encontrada." };
   const h = await headers();
-  const link = `https://${h.get("host")}/matriz-gut/${t.id}`;
-  const { titulo, descricao } = textoDoLembrete({ titulo: t.titulo, prazo: t.prazo, obra: t.obras?.codigo ?? null, detalhe: t.acoes_detalhes as Detalhe5w2h | null }, link);
+  const link = t.problema_id ? `https://${h.get("host")}/problemas/${t.problema_id}` : `https://${h.get("host")}/tarefas/${t.id}`;
+  // O GUT é do problema; a ação traz o 5W2H
+  const detalhe = { ...(t.acoes_detalhes as Detalhe5w2h | null), gut: t.problemas?.gut ?? (t.acoes_detalhes as Detalhe5w2h | null)?.gut ?? null } as Detalhe5w2h;
+  const { titulo, descricao } = textoDoLembrete({ titulo: t.titulo, prazo: t.prazo, obra: t.obras?.codigo ?? null, detalhe }, link);
 
   const novoId = crypto.randomUUID();
   const r = await noGoogle(supabase, { operacao: "criar", registro_id: novoId, id_externo: "novo" }, (acesso) =>

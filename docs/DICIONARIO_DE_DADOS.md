@@ -589,6 +589,27 @@ Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual r
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `problemas`
+
+Problemas das obras, priorizados por G × U × T. Cada um tem ações 5W2H em tarefas.problema_id.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| obra_id | uuid |  | obras |  |
+| titulo | text | sim |  |  |
+| descricao | text |  |  |  |
+| responsavel_id | uuid |  | pessoas |  |
+| gravidade | smallint | sim |  |  |
+| urgencia | smallint | sim |  |  |
+| tendencia | smallint | sim |  |  |
+| gut | smallint |  |  |  |
+| status | text | sim |  |  |
+| resolvido_em | timestamp with time zone |  |  |  |
+| origem | text | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `reunioes`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -724,6 +745,7 @@ Toda gravação feita numa ferramenta externa: o quê, onde, quando e com qual r
 | status_sync | text | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| problema_id | uuid |  | problemas | Problema que esta ação 5W2H resolve. |
 
 ## Tabela `trello_cartao_datas`
 

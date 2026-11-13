@@ -72,6 +72,7 @@ Ver [docs/adr](adr). Índice:
 | [0018](adr/0018-indice-de-documentos.md) | Índice local de documentos e abertura pelo Google Drive |
 | [0019](adr/0019-relatorios.md) | Relatórios: PDF pela impressão do navegador e Excel gerado no servidor |
 | [0020](adr/0020-integracoes-completas.md) | Integrações completas: leituras do agente, pausa, alerta e demanda no Notion |
+| [0023](adr/0023-problemas-no-sistema.md) | Problemas e planos 5W2H no sistema; a planilha da Central de Gestão deixa de ser lida |
 | [0021](adr/0021-assistente-pelo-claude.md) | Assistente pelo Claude, com conector só de leitura e sem custo novo |
 
 ## Aplicação web (`apps/web`, Fase 3)
