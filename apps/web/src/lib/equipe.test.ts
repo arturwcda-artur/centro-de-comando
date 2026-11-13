@@ -101,7 +101,7 @@ describe("sem responsável", () => {
 
 describe("crédito do item por quem marcou", () => {
   // O membro do cartão pode aparecer zerado: ele continua respondendo pelo prazo do cartão
-  const porPessoa = (c: CartaoEquipe) => Object.fromEntries(resumirEquipe([c], hoje).porResponsavel.filter((l) => l.sobResponsabilidade > 0).map((l) => [l.nome, [l.resolvidas, l.pendentes]]));
+  const porPessoa = (c: CartaoEquipe) => Object.fromEntries(resumirEquipe([c], hoje, undefined, true).porResponsavel.filter((l) => l.sobResponsabilidade > 0).map((l) => [l.nome, [l.resolvidas, l.pendentes]]));
 
   it("vai para quem marcou, não para o membro do cartão", () => {
     expect(porPessoa(cartao({ membros: ["Ana"], itens: [item({ resolvido_por: "Bia" })] }))).toEqual({ Bia: [1, 0] });
@@ -211,7 +211,7 @@ describe("cartões e entregas", () => {
   });
 
   it("quem resolve itens em cartão de rotina aparece com as entregas, sem cartões", () => {
-    const r = resumirEquipe([cartao({ rotina: true, membros: ["Ana"], itens: [item({ resolvido_por: "Bia" })] })], hoje).porResponsavel;
+    const r = resumirEquipe([cartao({ rotina: true, membros: ["Ana"], itens: [item({ resolvido_por: "Bia" })] })], hoje, undefined, true).porResponsavel;
     expect(r.find((l) => l.nome === "Bia")).toMatchObject({ atribuidas: 0, itensResolvidos: 1, resolvidas: 1 });
   });
 });
@@ -354,7 +354,7 @@ describe("o que cada um resolveu", () => {
   ];
 
   it("lista itens e cartões do período, com a parte de cada um", () => {
-    const r = detalharResolvidas(cartoes, "2026-11-02");
+    const r = detalharResolvidas(cartoes, "2026-11-02", undefined, true);
     expect(r.get("Ana")).toEqual([
       { cartao: "Cartão B", item: null, data: "2026-11-07T12:00:00Z", parte: 0.5 },
       { cartao: "Cartão A", item: "Pintar", data: "2026-11-06T12:00:00Z", parte: 1 },
@@ -396,3 +396,27 @@ describe("quem gera atividade", () => {
     expect(geracaoPorPessoa(criacoes, comentarios, "2026-11-04", "2026-11-10")).toEqual([{ nome: "Bia", cartoes: 0, checklists: 0, comentarios: 1, total: 1 }]);
   });
 });
+
+describe("crédito pelo responsável do cartão (padrão desde 13/11)", () => {
+  it("item marcado por outra pessoa conta para os responsáveis do cartão, dividido", () => {
+    const c = cartao({ membros: ["Ana", "Bia"], itens: [item({ resolvido_por: "Caio" }), item({ resolvido_por: "Caio" })] });
+    const r = resumirEquipe([c], hoje).porResponsavel;
+    expect(r.find((l) => l.nome === "Caio")).toBeUndefined();
+    expect(r.find((l) => l.nome === "Ana")?.resolvidas).toBe(1);
+    expect(r.find((l) => l.nome === "Bia")?.resolvidas).toBe(1);
+  });
+});
+
+describe("ranking de evolução: quem não entregou nada", () => {
+  const linha = (nome: string, resolvidas: number) => ({ nome, resolvidas }) as Parameters<typeof rankingEvolucao>[0][number];
+  it("vai para o fim, sem posição, mesmo caindo menos que os outros", () => {
+    const r = rankingEvolucao([linha("Artur", 7), linha("Adamo", 7), linha("Pedro", 6)], [linha("Artur", 5.3), linha("Celso", 2), linha("Adamo", 9.3), linha("Pedro", 36.3)]);
+    expect(r.map((l) => [l.posicao, l.nome])).toEqual([
+      [1, "Artur"],
+      [2, "Adamo"],
+      [3, "Pedro"],
+      [null, "Celso"],
+    ]);
+  });
+});
+

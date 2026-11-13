@@ -120,11 +120,11 @@ function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
 }
 
 /**
- * Decisão do proprietário em 05/11/2026: o item resolvido é de quem marcou no Trello, e a equipe
- * combina que cada um marca o que resolveu. O cartão é sempre dos responsáveis, porque encerrar um
- * cartão costuma ser ato de gestão. Com false, os itens também voltam aos responsáveis.
+ * Decisão do proprietário em 13/11/2026: os pontos são dos responsáveis do cartão, inclusive os dos
+ * itens de checklist, divididos igualmente entre eles. Quem marcou o item não muda o crédito.
+ * (Entre 05/11 e 13/11, o item ia para quem o marcou no Trello: true.)
  */
-export const CREDITO_POR_QUEM_MARCOU = true;
+export const CREDITO_POR_QUEM_MARCOU = false;
 
 function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
   if (!porQuemMarcou) return c.membros;
@@ -243,12 +243,13 @@ export function tarefasQueEntraram(cartoes: CartaoEquipe[], desde?: string, porQ
   return tarefasDaEquipe(cartoes, porQuemMarcou).filter((t) => !desde || (t.criada_em ?? "") >= desde).length;
 }
 
-export type PosicaoEvolucao = { posicao: number; nome: string; anterior: number; atual: number; evolucao: number };
+export type PosicaoEvolucao = { posicao: number | null; nome: string; anterior: number; atual: number; evolucao: number };
 
 /**
  * Ranking de evolução (pedido do proprietário em 09/11/2026): tarefas resolvidas no período menos as do
  * período anterior de mesmo tamanho. Em tarefas, não em porcentagem, porque quem começa do zero teria
- * porcentagem infinita. Ninguém fica de fora, nem quem caiu. Empate divide a posição.
+ * porcentagem infinita. Ninguém fica de fora, nem quem caiu. Empate divide a posição. Quem não resolveu
+ * nada no período vai para o fim, sem posição (13/11/2026): cair pouco não é evoluir.
  */
 export function rankingEvolucao(atual: LinhaEquipe[], anterior: LinhaEquipe[]): PosicaoEvolucao[] {
   const resolvidas = (linhas: LinhaEquipe[], nome: string) => linhas.find((l) => l.nome === nome)?.resolvidas ?? 0;
@@ -260,8 +261,9 @@ export function rankingEvolucao(atual: LinhaEquipe[], anterior: LinhaEquipe[]): 
       // Arredondado como aparece na tela, para o empate ser o que a pessoa vê
       return { nome, anterior: b, atual: a, evolucao: Math.round((a - b) * 10) / 10 };
     })
-    .sort((x, y) => y.evolucao - x.evolucao || y.atual - x.atual || x.nome.localeCompare(y.nome, "pt-BR"));
-  return linhas.map((l) => ({ ...l, posicao: linhas.findIndex((o) => o.evolucao === l.evolucao) + 1 }));
+    .sort((x, y) => Number(y.atual > 0) - Number(x.atual > 0) || y.evolucao - x.evolucao || y.atual - x.atual || x.nome.localeCompare(y.nome, "pt-BR"));
+  const comEntrega = linhas.filter((l) => l.atual > 0);
+  return linhas.map((l) => ({ ...l, posicao: l.atual > 0 ? comEntrega.findIndex((o) => o.evolucao === l.evolucao) + 1 : null }));
 }
 
 export type Resolvida = { cartao: string; item: string | null; data: string | null; parte: number };
