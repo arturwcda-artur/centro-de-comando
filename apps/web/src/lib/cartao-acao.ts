@@ -1,5 +1,4 @@
 /** Ação 5W2H → cartão no Trello (RN-49k). Sem acesso ao banco, para poder testar. */
-import { dataCivil } from "@/lib/formato";
 import { GUT_ATENCAO, GUT_CRITICO } from "@/lib/gut";
 
 export const PRIORIDADES = [
@@ -24,31 +23,23 @@ export function listaDaObra(listas: { id: string; nome: string }[], obra: { codi
   return listas.find((l) => chaves.some((c) => normal(l.nome).includes(c) || c.includes(normal(l.nome))))?.id ?? null;
 }
 
-type Dados = {
-  problema: string;
-  gut: number | null;
-  obra?: string | null;
-  por_que?: string | null;
-  onde?: string | null;
-  como?: string | null;
-  quanto?: string | null;
-  prazo?: string | null;
-};
-
-/** Descrição do cartão: o problema de origem e o 5W2H, para quem não usa o sistema. */
-export function descricaoDoCartao(d: Dados): string {
-  const linhas: [string, string | null | undefined][] = [
-    ["Por quê", d.por_que],
-    ["Onde", d.onde],
-    ["Como", d.como],
-    ["Quanto", d.quanto],
-    ["Prazo", d.prazo ? dataCivil(d.prazo) : null],
-  ];
-  return [
-    `Problema: ${d.problema}${d.gut !== null ? ` (GUT ${d.gut})` : ""}${d.obra ? ` — ${d.obra}` : ""}`,
-    "",
-    ...linhas.filter(([, v]) => v).map(([r, v]) => `${r}: ${v}`),
-    "",
-    "Criado pelo Centro de Comando a partir do plano de ação 5W2H.",
-  ].join("\n");
+/**
+ * Membro do Trello pelo nome escrito em "Quem" do 5W2H: nome igual, ou mesmo primeiro e último nome,
+ * ou só o primeiro nome quando apenas um membro tem esse nome. Nulo se não houver certeza.
+ */
+export function membroPeloNome<T extends { id: string; nome: string }>(membros: T[], quem: string | null | undefined): string | null {
+  const partes = (t: string) => normal(t).trim().split(/\s+/).filter(Boolean);
+  const q = partes(quem ?? "");
+  if (q.length === 0) return null;
+  const unico = (lista: T[]) => (lista.length === 1 ? lista[0].id : null);
+  const iguais = membros.filter((m) => partes(m.nome).join(" ") === q.join(" "));
+  if (iguais.length) return unico(iguais);
+  if (q.length > 1) {
+    const pontas = membros.filter((m) => {
+      const p = partes(m.nome);
+      return p[0] === q[0] && p[p.length - 1] === q[q.length - 1];
+    });
+    if (pontas.length) return unico(pontas);
+  }
+  return unico(membros.filter((m) => partes(m.nome)[0] === q[0]));
 }

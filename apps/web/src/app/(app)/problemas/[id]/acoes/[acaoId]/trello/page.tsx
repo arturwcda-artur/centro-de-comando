@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listasDoQuadroPorNome } from "@cc/integrations/src/escrita.js";
 import { Aviso, Cartao } from "@/components/ui";
-import { listaDaObra, prioridadePorGut } from "@/lib/cartao-acao";
+import { listaDaObra, membroPeloNome, prioridadePorGut } from "@/lib/cartao-acao";
 import { QUADRO_EQUIPE } from "@/lib/equipe";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -29,7 +29,7 @@ export default async function PaginaCartaoDaAcao({ params }: { params: Promise<{
   const [{ data: a }, { data: membros }, { listas, falha }] = await Promise.all([
     supabase
       .from("tarefas")
-      .select("titulo, prazo, fonte, responsavel_id, acoes_detalhes(o_que), problemas(titulo, gut, obras(codigo, nome))")
+      .select("titulo, prazo, fonte, responsavel_id, acoes_detalhes(o_que, quem), problemas(titulo, gut, obras(codigo, nome))")
       .eq("id", acaoId)
       .eq("problema_id", id)
       .maybeSingle(),
@@ -37,7 +37,8 @@ export default async function PaginaCartaoDaAcao({ params }: { params: Promise<{
     lerListas(),
   ]);
   if (!a?.problemas) notFound();
-  const membroDaAcao = (membros ?? []).find((m) => m.pessoa_id && m.pessoa_id === a.responsavel_id)?.id ?? null;
+  // Quem do 5W2H: a pessoa cadastrada ligada ao membro ou, se não houver, o nome escrito em "outro nome"
+  const membroDaAcao = (membros ?? []).find((m) => m.pessoa_id && m.pessoa_id === a.responsavel_id)?.id ?? membroPeloNome(membros ?? [], a.acoes_detalhes?.quem);
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -47,7 +48,7 @@ export default async function PaginaCartaoDaAcao({ params }: { params: Promise<{
         </Link>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Criar cartão no Trello</h1>
         <p className="text-sm text-suave">
-          O cartão entra no quadro <strong>{QUADRO_EQUIPE}</strong> com o 5W2H na descrição. Depois disso, a ação acompanha o cartão: quando a equipe concluir no Trello, ela fica concluída aqui.
+          O cartão entra no quadro <strong>{QUADRO_EQUIPE}</strong> só com o O quê (título), o Quem (responsável) e o Quando (data). O resto do 5W2H fica no sistema. Depois disso, a ação acompanha o cartão: quando a equipe concluir no Trello, ela fica concluída aqui.
         </p>
       </div>
       <Cartao>
