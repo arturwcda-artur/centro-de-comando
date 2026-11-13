@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.19.1] — 2026-11-13 — Crédito da equipe
+### Alterado
+- Tela **Equipe**: os pontos dos itens de checklist passam aos responsáveis do cartão, como os do próprio cartão (RN-49c).
+- **Quem mais evoluiu**: quem não resolveu nada no período vai para o fim, sem posição (RN-49d).
+
 ## [0.19.0] — 2026-11-12 — Matriz GUT
 ### Adicionado
 - Menu **Matriz GUT**: ações das obras por G × U × T, com o 5W2H, e botão para criar lembrete no Google Agenda (RN-49g).

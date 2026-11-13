@@ -87,8 +87,11 @@ function RankingEvolucao({ linhas, periodo, atual, antes }: { linhas: PosicaoEvo
         <tbody className="divide-y divide-borda">
           {linhas.map((l) => (
             <tr key={l.nome}>
-              <td className="py-2.5 font-semibold tabular-nums">{l.posicao}º</td>
-              <td className="py-2.5 pr-3">{l.nome}</td>
+              <td className="py-2.5 font-semibold tabular-nums">{l.posicao ? `${l.posicao}º` : "—"}</td>
+              <td className="py-2.5 pr-3">
+                {l.nome}
+                {l.posicao === null && <span className="ml-2 text-xs text-suave">sem entregas no período</span>}
+              </td>
               <td className={`${NUMERO} text-suave`}>{quantidade(l.anterior)}</td>
               <td className={NUMERO}>{quantidade(l.atual)}</td>
               <td className={`${NUMERO} font-semibold ${corDoSinal(l.evolucao)}`}>{comSinal(l.evolucao)}</td>
