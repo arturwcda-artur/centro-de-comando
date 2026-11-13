@@ -109,6 +109,21 @@ export async function alternarAcao(problemaId: string, acaoId: string, concluir:
   revalidar(problemaId);
 }
 
+/** Conclui o problema direto, encerrando as ações que faltavam; ou reabre (RN-49h). */
+export async function concluirProblema(problemaId: string, concluir: boolean) {
+  const { supabase } = await exigirSessaoCompleta();
+  if (!UUID.test(problemaId)) return;
+  const agora = new Date().toISOString();
+  if (concluir) {
+    await supabase.from("tarefas").update({ status: "concluida", concluida_em: agora }).eq("problema_id", problemaId).not("status", "in", "(concluida,cancelada)");
+    await supabase.from("problemas").update({ status: "resolvido", resolvido_em: agora }).eq("id", problemaId);
+  } else {
+    const { count } = await supabase.from("tarefas").select("id", { count: "exact", head: true }).eq("problema_id", problemaId);
+    await supabase.from("problemas").update({ status: count ? "em_andamento" : "aberto", resolvido_em: null }).eq("id", problemaId);
+  }
+  revalidar(problemaId);
+}
+
 /** Cadastro rápido na lista: problema e notas GUT, sem sair da tela. */
 export async function adicionarProblemaRapido(_: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
   const { supabase } = await exigirSessaoCompleta();
