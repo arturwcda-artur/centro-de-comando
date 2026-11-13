@@ -1,10 +1,12 @@
 "use server";
-import { alterarEvento, criarEvento, excluirEvento } from "@cc/integrations/src/google.js";
+import { alterarEvento, criarEvento, excluirEvento, listarEventos } from "@cc/integrations/src/google.js";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { acessoGoogle } from "@/lib/google";
+import { hojeSP, somarDias } from "@/lib/formato";
 import { textoDoLembrete, type Detalhe5w2h } from "@/lib/gut";
+import { ajustarDiaUtil, diaUtil, DURACOES, emSaoPaulo, horariosLivres, ocupadosNoDia, paraHora } from "@/lib/pomodoro";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { compromissoSchema, mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
@@ -56,10 +58,45 @@ async function noGoogle<T>(
   }
 }
 
+export type EstadoHorario = { erro?: string; aviso?: string; opcoes?: { data: string; inicio: string; fim: string }[] };
+const DIAS_DE_BUSCA = 7;
+
+/** Horários livres no Google Agenda, lidos na hora, para incluir o que foi marcado direto lá (RN-49i). */
+export async function buscarHorarioLivre(_: EstadoHorario, fd: FormData): Promise<EstadoHorario> {
+  const { supabase } = await exigirSessaoCompleta();
+  const pedida = String(fd.get("data") ?? "");
+  const duracao = Number(fd.get("duracao"));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(pedida) || Number.isNaN(Date.parse(pedida))) return { erro: "Data inválida." };
+  if (!DURACOES.includes(duracao)) return { erro: "Duração inválida." };
+  if (!(await escritaAutorizada(supabase))) return { erro: "Conecte o Google em Integrações para gravar na agenda." };
+
+  const hoje = hojeSP();
+  const inicio = ajustarDiaUtil(pedida, hoje);
+  let eventos;
+  try {
+    eventos = await listarEventos(await acessoGoogle(supabase), { inicio, fim: somarDias(inicio, DIAS_DE_BUSCA + 1) });
+  } catch (e) {
+    return { erro: `Não foi possível ler a agenda: ${e instanceof Error ? e.message : "erro do Google"}` };
+  }
+  const agora = emSaoPaulo(new Date().toISOString());
+  const opcoes: NonNullable<EstadoHorario["opcoes"]> = [];
+  for (let i = 0; i <= DIAS_DE_BUSCA && opcoes.length < 3; i++) {
+    const dia = somarDias(inicio, i);
+    if (!diaUtil(dia)) continue;
+    const livres = horariosLivres(ocupadosNoDia(eventos, dia), duracao, dia === agora.data ? agora.minuto : null, 3 - opcoes.length);
+    opcoes.push(...livres.map(([a, b]) => ({ data: dia, inicio: paraHora(a), fim: paraHora(b) })));
+  }
+  const aviso = opcoes[0] && opcoes[0].data !== pedida ? "O dia escolhido não tinha horário livre no expediente, ou caía em fim de semana. Estas são as opções mais próximas." : undefined;
+  return { opcoes, aviso };
+}
+
 /** Lembrete de uma ação 5W2H: evento de dia inteiro com o 5W2H na descrição (RN-49g, RN-49h). */
 export async function criarLembreteDeAcao(tarefaId: string, _: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
   const { supabase } = await exigirSessaoCompleta();
-  const data = String(fd.get("data") ?? "");
+  // Com horário escolhido ("dia|início|fim"), o evento ocupa o bloco de pomodoro; sem ele, é de dia inteiro
+  const [diaHorario, inicioHorario, fimHorario] = String(fd.get("horario") ?? "").split("|");
+  const comHorario = /^\d{2}:\d{2}$/.test(inicioHorario ?? "") && /^\d{2}:\d{2}$/.test(fimHorario ?? "");
+  const data = comHorario ? diaHorario : String(fd.get("data") ?? "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || Number.isNaN(Date.parse(data))) return { erros: { data: "Data inválida." } };
   if (!UUID.test(tarefaId)) return { erro: "Ação inválida." };
   if (!(await escritaAutorizada(supabase))) return { erro: "Conecte o Google em Integrações para gravar na agenda." };
@@ -74,7 +111,7 @@ export async function criarLembreteDeAcao(tarefaId: string, _: EstadoFormulario,
 
   const novoId = crypto.randomUUID();
   const r = await noGoogle(supabase, { operacao: "criar", registro_id: novoId, id_externo: "novo" }, (acesso) =>
-    criarEvento(acesso, { titulo, data, dataFim: data, diaInteiro: true, local: "", descricao }),
+    criarEvento(acesso, comHorario ? { titulo, data, dataFim: data, inicio: inicioHorario, fim: fimHorario, diaInteiro: false, local: "", descricao } : { titulo, data, dataFim: data, diaInteiro: true, local: "", descricao }),
   );
   if ("erro" in r) return { erro: r.erro };
   await r.registrar(r.resultado.id_externo);
@@ -87,8 +124,9 @@ export async function criarLembreteDeAcao(tarefaId: string, _: EstadoFormulario,
     importado_em: new Date().toISOString(),
   });
   revalidarTudo();
-  if (error) return { ok: true, mensagem: "Lembrete criado no Google Agenda. Ele aparece aqui na próxima sincronização." };
-  return { ok: true, mensagem: "Lembrete criado no Google Agenda." };
+  const quando = comHorario ? ` em ${data.split("-").reverse().join("/")}, das ${inicioHorario} às ${fimHorario}` : "";
+  if (error) return { ok: true, mensagem: `Lembrete criado no Google Agenda${quando}. Ele aparece aqui na próxima sincronização.` };
+  return { ok: true, mensagem: `Lembrete criado no Google Agenda${quando}.` };
 }
 
 /** Cria (id nulo) ou altera um compromisso. Em evento recorrente, altera só esta ocorrência. */

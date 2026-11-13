@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.21.0] — 2026-11-13 — Lembrete em horário livre
+### Adicionado
+- O lembrete das ações busca horário livre no Google Agenda, em blocos de pomodoro, de segunda a sexta, das 08:00 às 16:00, sem o almoço (RN-49i).
+
 ## [0.20.1] — 2026-11-13 — Problemas: Pendentes, Resolvendo e Concluídos
 ### Adicionado
 - Tela **Problemas** em três etapas. O problema sai de Pendentes quando ganha plano 5W2H e é concluído sozinho quando todas as ações terminam (RN-49h).

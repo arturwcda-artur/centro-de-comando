@@ -17,6 +17,7 @@ export const AGENDA: string;
 export function urlAutorizacao(p: { clienteId: string; retorno: string; estado: string }): string;
 export function trocarCodigo(p: { clienteId: string; segredo: string; retorno: string; codigo: string }): Promise<string>;
 export function tokenDeAcesso(p: { clienteId: string; segredo: string; tokenLongo: string }): Promise<string>;
+export function listarEventos(acesso: string, janela: { inicio: string; fim: string }): Promise<EventoEspelho[]>;
 export function criarEvento(acesso: string, dados: DadosEvento): Promise<EventoEspelho>;
 export function alterarEvento(acesso: string, idExterno: string, dados: DadosEvento): Promise<EventoEspelho>;
 export function excluirEvento(acesso: string, idExterno: string): Promise<void>;
