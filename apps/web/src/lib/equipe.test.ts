@@ -406,3 +406,17 @@ describe("crédito pelo responsável do cartão (padrão desde 13/11)", () => {
     expect(r.find((l) => l.nome === "Bia")?.resolvidas).toBe(1);
   });
 });
+
+describe("ranking de evolução: quem não entregou nada", () => {
+  const linha = (nome: string, resolvidas: number) => ({ nome, resolvidas }) as Parameters<typeof rankingEvolucao>[0][number];
+  it("vai para o fim, sem posição, mesmo caindo menos que os outros", () => {
+    const r = rankingEvolucao([linha("Artur", 7), linha("Adamo", 7), linha("Pedro", 6)], [linha("Artur", 5.3), linha("Celso", 2), linha("Adamo", 9.3), linha("Pedro", 36.3)]);
+    expect(r.map((l) => [l.posicao, l.nome])).toEqual([
+      [1, "Artur"],
+      [2, "Adamo"],
+      [3, "Pedro"],
+      [null, "Celso"],
+    ]);
+  });
+});
+
