@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Send } from "lucide-react";
 import { LinhaTarefa } from "@/components/linha-tarefa";
 import { Cartao, EstadoVazio } from "@/components/ui";
 import { VISOES_TAREFA, type VisaoTarefa } from "@/lib/dominio";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
+import { hojeSP } from "@/lib/formato";
+import { linkWhatsApp, mensagemDeTarefas } from "@/lib/whatsapp";
 import { carregarResponsaveis, contarVisoes, tarefasDaVisao } from "@/lib/tarefas";
 
 export const metadata: Metadata = { title: "Tarefas" };
@@ -33,6 +35,16 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
   ]);
   const nomeObra = new Map((obras.data ?? []).map((o) => [o.id, o.codigo]));
   const itens = visao === "concluidas" ? lista.concluidas : lista.abertas;
+  // Envio por WhatsApp (RN-49j): uma mensagem por responsável, com as tarefas que estão na tela
+  const hoje = hojeSP();
+  const envios = responsaveis.membros
+    .filter((m) => !membro || m.id === membro)
+    .map((m) => {
+      const dele = itens.filter((t) => t.id && responsaveis.idsPorTarefa.get(t.id)?.includes(m.id));
+      const mensagem = mensagemDeTarefas(m.nome, dele.map((t) => ({ titulo: t.titulo, prazo: t.prazo, vencida: "vencida" in t ? t.vencida : false, obra: t.obra_id ? nomeObra.get(t.obra_id) : undefined })), hoje);
+      return { ...m, quantidade: dele.length, link: linkWhatsApp(mensagem, m.telefone) };
+    })
+    .filter((m) => m.quantidade > 0);
   const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}${quadro ? `&quadro=${encodeURIComponent(quadro)}` : ""}${membro ? `&membro=${membro}` : ""}`;
 
   return (
@@ -101,6 +113,30 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
           );
         })}
       </nav>
+
+      {envios.length > 0 && (
+        <Cartao titulo="Enviar por WhatsApp">
+          <p className="mb-3 text-sm text-suave">
+            Cada botão abre o WhatsApp com a lista das tarefas que estão na tela para aquele responsável. Você confere e envia. Quem não tem telefone em Cadastros → Pessoas abre a escolha do contato.
+          </p>
+          <ul className="flex flex-wrap gap-2">
+            {envios.map((m) => (
+              <li key={m.id}>
+                <a
+                  href={m.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg border border-borda bg-superficie px-3 text-sm hover:bg-superficie-2"
+                >
+                  <Send className="size-4 text-ok" aria-hidden="true" />
+                  {m.nome.split(" ")[0]} · {m.quantidade}
+                  {!m.telefone && <span className="text-xs text-suave">(sem telefone)</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Cartao>
+      )}
 
       <Cartao>
         {itens.length === 0 ? (

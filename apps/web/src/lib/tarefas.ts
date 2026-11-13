@@ -37,12 +37,17 @@ export async function tarefasDaVisao(supabase: Cliente, visao: VisaoTarefa, obra
 /** Membros do Trello e os responsáveis de cada cartão, para mostrar quem está executando. */
 export async function carregarResponsaveis(supabase: Cliente) {
   const [membros, vinculos] = await Promise.all([
-    supabase.from("trello_membros").select("id, nome").order("nome"),
-    supabase.from("tarefa_membros").select("tarefa_id, trello_membros(nome)").limit(1000),
+    supabase.from("trello_membros").select("id, nome, pessoas(telefone)").order("nome"),
+    supabase.from("tarefa_membros").select("tarefa_id, membro_id, trello_membros(nome)").limit(1000),
   ]);
   const porTarefa = new Map<string, string[]>();
-  for (const v of vinculos.data ?? []) porTarefa.set(v.tarefa_id, [...(porTarefa.get(v.tarefa_id) ?? []), v.trello_membros.nome]);
-  return { membros: membros.data ?? [], porTarefa };
+  const idsPorTarefa = new Map<string, string[]>();
+  for (const v of vinculos.data ?? []) {
+    porTarefa.set(v.tarefa_id, [...(porTarefa.get(v.tarefa_id) ?? []), v.trello_membros.nome]);
+    idsPorTarefa.set(v.tarefa_id, [...(idsPorTarefa.get(v.tarefa_id) ?? []), v.membro_id]);
+  }
+  const lista = (membros.data ?? []).map((m) => ({ id: m.id, nome: m.nome, telefone: m.pessoas?.telefone ?? null }));
+  return { membros: lista, porTarefa, idsPorTarefa };
 }
 
 /** Contagem por visão, para as abas. */

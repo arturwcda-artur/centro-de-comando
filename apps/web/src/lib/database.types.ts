@@ -14,21 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      problemas: {
-        Row: { atualizado_em: string; criado_em: string; descricao: string | null; gravidade: number; gut: number | null; id: string; obra_id: string | null; origem: string; resolvido_em: string | null; responsavel_id: string | null; status: string; tendencia: number; titulo: string; urgencia: number };
-        Insert: { atualizado_em?: string; criado_em?: string; descricao?: string | null; gravidade?: number; id?: string; obra_id?: string | null; origem?: string; resolvido_em?: string | null; responsavel_id?: string | null; status?: string; tendencia?: number; titulo: string; urgencia?: number };
-        Update: { atualizado_em?: string; criado_em?: string; descricao?: string | null; gravidade?: number; id?: string; obra_id?: string | null; origem?: string; resolvido_em?: string | null; responsavel_id?: string | null; status?: string; tendencia?: number; titulo?: string; urgencia?: number };
-        Relationships: [
-          { foreignKeyName: "problemas_obra_id_fkey"; columns: ["obra_id"]; isOneToOne: false; referencedRelation: "obras"; referencedColumns: ["id"] },
-          { foreignKeyName: "problemas_responsavel_id_fkey"; columns: ["responsavel_id"]; isOneToOne: false; referencedRelation: "pessoas"; referencedColumns: ["id"] },
-        ];
-      };
       acoes_detalhes: {
-        Row: { atualizado_em: string; como: string | null; criado_em: string; gravidade: number | null; gut: number | null; o_que: string | null; onde: string | null; por_que: string | null; quanto: string | null; quem: string | null; tarefa_id: string; tendencia: number | null; urgencia: number | null };
-        Insert: { atualizado_em?: string; como?: string | null; criado_em?: string; gravidade?: number | null; o_que?: string | null; onde?: string | null; por_que?: string | null; quanto?: string | null; quem?: string | null; tarefa_id: string; tendencia?: number | null; urgencia?: number | null };
-        Update: { atualizado_em?: string; como?: string | null; criado_em?: string; gravidade?: number | null; o_que?: string | null; onde?: string | null; por_que?: string | null; quanto?: string | null; quem?: string | null; tarefa_id?: string; tendencia?: number | null; urgencia?: number | null };
-        Relationships: [{ foreignKeyName: "acoes_detalhes_tarefa_id_fkey"; columns: ["tarefa_id"]; isOneToOne: true; referencedRelation: "tarefas"; referencedColumns: ["id"] }];
-      };
+        Row: {
+          atualizado_em: string
+          como: string | null
+          criado_em: string
+          gravidade: number | null
+          gut: number | null
+          o_que: string | null
+          onde: string | null
+          por_que: string | null
+          quanto: string | null
+          quem: string | null
+          tarefa_id: string
+          tendencia: number | null
+          urgencia: number | null
+        }
+        Insert: {
+          atualizado_em?: string
+          como?: string | null
+          criado_em?: string
+          gravidade?: number | null
+          gut?: number | null
+          o_que?: string | null
+          onde?: string | null
+          por_que?: string | null
+          quanto?: string | null
+          quem?: string | null
+          tarefa_id: string
+          tendencia?: number | null
+          urgencia?: number | null
+        }
+        Update: {
+          atualizado_em?: string
+          como?: string | null
+          criado_em?: string
+          gravidade?: number | null
+          gut?: number | null
+          o_que?: string | null
+          onde?: string | null
+          por_que?: string | null
+          quanto?: string | null
+          quem?: string | null
+          tarefa_id?: string
+          tendencia?: number | null
+          urgencia?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acoes_detalhes_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: true
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acoes_detalhes_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: true
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       acoes_planilhas: {
         Row: {
           atualizado_em: string
@@ -67,6 +115,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "obras"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acoes_planilhas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: true
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
           },
         ]
       }
@@ -228,6 +283,13 @@ export type Database = {
             foreignKeyName: "atividades_cronograma_versao_id_fkey"
             columns: ["versao_id"]
             isOneToOne: false
+            referencedRelation: "cronograma_realizado"
+            referencedColumns: ["versao_id"]
+          },
+          {
+            foreignKeyName: "atividades_cronograma_versao_id_fkey"
+            columns: ["versao_id"]
+            isOneToOne: false
             referencedRelation: "cronograma_versoes"
             referencedColumns: ["id"]
           },
@@ -278,6 +340,39 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_obra_resumo"
             referencedColumns: ["obra_id"]
+          },
+        ]
+      }
+      cartoes_rotina: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          tarefa_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          tarefa_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          tarefa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartoes_rotina_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: true
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartoes_rotina_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: true
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -371,39 +466,13 @@ export type Database = {
         }
         Relationships: []
       }
-      cartoes_rotina: {
-        Row: {
-          atualizado_em: string
-          criado_em: string
-          tarefa_id: string
-        }
-        Insert: {
-          atualizado_em?: string
-          criado_em?: string
-          tarefa_id: string
-        }
-        Update: {
-          atualizado_em?: string
-          criado_em?: string
-          tarefa_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cartoes_rotina_tarefa_id_fkey"
-            columns: ["tarefa_id"]
-            isOneToOne: true
-            referencedRelation: "tarefas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       contrato_itens: {
         Row: {
           atualizado_em: string
-          criado_em: string
-          id: string
           contrato_id: string
+          criado_em: string
           descricao: string
+          id: string
           item: string
           preco_unitario: number
           quantidade: number
@@ -412,10 +481,10 @@ export type Database = {
         }
         Insert: {
           atualizado_em?: string
-          criado_em?: string
-          id?: string
           contrato_id: string
+          criado_em?: string
           descricao: string
+          id?: string
           item: string
           preco_unitario?: number
           quantidade?: number
@@ -424,10 +493,10 @@ export type Database = {
         }
         Update: {
           atualizado_em?: string
-          criado_em?: string
-          id?: string
           contrato_id?: string
+          criado_em?: string
           descricao?: string
+          id?: string
           item?: string
           preco_unitario?: number
           quantidade?: number
@@ -442,94 +511,12 @@ export type Database = {
             referencedRelation: "contratos"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      medicao_arquivos: {
-        Row: {
-          atualizado_em: string
-          criado_em: string
-          id: string
-          caminho: string
-          contrato_id: string
-          modelo: string
-          ultima_leitura_em: string | null
-          ultimo_erro: string | null
-          ultimo_hash: string | null
-        }
-        Insert: {
-          atualizado_em?: string
-          criado_em?: string
-          id?: string
-          caminho: string
-          contrato_id: string
-          modelo?: string
-          ultima_leitura_em?: string | null
-          ultimo_erro?: string | null
-          ultimo_hash?: string | null
-        }
-        Update: {
-          atualizado_em?: string
-          criado_em?: string
-          id?: string
-          caminho?: string
-          contrato_id?: string
-          modelo?: string
-          ultima_leitura_em?: string | null
-          ultimo_erro?: string | null
-          ultimo_hash?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "medicao_arquivos_contrato_id_fkey"
+            foreignKeyName: "contrato_itens_contrato_id_fkey"
             columns: ["contrato_id"]
             isOneToOne: false
-            referencedRelation: "contratos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      medicao_itens: {
-        Row: {
-          atualizado_em: string
-          criado_em: string
-          id: string
-          item_id: string
-          medicao_id: string
-          quantidade: number
-          valor: number
-        }
-        Insert: {
-          atualizado_em?: string
-          criado_em?: string
-          id?: string
-          item_id: string
-          medicao_id: string
-          quantidade: number
-          valor: number
-        }
-        Update: {
-          atualizado_em?: string
-          criado_em?: string
-          id?: string
-          item_id?: string
-          medicao_id?: string
-          quantidade?: number
-          valor?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "medicao_itens_medicao_id_fkey"
-            columns: ["medicao_id"]
-            isOneToOne: false
-            referencedRelation: "medicoes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "medicao_itens_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "contrato_itens"
-            referencedColumns: ["id"]
+            referencedRelation: "v_contratos_resumo"
+            referencedColumns: ["contrato_id"]
           },
         ]
       }
@@ -663,6 +650,13 @@ export type Database = {
             referencedRelation: "obras"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cronograma_arquivos_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
+          },
         ]
       }
       cronograma_versoes: {
@@ -718,6 +712,13 @@ export type Database = {
           tipo?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cronograma_versoes_arquivo_id_fkey"
+            columns: ["arquivo_id"]
+            isOneToOne: false
+            referencedRelation: "cronograma_arquivos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cronograma_versoes_obra_id_fkey"
             columns: ["obra_id"]
@@ -953,6 +954,13 @@ export type Database = {
             referencedRelation: "obras"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "documento_pastas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: true
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
+          },
         ]
       }
       documento_versoes: {
@@ -1006,9 +1014,6 @@ export type Database = {
           caminho_local: string | null
           categoria: string
           criado_em: string
-          obsoleto: boolean
-          pasta: string | null
-          sem_texto: boolean
           data_documento: string | null
           drive_file_id: string | null
           fonte: string
@@ -1018,6 +1023,9 @@ export type Database = {
           importado_em: string | null
           mime_type: string | null
           obra_id: string | null
+          obsoleto: boolean
+          pasta: string | null
+          sem_texto: boolean
           status_sync: string
           tamanho_bytes: number | null
           texto_extraido: string | null
@@ -1033,9 +1041,6 @@ export type Database = {
           caminho_local?: string | null
           categoria?: string
           criado_em?: string
-          obsoleto?: boolean
-          pasta?: string | null
-          sem_texto?: boolean
           data_documento?: string | null
           drive_file_id?: string | null
           fonte?: string
@@ -1045,6 +1050,9 @@ export type Database = {
           importado_em?: string | null
           mime_type?: string | null
           obra_id?: string | null
+          obsoleto?: boolean
+          pasta?: string | null
+          sem_texto?: boolean
           status_sync?: string
           tamanho_bytes?: number | null
           texto_extraido?: string | null
@@ -1060,9 +1068,6 @@ export type Database = {
           caminho_local?: string | null
           categoria?: string
           criado_em?: string
-          obsoleto?: boolean
-          pasta?: string | null
-          sem_texto?: boolean
           data_documento?: string | null
           drive_file_id?: string | null
           fonte?: string
@@ -1072,6 +1077,9 @@ export type Database = {
           importado_em?: string | null
           mime_type?: string | null
           obra_id?: string | null
+          obsoleto?: boolean
+          pasta?: string | null
+          sem_texto?: boolean
           status_sync?: string
           tamanho_bytes?: number | null
           texto_extraido?: string | null
@@ -1536,16 +1544,119 @@ export type Database = {
           },
         ]
       }
+      medicao_arquivos: {
+        Row: {
+          atualizado_em: string
+          caminho: string
+          contrato_id: string
+          criado_em: string
+          id: string
+          modelo: string
+          ultima_leitura_em: string | null
+          ultimo_erro: string | null
+          ultimo_hash: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          caminho: string
+          contrato_id: string
+          criado_em?: string
+          id?: string
+          modelo?: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          caminho?: string
+          contrato_id?: string
+          criado_em?: string
+          id?: string
+          modelo?: string
+          ultima_leitura_em?: string | null
+          ultimo_erro?: string | null
+          ultimo_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicao_arquivos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: true
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicao_arquivos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: true
+            referencedRelation: "v_contratos_resumo"
+            referencedColumns: ["contrato_id"]
+          },
+        ]
+      }
+      medicao_itens: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          item_id: string
+          medicao_id: string
+          quantidade: number
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          item_id: string
+          medicao_id: string
+          quantidade: number
+          valor: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          item_id?: string
+          medicao_id?: string
+          quantidade?: number
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicao_itens_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "contrato_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicao_itens_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrato_itens_saldo"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "medicao_itens_medicao_id_fkey"
+            columns: ["medicao_id"]
+            isOneToOne: false
+            referencedRelation: "medicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medicoes: {
         Row: {
           atualizado_em: string
           atualizado_em_origem: string | null
           contrato_id: string
           criado_em: string
-          data_medicao: string | null
-          diferenca_planilha: number | null
           data_aprovacao: string | null
           data_envio: string | null
+          data_medicao: string | null
+          diferenca_planilha: number | null
           fonte: string
           hash_conteudo: string | null
           id: string
@@ -1565,10 +1676,10 @@ export type Database = {
           atualizado_em_origem?: string | null
           contrato_id: string
           criado_em?: string
-          data_medicao?: string | null
-          diferenca_planilha?: number | null
           data_aprovacao?: string | null
           data_envio?: string | null
+          data_medicao?: string | null
+          diferenca_planilha?: number | null
           fonte?: string
           hash_conteudo?: string | null
           id?: string
@@ -1588,10 +1699,10 @@ export type Database = {
           atualizado_em_origem?: string | null
           contrato_id?: string
           criado_em?: string
-          data_medicao?: string | null
-          diferenca_planilha?: number | null
           data_aprovacao?: string | null
           data_envio?: string | null
+          data_medicao?: string | null
+          diferenca_planilha?: number | null
           fonte?: string
           hash_conteudo?: string | null
           id?: string
@@ -1854,6 +1965,79 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      problemas: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          descricao: string | null
+          gravidade: number
+          gut: number | null
+          id: string
+          obra_id: string | null
+          origem: string
+          resolvido_em: string | null
+          responsavel_id: string | null
+          status: string
+          tendencia: number
+          titulo: string
+          urgencia: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string | null
+          gravidade?: number
+          gut?: number | null
+          id?: string
+          obra_id?: string | null
+          origem?: string
+          resolvido_em?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tendencia?: number
+          titulo: string
+          urgencia?: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string | null
+          gravidade?: number
+          gut?: number | null
+          id?: string
+          obra_id?: string | null
+          origem?: string
+          resolvido_em?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tendencia?: number
+          titulo?: string
+          urgencia?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "problemas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "problemas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
+          },
+          {
+            foreignKeyName: "problemas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
         ]
@@ -2234,6 +2418,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "tarefa_membros_membro_id_fkey"
+            columns: ["membro_id"]
+            isOneToOne: false
+            referencedRelation: "trello_membros"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tarefa_membros_tarefa_id_fkey"
             columns: ["tarefa_id"]
             isOneToOne: false
@@ -2241,10 +2432,144 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tarefa_membros_membro_id_fkey"
-            columns: ["membro_id"]
+            foreignKeyName: "tarefa_membros_tarefa_id_fkey"
+            columns: ["tarefa_id"]
             isOneToOne: false
-            referencedRelation: "trello_membros"
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefas: {
+        Row: {
+          aguardando_pessoa_id: string | null
+          atualizado_em: string
+          atualizado_em_origem: string | null
+          categoria: string | null
+          codigo: number
+          concluida_em: string | null
+          criado_em: string
+          critica: boolean
+          descricao: string | null
+          fonte: string
+          hash_conteudo: string | null
+          id: string
+          id_externo: string | null
+          impacto: number
+          importado_em: string | null
+          importancia: number
+          obra_id: string | null
+          prazo: string | null
+          problema_id: string | null
+          responsavel_id: string | null
+          status: string
+          status_sync: string
+          tarefa_pai_id: string | null
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          aguardando_pessoa_id?: string | null
+          atualizado_em?: string
+          atualizado_em_origem?: string | null
+          categoria?: string | null
+          codigo?: never
+          concluida_em?: string | null
+          criado_em?: string
+          critica?: boolean
+          descricao?: string | null
+          fonte?: string
+          hash_conteudo?: string | null
+          id?: string
+          id_externo?: string | null
+          impacto?: number
+          importado_em?: string | null
+          importancia?: number
+          obra_id?: string | null
+          prazo?: string | null
+          problema_id?: string | null
+          responsavel_id?: string | null
+          status?: string
+          status_sync?: string
+          tarefa_pai_id?: string | null
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          aguardando_pessoa_id?: string | null
+          atualizado_em?: string
+          atualizado_em_origem?: string | null
+          categoria?: string | null
+          codigo?: never
+          concluida_em?: string | null
+          criado_em?: string
+          critica?: boolean
+          descricao?: string | null
+          fonte?: string
+          hash_conteudo?: string | null
+          id?: string
+          id_externo?: string | null
+          impacto?: number
+          importado_em?: string | null
+          importancia?: number
+          obra_id?: string | null
+          prazo?: string | null
+          problema_id?: string | null
+          responsavel_id?: string | null
+          status?: string
+          status_sync?: string
+          tarefa_pai_id?: string | null
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_aguardando_pessoa_id_fkey"
+            columns: ["aguardando_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
+          },
+          {
+            foreignKeyName: "tarefas_problema_id_fkey"
+            columns: ["problema_id"]
+            isOneToOne: false
+            referencedRelation: "problemas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_tarefa_pai_id_fkey"
+            columns: ["tarefa_pai_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_tarefa_pai_id_fkey"
+            columns: ["tarefa_pai_id"]
+            isOneToOne: false
+            referencedRelation: "v_tarefas_priorizadas"
             referencedColumns: ["id"]
           },
         ]
@@ -2292,50 +2617,57 @@ export type Database = {
             referencedRelation: "tarefas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trello_cartao_datas_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: true
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trello_checklist_itens: {
         Row: {
           atualizado_em: string
-          criado_em: string
-          id: string
           checklist: string
           concluido: boolean
           concluido_em: string | null
           concluido_por_id: string | null
+          criado_em: string
           criado_no_trello: string | null
-          membro_id: string | null
+          id: string
           id_externo: string
+          membro_id: string | null
           nome: string
           posicao: number
           tarefa_id: string
         }
         Insert: {
           atualizado_em?: string
-          criado_em?: string
-          id?: string
           checklist: string
           concluido?: boolean
           concluido_em?: string | null
           concluido_por_id?: string | null
+          criado_em?: string
           criado_no_trello?: string | null
-          membro_id?: string | null
+          id?: string
           id_externo: string
+          membro_id?: string | null
           nome: string
           posicao?: number
           tarefa_id: string
         }
         Update: {
           atualizado_em?: string
-          criado_em?: string
-          id?: string
           checklist?: string
           concluido?: boolean
           concluido_em?: string | null
           concluido_por_id?: string | null
+          criado_em?: string
           criado_no_trello?: string | null
-          membro_id?: string | null
+          id?: string
           id_externo?: string
+          membro_id?: string | null
           nome?: string
           posicao?: number
           tarefa_id?: string
@@ -2362,44 +2694,42 @@ export type Database = {
             referencedRelation: "tarefas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trello_checklist_itens_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      trello_criacoes: {
-        Row: { atualizado_em: string; criado_em: string; data: string; id: string; id_externo: string; membro_id: string | null; tarefa_id: string; tipo: string };
-        Insert: { atualizado_em?: string; criado_em?: string; data: string; id?: string; id_externo: string; membro_id?: string | null; tarefa_id: string; tipo: string };
-        Update: { atualizado_em?: string; criado_em?: string; data?: string; id?: string; id_externo?: string; membro_id?: string | null; tarefa_id?: string; tipo?: string };
-        Relationships: [
-          { foreignKeyName: "trello_criacoes_membro_id_fkey"; columns: ["membro_id"]; isOneToOne: false; referencedRelation: "trello_membros"; referencedColumns: ["id"] },
-          { foreignKeyName: "trello_criacoes_tarefa_id_fkey"; columns: ["tarefa_id"]; isOneToOne: false; referencedRelation: "tarefas"; referencedColumns: ["id"] },
-        ];
-      };
       trello_comentarios: {
         Row: {
           atualizado_em: string
-          criado_em: string
-          id: string
           autor: string | null
+          criado_em: string
           data: string
+          id: string
           id_externo: string
           tarefa_id: string
           texto: string
         }
         Insert: {
           atualizado_em?: string
-          criado_em?: string
-          id?: string
           autor?: string | null
+          criado_em?: string
           data: string
+          id?: string
           id_externo: string
           tarefa_id: string
           texto: string
         }
         Update: {
           atualizado_em?: string
-          criado_em?: string
-          id?: string
           autor?: string | null
+          criado_em?: string
           data?: string
+          id?: string
           id_externo?: string
           tarefa_id?: string
           texto?: string
@@ -2412,6 +2742,68 @@ export type Database = {
             referencedRelation: "tarefas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trello_comentarios_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_criacoes: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          data: string
+          id: string
+          id_externo: string
+          membro_id: string | null
+          tarefa_id: string
+          tipo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          data: string
+          id?: string
+          id_externo: string
+          membro_id?: string | null
+          tarefa_id: string
+          tipo: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          data?: string
+          id?: string
+          id_externo?: string
+          membro_id?: string | null
+          tarefa_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_criacoes_membro_id_fkey"
+            columns: ["membro_id"]
+            isOneToOne: false
+            referencedRelation: "trello_membros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trello_criacoes_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trello_criacoes_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trello_membros: {
@@ -2421,6 +2813,7 @@ export type Database = {
           id: string
           id_externo: string
           nome: string
+          pessoa_id: string | null
           usuario: string | null
         }
         Insert: {
@@ -2429,6 +2822,7 @@ export type Database = {
           id?: string
           id_externo: string
           nome: string
+          pessoa_id?: string | null
           usuario?: string | null
         }
         Update: {
@@ -2437,141 +2831,54 @@ export type Database = {
           id?: string
           id_externo?: string
           nome?: string
+          pessoa_id?: string | null
           usuario?: string | null
         }
         Relationships: [
-        ]
-      }
-      tarefas: {
-        Row: {
-          aguardando_pessoa_id: string | null
-          atualizado_em: string
-          atualizado_em_origem: string | null
-          categoria: string | null
-          codigo: number
-          concluida_em: string | null
-          criado_em: string
-          critica: boolean
-          descricao: string | null
-          fonte: string
-          hash_conteudo: string | null
-          id: string
-          id_externo: string | null
-          impacto: number
-          importado_em: string | null
-          importancia: number
-          obra_id: string | null
-          problema_id: string | null
-          prazo: string | null
-          responsavel_id: string | null
-          status: string
-          status_sync: string
-          tarefa_pai_id: string | null
-          tipo: string
-          titulo: string
-        }
-        Insert: {
-          aguardando_pessoa_id?: string | null
-          atualizado_em?: string
-          atualizado_em_origem?: string | null
-          categoria?: string | null
-          codigo?: never
-          concluida_em?: string | null
-          criado_em?: string
-          critica?: boolean
-          descricao?: string | null
-          fonte?: string
-          hash_conteudo?: string | null
-          id?: string
-          id_externo?: string | null
-          impacto?: number
-          importado_em?: string | null
-          importancia?: number
-          obra_id?: string | null
-          problema_id?: string | null
-          prazo?: string | null
-          responsavel_id?: string | null
-          status?: string
-          status_sync?: string
-          tarefa_pai_id?: string | null
-          tipo?: string
-          titulo: string
-        }
-        Update: {
-          aguardando_pessoa_id?: string | null
-          atualizado_em?: string
-          atualizado_em_origem?: string | null
-          categoria?: string | null
-          codigo?: never
-          concluida_em?: string | null
-          criado_em?: string
-          critica?: boolean
-          descricao?: string | null
-          fonte?: string
-          hash_conteudo?: string | null
-          id?: string
-          id_externo?: string | null
-          impacto?: number
-          importado_em?: string | null
-          importancia?: number
-          obra_id?: string | null
-          problema_id?: string | null
-          prazo?: string | null
-          responsavel_id?: string | null
-          status?: string
-          status_sync?: string
-          tarefa_pai_id?: string | null
-          tipo?: string
-          titulo?: string
-        }
-        Relationships: [
-          { foreignKeyName: "tarefas_problema_id_fkey"; columns: ["problema_id"]; isOneToOne: false; referencedRelation: "problemas"; referencedColumns: ["id"] },
           {
-            foreignKeyName: "tarefas_aguardando_pessoa_id_fkey"
-            columns: ["aguardando_pessoa_id"]
+            foreignKeyName: "trello_membros_pessoa_id_fkey"
+            columns: ["pessoa_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tarefas_obra_id_fkey"
-            columns: ["obra_id"]
-            isOneToOne: false
-            referencedRelation: "obras"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tarefas_obra_id_fkey"
-            columns: ["obra_id"]
-            isOneToOne: false
-            referencedRelation: "v_obra_resumo"
-            referencedColumns: ["obra_id"]
-          },
-          {
-            foreignKeyName: "tarefas_responsavel_id_fkey"
-            columns: ["responsavel_id"]
-            isOneToOne: false
-            referencedRelation: "pessoas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tarefas_tarefa_pai_id_fkey"
-            columns: ["tarefa_pai_id"]
-            isOneToOne: false
-            referencedRelation: "tarefas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tarefas_tarefa_pai_id_fkey"
-            columns: ["tarefa_pai_id"]
-            isOneToOne: false
-            referencedRelation: "v_tarefas_priorizadas"
             referencedColumns: ["id"]
           },
         ]
       }
     }
     Views: {
+      cronograma_realizado: {
+        Row: {
+          arquivo_id: string | null
+          data_leitura: string | null
+          obra_id: string | null
+          realizado: number | null
+          total: number | null
+          versao_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cronograma_versoes_arquivo_id_fkey"
+            columns: ["arquivo_id"]
+            isOneToOne: false
+            referencedRelation: "cronograma_arquivos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cronograma_versoes_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cronograma_versoes_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
+          },
+        ]
+      }
       v_contrato_itens_saldo: {
         Row: {
           acima_do_contrato: boolean | null
@@ -2588,18 +2895,22 @@ export type Database = {
           valor_saldo: number | null
           valor_total: number | null
         }
-        Relationships: []
-      }
-      cronograma_realizado: {
-        Row: {
-          arquivo_id: string | null
-          data_leitura: string | null
-          obra_id: string | null
-          realizado: number | null
-          total: number | null
-          versao_id: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contrato_itens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_itens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "v_contratos_resumo"
+            referencedColumns: ["contrato_id"]
+          },
+        ]
       }
       v_contratos_resumo: {
         Row: {
@@ -2837,30 +3148,6 @@ export type Database = {
       }
     }
     Functions: {
-      buscar_documentos: {
-        Args: { p_busca?: string; p_categoria?: string; p_obra?: string; p_obsoletos?: boolean }
-        Returns: {
-          caminho_local: string | null
-          categoria: string
-          data_documento: string | null
-          id: string
-          obra_id: string | null
-          obsoleto: boolean
-          pasta: string | null
-          sem_texto: boolean
-          titulo: string
-          trecho: string | null
-          url: string | null
-        }[]
-      }
-      tamanho_do_banco: { Args: never; Returns: number }
-      tornar_linha_base: { Args: { p_versao: string }; Returns: undefined }
-      ler_credencial: { Args: { p_ferramenta: string }; Returns: string }
-      ler_credencial_servico: { Args: { p_ferramenta: string }; Returns: string }
-      salvar_credencial: {
-        Args: { p_ferramenta: string; p_valor: string }
-        Returns: undefined
-      }
       aprovar_importacao_obra: {
         Args: {
           p_cidade?: string
@@ -2874,6 +3161,124 @@ export type Database = {
         }
         Returns: string
       }
+      assistente_contratos: { Args: never; Returns: Json }
+      assistente_obras: { Args: never; Returns: Json }
+      assistente_riscos: { Args: never; Returns: Json }
+      assistente_tarefas: {
+        Args: {
+          p_limite?: number
+          p_obra?: string
+          p_somente_vencidas?: boolean
+        }
+        Returns: Json
+      }
+      assistente_vencimentos: { Args: { p_dias?: number }; Returns: Json }
+      assistente_verificar: { Args: never; Returns: boolean }
+      buscar_documentos: {
+        Args: {
+          p_busca?: string
+          p_categoria?: string
+          p_obra?: string
+          p_obsoletos?: boolean
+        }
+        Returns: {
+          caminho_local: string
+          categoria: string
+          data_documento: string
+          id: string
+          obra_id: string
+          obsoleto: boolean
+          pasta: string
+          sem_texto: boolean
+          titulo: string
+          trecho: string
+          url: string
+        }[]
+      }
+      encerrar_leitura_documentos: {
+        Args: { p_pasta: string; p_presentes: string[] }
+        Returns: number
+      }
+      importar_acoes: { Args: { payload: Json }; Returns: string }
+      importar_cronograma: { Args: { payload: Json }; Returns: string }
+      importar_documentos: { Args: { payload: Json }; Returns: number }
+      importar_medicoes: { Args: { payload: Json }; Returns: string }
+      ler_credencial: { Args: { p_ferramenta: string }; Returns: string }
+      ler_credencial_servico: {
+        Args: { p_ferramenta: string }
+        Returns: string
+      }
+      listar_acoes_agente: {
+        Args: never
+        Returns: {
+          caminho: string
+          id: string
+          ultimo_hash: string
+        }[]
+      }
+      listar_cronogramas_agente: {
+        Args: never
+        Returns: {
+          caminho: string
+          id: string
+          ultimo_hash: string
+        }[]
+      }
+      listar_documentos_agente: {
+        Args: { p_pasta: string }
+        Returns: {
+          assinatura: string
+          relativo: string
+        }[]
+      }
+      listar_medicoes_agente: {
+        Args: never
+        Returns: {
+          caminho: string
+          id: string
+          modelo: string
+          ultimo_hash: string
+        }[]
+      }
+      listar_pastas_agente: {
+        Args: never
+        Returns: {
+          caminho: string
+          id: string
+        }[]
+      }
+      registrar_erro_acoes: {
+        Args: { p_arquivo: string; p_erro: string }
+        Returns: undefined
+      }
+      registrar_erro_cronograma: {
+        Args: { p_arquivo: string; p_erro: string }
+        Returns: undefined
+      }
+      registrar_erro_medicao: {
+        Args: { p_arquivo: string; p_erro: string }
+        Returns: undefined
+      }
+      registrar_erro_pasta: {
+        Args: { p_erro: string; p_pasta: string }
+        Returns: undefined
+      }
+      registrar_execucao_agente: {
+        Args: {
+          p_erros: number
+          p_ferramenta: string
+          p_ignorados: number
+          p_lidos: number
+          p_mensagem: string
+        }
+        Returns: undefined
+      }
+      salvar_credencial: {
+        Args: { p_ferramenta: string; p_valor: string }
+        Returns: undefined
+      }
+      tamanho_do_banco: { Args: never; Returns: number }
+      tornar_linha_base: { Args: { p_versao: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
