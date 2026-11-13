@@ -2,7 +2,6 @@
 import { criarCartaoNoQuadro } from "@cc/integrations/src/escrita.js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { descricaoDoCartao } from "@/lib/cartao-acao";
 import { QUADRO_EQUIPE } from "@/lib/equipe";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -10,6 +9,7 @@ import { cartaoDaAcaoSchema, mensagemDoBanco, validar, type EstadoFormulario } f
 
 /**
  * Transforma uma ação 5W2H em cartão no quadro da equipe (RN-49k). Só com o clique do proprietário.
+ * O cartão leva só o O quê (título), o Quem (membro) e o Quando (data); o resto do 5W2H fica no sistema.
  * A ação passa a ser o próprio cartão: o que a equipe fizer no Trello volta na sincronização,
  * e a situação do problema anda sozinha. Cada ação vira cartão uma única vez.
  */
@@ -26,7 +26,7 @@ export async function criarCartaoDaAcao(problemaId: string, acaoId: string, _: E
 
   const { data: acao } = await supabase
     .from("tarefas")
-    .select("fonte, acoes_detalhes(*), problemas(titulo, gut, obras(codigo))")
+    .select("fonte, problemas(titulo)")
     .eq("id", acaoId)
     .eq("problema_id", problemaId)
     .maybeSingle();
@@ -35,18 +35,6 @@ export async function criarCartaoDaAcao(problemaId: string, acaoId: string, _: E
 
   const membro = dados.membro ? (await supabase.from("trello_membros").select("id, id_externo, nome").eq("id", dados.membro).maybeSingle()).data : null;
   if (dados.membro && !membro) return { erros: { membro: "Responsável não encontrado no Trello." } };
-
-  const d = acao.acoes_detalhes;
-  const descricao = descricaoDoCartao({
-    problema: acao.problemas.titulo,
-    gut: acao.problemas.gut,
-    obra: acao.problemas.obras?.codigo,
-    por_que: d?.por_que,
-    onde: d?.onde,
-    como: d?.como,
-    quanto: d?.quanto,
-    prazo: dados.prazo,
-  });
 
   const { data: operacao, error } = await supabase
     .from("operacoes_externas")
@@ -59,7 +47,7 @@ export async function criarCartaoDaAcao(problemaId: string, acaoId: string, _: E
   try {
     novo = await criarCartaoNoQuadro(
       { chave: TRELLO_API_KEY, token: TRELLO_TOKEN },
-      { nomeQuadro: QUADRO_EQUIPE, idLista: dados.lista, titulo: dados.titulo, descricao, prazo: dados.prazo, idMembro: membro?.id_externo, prioridade: dados.prioridade },
+      { nomeQuadro: QUADRO_EQUIPE, idLista: dados.lista, titulo: dados.titulo, prazo: dados.prazo, idMembro: membro?.id_externo, prioridade: dados.prioridade },
     );
     await supabase.from("operacoes_externas").update({ status: "sucesso", id_externo: novo.id, detalhe: novo.url, executado_em: new Date().toISOString() }).eq("id", operacao.id);
   } catch (e) {

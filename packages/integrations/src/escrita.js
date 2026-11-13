@@ -85,7 +85,8 @@ export async function criarCartaoNoQuadro(credenciais, { nomeQuadro, idLista, ti
   const postar = (caminho, params) =>
     buscar(`${TRELLO}${caminho}?${new URLSearchParams({ ...params, ...auth })}`, { method: 'POST', headers: { Accept: 'application/json' } }, 'Trello').then((r) => r.json());
 
-  const params = { idList: idLista, name: titulo, desc: (descricao ?? '').slice(0, 3000), pos: 'top' };
+  const params = { idList: idLista, name: titulo, pos: 'top' };
+  if (descricao) params.desc = descricao.slice(0, 3000);
   if (prazo) params.due = `${prazo}T21:00:00.000Z`; // 18:00 em Brasília
   if (idMembro) params.idMembers = idMembro;
   const etiqueta = PRIORIDADES_TRELLO[prioridade];

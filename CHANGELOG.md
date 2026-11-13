@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.26.1] — 2026-11-13
+### Alterado
+- Cartão criado a partir da ação 5W2H leva só o O quê, o Quem e o Quando (e a prioridade). O responsável é sugerido também pelo nome escrito em "Quem: outro nome".
+
 ## [0.26.0] — 2026-11-13 — Ação 5W2H vira cartão no Trello
 ### Adicionado
 - Problemas: **Criar cartão no Trello** em cada ação 5W2H aberta, com lista, responsável, data de entrega e prioridade (RN-49k). A ação passa a acompanhar o cartão.
