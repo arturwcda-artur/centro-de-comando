@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.20.1] — 2026-11-13 — Problemas: Pendentes, Resolvendo e Concluídos
+### Adicionado
+- Tela **Problemas** em três etapas. O problema sai de Pendentes quando ganha plano 5W2H e é concluído sozinho quando todas as ações terminam (RN-49h).
+- Cadastro rápido de problema com as notas GUT direto na lista.
+
 ## [0.20.0] — 2026-11-13 — Problemas
 ### Adicionado
 - Tela **Problemas** no lugar da Matriz GUT: cadastro de problemas com G, U e T, fila do mais grave para o menos grave, plano de ação 5W2H e lembrete na agenda (RN-49h, ADR 0023).

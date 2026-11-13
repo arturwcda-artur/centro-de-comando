@@ -43,6 +43,25 @@ export const acao5w2hSchema = z.object({
   quanto: opcional(500),
 });
 
+/** Abas da tela: o problema sai de Pendentes quando ganha plano e de Resolvendo quando todas as ações terminam. */
+export const ABAS = [
+  { valor: "pendentes", rotulo: "Pendentes", status: ["aberto"], ajuda: "Ainda sem plano de ação." },
+  { valor: "resolvendo", rotulo: "Resolvendo", status: ["em_andamento"], ajuda: "Com plano 5W2H em execução." },
+  { valor: "concluidos", rotulo: "Concluídos", status: ["resolvido", "cancelado"], ajuda: "Todas as ações feitas, ou cancelados." },
+] as const;
+export const abaDe = (valor: unknown) => ABAS.find((a) => a.valor === valor) ?? ABAS[0];
+
+/**
+ * Situação do problema depois de mexer nas ações (RN-49h). Com ação, sai de Pendentes. Com todas as
+ * ações concluídas, fica resolvido. Reabrir uma ação volta para Resolvendo. Cancelado não muda sozinho.
+ */
+export function situacaoPelasAcoes(atual: string, acoes: { status: string }[]): string {
+  if (atual === "cancelado") return atual;
+  const validas = acoes.filter((a) => a.status !== "cancelada");
+  if (validas.length === 0) return atual === "resolvido" ? "em_andamento" : atual;
+  return validas.every((a) => a.status === "concluida") ? "resolvido" : "em_andamento";
+}
+
 export type Problema = { gravidade: number; urgencia: number; tendencia: number; gut: number | null; status: string; criado_em: string };
 
 /** Fila: em aberto primeiro, maior GUT primeiro e, no empate, o mais antigo. */

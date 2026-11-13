@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acao5w2hSchema, ordenarFila, problemaSchema, resumoGut } from "./problemas";
+import { abaDe, acao5w2hSchema, ordenarFila, problemaSchema, resumoGut, situacaoPelasAcoes } from "./problemas";
 import { validar } from "./validacao";
 
 const p = (titulo: string, gut: number, status = "aberto", criado_em = "2026-11-01") => ({ titulo, gravidade: 3, urgencia: 3, tendencia: 3, gut, status, criado_em });
@@ -30,3 +30,25 @@ describe("validação", () => {
     expect(validar(acao5w2hSchema, { o_que: "x", prazo: "31/12" }).erros?.prazo).toBeTruthy();
   });
 });
+
+describe("situação pelo andamento das ações", () => {
+  const a = (status: string) => ({ status });
+  it("com ação em aberto, vai para Resolvendo", () => {
+    expect(situacaoPelasAcoes("aberto", [a("a_fazer")])).toBe("em_andamento");
+  });
+  it("todas concluídas: resolvido", () => {
+    expect(situacaoPelasAcoes("em_andamento", [a("concluida"), a("concluida"), a("cancelada")])).toBe("resolvido");
+  });
+  it("reabrir uma ação volta para Resolvendo", () => {
+    expect(situacaoPelasAcoes("resolvido", [a("concluida"), a("a_fazer")])).toBe("em_andamento");
+  });
+  it("cancelado não muda sozinho, e sem ação continua pendente", () => {
+    expect(situacaoPelasAcoes("cancelado", [a("concluida")])).toBe("cancelado");
+    expect(situacaoPelasAcoes("aberto", [])).toBe("aberto");
+  });
+  it("aba desconhecida cai em Pendentes", () => {
+    expect(abaDe("x").valor).toBe("pendentes");
+    expect(abaDe("resolvendo").status).toEqual(["em_andamento"]);
+  });
+});
+
