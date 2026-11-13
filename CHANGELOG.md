@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.24.0] — 2026-11-13 — Equipe como responsável
+### Adicionado
+- Os membros do quadro da equipe no Trello viram pessoas cadastradas e aparecem como responsáveis nos problemas e nas tarefas. Membro novo entra sozinho na próxima sincronização.
+- Migration `0034_membros_viram_pessoas.sql`.
+
 ## [0.23.0] — 2026-11-13 — Notion sai
 ### Removido
 - Sincronização com o Notion, **Demanda no Notion** e conclusão de tarefas no Notion: o proprietário não usa mais o Notion para demandas (ADR 0024).
