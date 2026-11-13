@@ -269,3 +269,11 @@ export function mensagemDoBanco(erro: { code?: string; message?: string } | null
   if (erro.code === "42501") return "Sem permissão. Entre novamente com o autenticador.";
   return "Não foi possível salvar. Tente novamente.";
 }
+
+export const cartaoDaAcaoSchema = z.object({
+  titulo: texto("Título", 300),
+  lista: texto("Lista", 40),
+  membro: uuidOpcional,
+  prazo: dataOpcional,
+  prioridade: z.enum(["alta", "media", "baixa"], { error: "Escolha a prioridade." }),
+});

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { concluirCartaoTrello } from '../src/escrita.js';
+import { concluirCartaoTrello, criarCartaoNoQuadro } from '../src/escrita.js';
 
 // Respostas de TESTE no formato das APIs. Nenhuma chamada real é feita.
 function apiFalsa(rotas) {
@@ -50,3 +50,33 @@ describe('concluir no Trello', () => {
   });
 });
 
+
+describe('cartão a partir de ação 5W2H', () => {
+  const base = {
+    'GET /1/members/me/boards': [{ id: 'b1', name: 'Obras do Grupo - C.SALLES' }],
+    'GET /1/boards/b1/lists': [{ id: 'l1', name: 'NILLS' }, { id: 'l2', name: 'Senhas' }],
+    'POST /1/cards': { id: 'c9', shortUrl: 'https://trello.com/c/x' },
+  };
+
+  it('cria o cartão com membro, prazo e a etiqueta que já existe', async () => {
+    const c = apiFalsa({ ...base, 'GET /1/boards/b1/labels': [{ id: 'e1', name: 'Prioridade Alta', color: 'red' }] });
+    const r = await criarCartaoNoQuadro(cred, { nomeQuadro: 'Obras do Grupo - C.SALLES', idLista: 'l1', titulo: 'Cotar telhas', descricao: 'Por quê: x', prazo: '2026-11-20', idMembro: 'm1', prioridade: 'alta' });
+    expect(r).toEqual({ id: 'c9', url: 'https://trello.com/c/x', lista: 'NILLS' });
+    expect(escritas(c)).toHaveLength(1);
+    expect(escritas(c)[0].params).toMatchObject({ idList: 'l1', name: 'Cotar telhas', idMembers: 'm1', idLabels: 'e1', due: '2026-11-20T21:00:00.000Z' });
+  });
+
+  it('cria a etiqueta de prioridade quando o quadro não tem', async () => {
+    const c = apiFalsa({ ...base, 'GET /1/boards/b1/labels': [], 'POST /1/labels': { id: 'e2' } });
+    await criarCartaoNoQuadro(cred, { nomeQuadro: 'Obras do Grupo - C.SALLES', idLista: 'l1', titulo: 'T', prioridade: 'baixa' });
+    expect(escritas(c).map((x) => x.caminho)).toEqual(['/1/labels', '/1/cards']);
+    expect(escritas(c)[0].params).toMatchObject({ name: 'Prioridade baixa', color: 'green', idBoard: 'b1' });
+    expect(escritas(c)[1].params.idLabels).toBe('e2');
+  });
+
+  it('recusa lista de outro quadro ou lista sensível, sem gravar nada', async () => {
+    const c = apiFalsa(base);
+    await expect(criarCartaoNoQuadro(cred, { nomeQuadro: 'Obras do Grupo - C.SALLES', idLista: 'l2', titulo: 'T' })).rejects.toThrow('não pertence');
+    expect(escritas(c)).toHaveLength(0);
+  });
+});

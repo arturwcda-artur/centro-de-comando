@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.26.0] — 2026-11-13 — Ação 5W2H vira cartão no Trello
+### Adicionado
+- Problemas: **Criar cartão no Trello** em cada ação 5W2H aberta, com lista, responsável, data de entrega e prioridade (RN-49k). A ação passa a acompanhar o cartão.
+- Migration `0035_situacao_do_problema.sql`: a situação do problema muda sozinha quando as ações mudam, inclusive pela sincronização do Trello.
+
 ## [0.25.0] — 2026-11-13 — Tarefas por WhatsApp
 ### Adicionado
 - Menu Tarefas: **Enviar por WhatsApp**, um botão por responsável com a lista das tarefas filtradas na tela (RN-49j). Abre o WhatsApp com a mensagem escrita; o envio é feito pelo proprietário.

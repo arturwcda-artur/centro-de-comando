@@ -63,3 +63,26 @@ describe('importação única do plano de ações da planilha', () => {
     expect(t2).toBeTruthy();
   }, 60000);
 });
+
+describe('situação do problema pelas ações (migration 0035)', () => {
+  it('cartão concluído no Trello resolve o problema, e reaberto volta para resolvendo', async () => {
+    const p = (await db.query(`insert into public.problemas (titulo, status) values ('Via Trello', 'em_andamento') returning id`)).rows[0].id;
+    const a = (await db.query(`insert into public.tarefas (titulo, problema_id, fonte, id_externo) values ('Cartão', $1, 'trello', 'c-teste-1') returning id`, [p])).rows[0].id;
+    const b = (await db.query(`insert into public.tarefas (titulo, problema_id, status) values ('Cancelada', $1, 'cancelada') returning id`, [p])).rows[0].id;
+    const situacao = async () => (await db.query(`select status, resolvido_em is not null as data from public.problemas where id = $1`, [p])).rows[0];
+
+    await db.query(`update public.tarefas set status = 'concluida', concluida_em = now() where id = $1`, [a]);
+    expect(await situacao()).toEqual({ status: 'resolvido', data: true });
+
+    await db.query(`update public.tarefas set status = 'a_fazer', concluida_em = null where id = $1`, [a]);
+    expect(await situacao()).toEqual({ status: 'em_andamento', data: false });
+    expect(b).toBeTruthy();
+  });
+
+  it('problema cancelado não muda', async () => {
+    const p = (await db.query(`insert into public.problemas (titulo, status) values ('Cancelado', 'cancelado') returning id`)).rows[0].id;
+    const a = (await db.query(`insert into public.tarefas (titulo, problema_id) values ('x', $1) returning id`, [p])).rows[0].id;
+    await db.query(`update public.tarefas set status = 'concluida', concluida_em = now() where id = $1`, [a]);
+    expect((await db.query(`select status from public.problemas where id = $1`, [p])).rows[0].status).toBe('cancelado');
+  });
+});
