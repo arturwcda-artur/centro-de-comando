@@ -819,6 +819,7 @@ Membros do Trello. Ficam fora de pessoas para não misturar com o cadastro da em
 | usuario | text |  |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| pessoa_id | uuid |  | pessoas | Pessoa cadastrada que corresponde a este membro do Trello. |
 
 ## View `cronograma_realizado`
 
