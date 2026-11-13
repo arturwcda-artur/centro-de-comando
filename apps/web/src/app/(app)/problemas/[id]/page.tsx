@@ -7,7 +7,7 @@ import { dataCivil, hojeSP } from "@/lib/formato";
 import { dataSugeridaLembrete, faixaGut } from "@/lib/gut";
 import { GRAVIDADE, STATUS_PROBLEMA, TENDENCIA, URGENCIA } from "@/lib/problemas";
 import { exigirSessaoCompleta } from "@/lib/sessao";
-import { alternarAcao, salvarAcao5w2h } from "../acoes";
+import { alternarAcao, concluirProblema, salvarAcao5w2h } from "../acoes";
 import { FormularioAcao5w2h } from "../formularios";
 import { FormularioLembrete } from "./formulario-lembrete";
 
@@ -41,9 +41,16 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
         </Link>
         <div className="mt-1 flex items-start justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">{p.titulo}</h1>
-          <Link href={`/problemas/${id}/editar`} className="shrink-0 rounded-lg border border-borda px-3 py-1.5 text-xs font-medium hover:bg-superficie-2">
-            Editar
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <form action={concluirProblema.bind(null, id, p.status !== "resolvido")}>
+              <button className={`rounded-lg px-3 py-1.5 text-xs font-medium ${p.status === "resolvido" ? "border border-borda hover:bg-superficie-2" : "bg-marca text-white hover:opacity-90"}`}>
+                {p.status === "resolvido" ? "Reabrir problema" : "Concluir problema"}
+              </button>
+            </form>
+            <Link href={`/problemas/${id}/editar`} className="rounded-lg border border-borda px-3 py-1.5 text-xs font-medium hover:bg-superficie-2">
+              Editar
+            </Link>
+          </div>
         </div>
         <p className="text-sm text-suave">
           {[p.obras?.codigo, p.pessoas?.nome ?? "Responsável: eu", STATUS_PROBLEMA.find((s) => s.valor === p.status)?.rotulo].filter(Boolean).join(" · ")}
