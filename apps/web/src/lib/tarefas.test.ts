@@ -23,9 +23,9 @@ describe("validação de tarefas", () => {
 });
 
 describe("quem pode concluir pelo sistema (RN-48)", () => {
-  it("tarefas manuais, do Notion e cartões do proprietário podem", () => {
+  it("tarefas manuais e cartões do proprietário podem", () => {
     expect(podeConcluir({ fonte: "manual", status: "a_fazer" })).toBe(true);
-    expect(podeConcluir({ fonte: "notion", status: "a_fazer" })).toBe(true);
+    expect(podeConcluir({ fonte: "notion", status: "a_fazer" })).toBe(false);
     expect(podeConcluir({ fonte: "trello", responsavel_id: null, status: "a_fazer" })).toBe(true);
   });
 

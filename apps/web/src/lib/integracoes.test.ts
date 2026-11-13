@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { alertasConectores, estaPausado } from "./integracoes";
-import { demandaNotionSchema, validar } from "./validacao";
 
 const agora = new Date("2026-11-05T12:00:00Z");
 const conector = (extra = {}) => ({ nome_exibicao: "Trello", ativo: true, estado_conexao: "conectado", ultima_sync_em: "2026-11-05T11:30:00Z", intervalo_minutos: 60, pausado_ate: null, ...extra });
@@ -38,10 +37,3 @@ describe("estaPausado", () => {
   });
 });
 
-describe("demanda no Notion", () => {
-  it("exige título e aceita só prioridades e categorias da base", () => {
-    expect(validar(demandaNotionSchema, { titulo: "Revisar contrato", prioridade: "🟠 Alta", categoria: "Obras" }).erros).toBeNull();
-    expect(validar(demandaNotionSchema, { titulo: "", prioridade: "🟠 Alta", categoria: "Obras" }).erros?.titulo).toBeTruthy();
-    expect(validar(demandaNotionSchema, { titulo: "x", prioridade: "Inventada", categoria: "Obras" }).erros?.prioridade).toBeTruthy();
-  });
-});

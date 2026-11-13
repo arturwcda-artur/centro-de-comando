@@ -17,7 +17,6 @@ const WORKFLOW = "https://github.com/arturwcda-artur/centro-de-comando/actions/w
 const PREVISTAS = [
   { ferramenta: "trello", nome: "Trello", oque: "cartões dos quadros abertos → tarefas" },
   { ferramenta: "google_agenda", nome: "Google Agenda", oque: "eventos (−7 a +90 dias) → agenda" },
-  { ferramenta: "notion", nome: "Notion", oque: "Central de Gestão: demandas → tarefas, reuniões → reuniões" },
   { ferramenta: "msproject", nome: "MS Project", oque: "cronogramas, lidos pelo agente local" },
   { ferramenta: "excel", nome: "Excel", oque: "planilhas de medição, lidas pelo agente local" },
   { ferramenta: "pastas", nome: "Pastas das obras", oque: "índice de documentos, lido pelo agente local" },
@@ -31,7 +30,7 @@ const RETORNO_GOOGLE: Record<string, { tipo: "info" | "alerta"; texto: string }>
   erro: { tipo: "alerta", texto: "Não foi possível conectar ao Google. Tente de novo." },
 };
 
-const PAUSAVEIS = ["trello", "google_agenda", "google_drive", "notion"];
+const PAUSAVEIS = ["trello", "google_agenda", "google_drive"];
 const NOME_FERRAMENTA: Record<string, string> = { trello: "Trello", notion: "Notion", google_agenda: "Google Agenda" };
 
 const ESTADO: Record<string, { rotulo: string; tom: "ok" | "alerta" | "atencao" | "neutro" }> = {

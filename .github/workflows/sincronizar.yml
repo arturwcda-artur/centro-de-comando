@@ -1,6 +1,6 @@
 name: Sincronizar conectores
 
-# Lê Trello, Google Agenda e Notion e grava espelhos no banco (ADR 0012).
+# Lê Trello e Google Agenda e grava espelhos no banco (ADR 0012).
 # Esta rotina só lê as ferramentas de origem. Os segredos são cadastrados pelo proprietário
 # em Settings → Secrets and variables → Actions e nunca aparecem nos logs.
 on:
@@ -36,4 +36,3 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_ICAL_URLS: ${{ secrets.GOOGLE_ICAL_URLS }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}

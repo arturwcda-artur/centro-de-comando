@@ -53,12 +53,12 @@ export const VISOES_TAREFA = [
 export type VisaoTarefa = (typeof VISOES_TAREFA)[number]["valor"];
 
 /**
- * RN-48: o que pode ser concluído pelo sistema. Tarefas manuais e do Notion, e cartões do Trello que
+ * RN-48: o que pode ser concluído pelo sistema. Tarefas manuais e cartões do Trello que
  * são do proprietário (sem responsável aqui). Cartões de terceiros continuam só leitura.
  */
 export function podeConcluir(t: { fonte: string | null; responsavel_id?: string | null; status?: string | null }): boolean {
   if (t.status === "concluida" || t.status === "cancelada") return false;
-  if (t.fonte === "manual" || t.fonte === "notion") return true;
+  if (t.fonte === "manual") return true;
   return t.fonte === "trello" && !t.responsavel_id;
 }
 
@@ -131,6 +131,3 @@ export function quadrosDoTrello(lista: { fonte: string | null; categoria: string
   return [...new Set(nomes)].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
-/** Opções da base Demandas Ativas no Notion. */
-export const PRIORIDADES_NOTION = ["🔴 Crítica", "🟠 Alta", "🟡 Média", "🟢 Baixa"].map((p) => ({ valor: p, rotulo: p }));
-export const CATEGORIAS_NOTION = ["Estratégico", "Financeiro", "Contratos", "Jurídico", "Obras", "Marketing", "Operacional", "Infraestrutura"].map((c) => ({ valor: c, rotulo: c }));

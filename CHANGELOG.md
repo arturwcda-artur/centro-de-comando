@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.23.0] — 2026-11-13 — Notion sai
+### Removido
+- Sincronização com o Notion, **Demanda no Notion** e conclusão de tarefas no Notion: o proprietário não usa mais o Notion para demandas (ADR 0024).
+- Migration `0033_sem_notion.sql`: as 13 tarefas vindas do Notion passam a manuais, editáveis no sistema, e o conector fica inativo.
+
 ## [0.22.0] — 2026-11-13 — Limpeza
 ### Removido
 - Tela **Riscos e decisões** e as abas de riscos e decisões da obra: os **Problemas** fazem esse papel. Painel, Alertas e relatório da obra passam a mostrar problemas.

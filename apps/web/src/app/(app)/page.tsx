@@ -112,7 +112,7 @@ export default async function Painel({ searchParams }: PageProps<"/">) {
       <div className="grid gap-4 lg:grid-cols-3">
         <Cartao titulo="Prioridades" className="lg:col-span-2" acao={<Link href="/tarefas" className="text-xs font-medium text-marca hover:underline">Todas</Link>}>
           {p.prioridades.length === 0 ? (
-            <EstadoVazio>Nenhuma tarefa aberta. As tarefas do Trello e do Notion chegam na Fase 5.</EstadoVazio>
+            <EstadoVazio>Nenhuma tarefa aberta.</EstadoVazio>
           ) : (
             <ul className="divide-y divide-borda">
               {p.prioridades.map((t) => (

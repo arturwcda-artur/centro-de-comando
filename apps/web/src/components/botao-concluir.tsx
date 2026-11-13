@@ -21,7 +21,7 @@ function Circulo({ titulo }: { titulo: string | null }) {
   );
 }
 
-/** Concluir uma tarefa. Em tarefas do Trello e do Notion, conclui também na origem (RN-48). */
+/** Concluir uma tarefa. Em cartões do Trello, conclui também na origem (RN-48). */
 export function BotaoConcluir({ id, titulo }: { id: string; titulo: string | null }) {
   const [estado, enviar] = useActionState(concluirTarefa.bind(null, id), {});
   return (
