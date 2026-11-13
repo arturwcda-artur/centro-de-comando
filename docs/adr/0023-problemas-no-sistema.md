@@ -19,5 +19,5 @@ O ADR 0022 trouxe o plano de ações da planilha da Central de Gestão para o si
 ## Consequências
 
 - Uma fonte só para os problemas, como pede a regra do projeto.
-- A leitura `cc_agente.acoes` fica sem planilha cadastrada; o código continua no agente, caso a decisão volte atrás.
+- Em 13/11/2026, a leitura `cc_agente.acoes`, o campo da planilha na obra e a tela Riscos e decisões foram retirados. As tabelas `acoes_planilhas`, `riscos` e `decisoes` continuam no banco, vazias, e o histórico fica no git.
 - As mudanças feitas na planilha depois da importação não chegam ao sistema.

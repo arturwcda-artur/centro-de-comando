@@ -17,7 +17,6 @@ type Obra = {
   data_inicio?: string | null;
   data_termino_prevista?: string | null;
   pasta_local?: string | null;
-  planilha_acoes?: string | null;
   observacoes?: string | null;
 };
 type Opcao = { valor: string; rotulo: string };
@@ -70,13 +69,6 @@ export function FormularioObra({
         />
       </div>
       <CampoTexto nome="pasta_local" rotulo="Pasta no computador" defaultValue={obra.pasta_local ?? ""} erro={e.pasta_local} ajuda="Referência à pasta da obra; nada é copiado." />
-      <CampoTexto
-        nome="planilha_acoes"
-        rotulo="Planilha do plano de ações"
-        defaultValue={obra.planilha_acoes ?? ""}
-        erro={e.planilha_acoes}
-        ajuda="Caminho completo da Central de Gestão (aba AÇÕES) neste computador. O agente só lê a planilha; as ações são atualizadas nela."
-      />
       <CampoAreaTexto nome="observacoes" rotulo="Observações" defaultValue={obra.observacoes ?? ""} erro={e.observacoes} />
       <BotaoEnviar>Salvar obra</BotaoEnviar>
     </form>

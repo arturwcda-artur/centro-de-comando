@@ -2,20 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
-import { AlterarStatus } from "@/components/alterar-status";
-import { Aviso, Cartao, EstadoVazio, Etiqueta } from "@/components/ui";
-import { STATUS_DECISAO, STATUS_RISCO, nivelSeveridade, rotuloSituacao } from "@/lib/dominio";
+import { Cartao, Etiqueta } from "@/components/ui";
+import { rotuloSituacao } from "@/lib/dominio";
 import { brl, dataCivil, dataHora, pct } from "@/lib/formato";
-import { carregarOpcoes, UUID } from "@/lib/obras";
+import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
-import { FormularioDecisao, FormularioRisco } from "./formularios";
 
 export const metadata: Metadata = { title: "Obra" };
 
 const ABAS = [
   { id: "visao", rotulo: "Visão geral" },
-  { id: "riscos", rotulo: "Riscos" },
-  { id: "decisoes", rotulo: "Decisões" },
 ] as const;
 const FUTURAS = [
   { rotulo: "Tarefas", fase: 5 },
@@ -40,25 +36,17 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
   const aba = ABAS.find((a) => a.id === abaPedida)?.id ?? "visao";
   const { supabase } = await exigirSessaoCompleta();
 
-  const [obra, resumo, riscos, decisoes, opcoes, plano, acoes] = await Promise.all([
+  const [obra, resumo, problemas] = await Promise.all([
     supabase.from("obras").select("*, empresas(razao_social, nome_fantasia), contratantes(nome)").eq("id", id).is("arquivado_em", null).maybeSingle(),
     supabase.from("v_obra_resumo").select("*").eq("obra_id", id).maybeSingle(),
-    supabase.from("riscos").select("*, pessoas(nome)").eq("obra_id", id).order("severidade", { ascending: false }),
-    supabase.from("decisoes").select("*, pessoas(nome)").eq("obra_id", id).order("criado_em", { ascending: false }),
-    carregarOpcoes(supabase),
-    supabase.from("acoes_planilhas").select("caminho, ultima_leitura_em, ultimo_erro").eq("obra_id", id).maybeSingle(),
-    supabase.from("v_tarefas_priorizadas").select("vencida, critica, escore, status_sync").eq("obra_id", id).eq("fonte", "planilha"),
+    supabase.from("problemas").select("gut").eq("obra_id", id).in("status", ["aberto", "em_andamento"]),
   ]);
   if (!obra.data) notFound();
   const o = obra.data;
   const r = resumo.data;
   const s = rotuloSituacao(o.situacao);
-  const riscosAbertos = (riscos.data ?? []).filter((x) => x.status === "aberto" || x.status === "em_tratamento");
-  const decisoesPendentes = (decisoes.data ?? []).filter((x) => x.status === "pendente");
-  const acoesAbertas = acoes.data ?? [];
-  const acoesVencidas = acoesAbertas.filter((x) => x.vencida).length;
-  const acoesCriticas = acoesAbertas.filter((x) => x.critica).length;
-  const acoesForaDaPlanilha = acoesAbertas.filter((x) => x.status_sync === "pendente").length;
+  const problemasAbertos = problemas.data ?? [];
+  const problemasCriticos = problemasAbertos.filter((x) => (x.gut ?? 0) >= 64).length;
 
   return (
     <div className="space-y-5">
@@ -88,8 +76,6 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
             className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm ${aba === a.id ? "border-marca font-medium text-texto" : "border-transparent text-suave hover:text-texto"}`}
           >
             {a.rotulo}
-            {a.id === "riscos" && riscosAbertos.length > 0 && <span className="ml-1.5 text-xs text-suave">{riscosAbertos.length}</span>}
-            {a.id === "decisoes" && decisoesPendentes.length > 0 && <span className="ml-1.5 text-xs text-suave">{decisoesPendentes.length}</span>}
           </Link>
         ))}
         {FUTURAS.map((f) => (
@@ -125,104 +111,20 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
               <Dado rotulo="Medido" valor={`${brl(r?.valor_medido)} · ${pct(r?.pct_financeiro)}`} />
               <Dado rotulo="Recebido" valor={brl(r?.valor_recebido)} />
               <Dado rotulo="Avanço físico (previsto / realizado)" valor={`${pct(r?.pct_fisico_previsto)} / ${pct(r?.pct_fisico_realizado)}`} />
-              <Dado rotulo="Riscos abertos · decisões pendentes" valor={`${riscosAbertos.length} · ${decisoesPendentes.length}`} />
+              <Dado
+                rotulo="Problemas em aberto · críticos"
+                valor={
+                  <Link href={`/problemas?obra=${id}`} className="hover:text-marca hover:underline">
+                    {problemasAbertos.length} · {problemasCriticos}
+                  </Link>
+                }
+              />
             </dl>
             <p className="mt-3 text-xs text-suave">Contratos e medições entram na Fase 7; avanço físico, na Fase 6.</p>
           </Cartao>
-          {plano.data && (
-            <Cartao titulo="Plano de ações" className="lg:col-span-3">
-              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Dado rotulo="Ações abertas" valor={String(acoesAbertas.length)} />
-                <Dado rotulo="Vencidas" valor={String(acoesVencidas)} />
-                <Dado rotulo="Críticas (GUT ≥ 64)" valor={String(acoesCriticas)} />
-                <Dado rotulo="Última leitura da planilha" valor={dataHora(plano.data.ultima_leitura_em)} />
-              </dl>
-              {plano.data.ultimo_erro && (
-                <div className="mt-3">
-                  <Aviso>Erro na última leitura: {plano.data.ultimo_erro}</Aviso>
-                </div>
-              )}
-              {acoesForaDaPlanilha > 0 && (
-                <div className="mt-3">
-                  <Aviso>{acoesForaDaPlanilha} ação(ões) abertas aqui não estão mais na planilha: confira se alguma linha foi apagada ou movida.</Aviso>
-                </div>
-              )}
-              <p className="mt-3 text-xs text-suave">
-                Fonte: <code className="break-all font-mono">{plano.data.caminho}</code>. As ações são atualizadas na planilha; aqui só são mostradas.{" "}
-                <Link href={`/tarefas?obra=${id}`} className="underline hover:text-texto">
-                  Ver as ações
-                </Link>
-              </p>
-            </Cartao>
-          )}
         </div>
       )}
 
-      {aba === "riscos" && (
-        <div className="grid gap-4 lg:grid-cols-5">
-          <Cartao titulo="Riscos da obra" className="lg:col-span-3">
-            {(riscos.data ?? []).length === 0 ? (
-              <EstadoVazio>Nenhum risco registrado.</EstadoVazio>
-            ) : (
-              <ul className="divide-y divide-borda">
-                {(riscos.data ?? []).map((x) => {
-                  const n = nivelSeveridade(x.severidade ?? 0);
-                  return (
-                    <li key={x.id} className="flex flex-wrap items-start gap-3 py-3">
-                      <span title="Severidade = probabilidade × impacto (RN-50)" className="w-14 shrink-0">
-                        <Etiqueta tom={n.tom}>{x.severidade}</Etiqueta>
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm">{x.descricao}</p>
-                        <p className="mt-0.5 text-xs text-suave">
-                          P{x.probabilidade} × I{x.impacto} · {n.rotulo}
-                          {x.pessoas?.nome && ` · ${x.pessoas.nome}`}
-                          {x.prazo && ` · até ${dataCivil(x.prazo)}`}
-                        </p>
-                        {x.plano_resposta && <p className="mt-1 text-xs">{x.plano_resposta}</p>}
-                      </div>
-                      <AlterarStatus tabela="riscos" id={x.id} obraId={id} atual={x.status} opcoes={STATUS_RISCO} />
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Cartao>
-          <Cartao titulo="Registrar risco" className="lg:col-span-2">
-            <FormularioRisco obraId={id} pessoas={opcoes.pessoas} />
-          </Cartao>
-        </div>
-      )}
-
-      {aba === "decisoes" && (
-        <div className="grid gap-4 lg:grid-cols-5">
-          <Cartao titulo="Decisões gerenciais" className="lg:col-span-3">
-            {(decisoes.data ?? []).length === 0 ? (
-              <EstadoVazio>Nenhuma decisão registrada.</EstadoVazio>
-            ) : (
-              <ul className="divide-y divide-borda">
-                {(decisoes.data ?? []).map((x) => (
-                  <li key={x.id} className="flex flex-wrap items-start gap-3 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{x.problema}</p>
-                      {x.decisao && <p className="mt-0.5 text-sm">→ {x.decisao}</p>}
-                      <p className="mt-0.5 text-xs text-suave">
-                        {x.pessoas?.nome ?? "Sem responsável"}
-                        {x.prazo && ` · prazo ${dataCivil(x.prazo)}`}
-                        {x.data_decisao && ` · decidido em ${dataCivil(x.data_decisao)}`}
-                      </p>
-                    </div>
-                    <AlterarStatus tabela="decisoes" id={x.id} obraId={id} atual={x.status} opcoes={STATUS_DECISAO} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Cartao>
-          <Cartao titulo="Registrar decisão" className="lg:col-span-2">
-            <FormularioDecisao obraId={id} pessoas={opcoes.pessoas} />
-          </Cartao>
-        </div>
-      )}
     </div>
   );
 }

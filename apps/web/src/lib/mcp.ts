@@ -52,7 +52,6 @@ export const FERRAMENTAS: Ferramenta[] = [
     validar: z.object({ dias: z.number().int().min(0).max(365).optional() }).strict(),
     parametros: (a: { dias?: number }) => ({ p_dias: a.dias ?? 30 }),
   },
-  { name: "listar_riscos", title: "Riscos e decisões", description: "Riscos abertos e decisões pendentes.", inputSchema: SEM_PARAMETROS, funcao: "assistente_riscos", validar: vazio, parametros: () => ({}) },
 ];
 
 type Mensagem = { jsonrpc?: string; id?: string | number | null; method?: string; params?: Record<string, unknown> };

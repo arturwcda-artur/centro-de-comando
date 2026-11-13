@@ -5,10 +5,8 @@ import { exigirSessaoCompleta } from "@/lib/sessao";
 import { UUID } from "@/lib/obras";
 import {
   aprovacaoSchema,
-  decisaoSchema,
   mensagemDoBanco,
   obraSchema,
-  riscoSchema,
   validar,
   type EstadoFormulario,
 } from "@/lib/validacao";
@@ -18,25 +16,12 @@ export async function salvarObra(id: string | null, _: EstadoFormulario, fd: For
   const { supabase } = await exigirSessaoCompleta();
   const { dados, erros } = validar(obraSchema, fd);
   if (!dados) return { erros };
-  const { planilha_acoes, ...obra } = dados;
+  const obra = dados;
 
   const resposta = id
     ? await supabase.from("obras").update(obra).eq("id", id).select("id").single()
     : await supabase.from("obras").insert(obra).select("id").single();
   if (resposta.error) return { erro: mensagemDoBanco(resposta.error) };
-
-  // Plano de ações (RN-49f): o agente local passa a ler esta planilha. Trocar o caminho força nova leitura.
-  if (planilha_acoes) {
-    const { error } = await supabase
-      .from("acoes_planilhas")
-      .upsert({ obra_id: resposta.data.id, caminho: planilha_acoes, ultimo_hash: null }, { onConflict: "obra_id" });
-    if (error) return { erro: mensagemDoBanco(error) };
-  } else if (id) {
-    // Campo apagado desliga a planilha. As ações já lidas ficam, marcadas para conferência (RN-49f)
-    const { error } = await supabase.from("acoes_planilhas").delete().eq("obra_id", id);
-    if (error) return { erro: mensagemDoBanco(error) };
-    await supabase.from("tarefas").update({ status_sync: "pendente" }).eq("obra_id", id).eq("fonte", "planilha");
-  }
 
   revalidatePath("/obras");
   revalidatePath("/");
@@ -115,49 +100,3 @@ export async function reabrirProposta(id: string) {
   revalidatePath("/obras/importar");
 }
 
-export async function salvarRisco(_: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
-  const { supabase } = await exigirSessaoCompleta();
-  const { dados, erros } = validar(riscoSchema, fd);
-  if (!dados) return { erros };
-  const { error } = await supabase.from("riscos").insert(dados);
-  if (error) return { erro: mensagemDoBanco(error) };
-  revalidatePath(`/obras/${dados.obra_id}`);
-  revalidatePath("/riscos");
-  return { ok: true, mensagem: "Risco registrado." };
-}
-
-export async function salvarDecisao(_: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
-  const { supabase } = await exigirSessaoCompleta();
-  const { dados, erros } = validar(decisaoSchema, fd);
-  if (!dados) return { erros };
-  const { error } = await supabase.from("decisoes").insert(dados);
-  if (error) return { erro: mensagemDoBanco(error) };
-  revalidatePath(`/obras/${dados.obra_id}`);
-  revalidatePath("/riscos");
-  revalidatePath("/");
-  return { ok: true, mensagem: "Decisão registrada." };
-}
-
-const STATUS_RISCO_OK = new Set(["aberto", "em_tratamento", "mitigado", "materializado", "encerrado"]);
-const STATUS_DECISAO_OK = new Set(["pendente", "tomada", "implementada", "cancelada"]);
-
-export async function alterarStatus(fd: FormData) {
-  const { supabase } = await exigirSessaoCompleta();
-  const tabela = String(fd.get("tabela"));
-  const id = String(fd.get("id"));
-  const status = String(fd.get("status"));
-  const obraId = String(fd.get("obra_id") ?? "");
-  if (!UUID.test(id)) return;
-  if (tabela === "riscos" && STATUS_RISCO_OK.has(status)) {
-    await supabase.from("riscos").update({ status }).eq("id", id);
-  } else if (tabela === "decisoes" && STATUS_DECISAO_OK.has(status)) {
-    // "tomada" exige o texto da decisão (CHECK no banco): se faltar, o banco recusa e nada muda
-    await supabase
-      .from("decisoes")
-      .update({ status, ...(status === "tomada" ? { data_decisao: new Date().toISOString().slice(0, 10) } : {}) })
-      .eq("id", id);
-  }
-  if (UUID.test(obraId)) revalidatePath(`/obras/${obraId}`);
-  revalidatePath("/riscos");
-  revalidatePath("/");
-}

@@ -26,7 +26,7 @@ export default async function RelatorioObra({ params }: PageProps<"/relatorios/o
   const hoje = hojeSP();
   const [resumos, riscos, tarefas] = await Promise.all([
     supabase.from("v_contratos_resumo").select("*").eq("obra_id", id),
-    supabase.from("riscos").select("descricao, severidade, status").eq("obra_id", id).in("status", ["aberto", "em_tratamento"]).order("severidade", { ascending: false }).limit(5),
+    supabase.from("problemas").select("titulo, gut").eq("obra_id", id).in("status", ["aberto", "em_andamento"]).order("gut", { ascending: false }).limit(5),
     supabase.from("v_tarefas_priorizadas").select("id, vencida").eq("obra_id", id),
   ]);
   const contratos = resumos.data ?? [];
@@ -141,12 +141,12 @@ export default async function RelatorioObra({ params }: PageProps<"/relatorios/o
         </ul>
       </SecaoRelatorio>
 
-      <SecaoRelatorio titulo="Riscos abertos" vazia={(riscos.data ?? []).length === 0}>
+      <SecaoRelatorio titulo="Problemas em aberto" vazia={(riscos.data ?? []).length === 0}>
         <ul className="space-y-0.5 text-xs">
           {(riscos.data ?? []).map((r) => (
-            <li key={r.descricao} className="flex justify-between gap-3">
-              <span>{r.descricao}</span>
-              <span className="shrink-0 tabular-nums text-suave">Severidade {r.severidade}</span>
+            <li key={r.titulo} className="flex justify-between gap-3">
+              <span>{r.titulo}</span>
+              <span className="shrink-0 tabular-nums text-suave">GUT {r.gut}</span>
             </li>
           ))}
         </ul>

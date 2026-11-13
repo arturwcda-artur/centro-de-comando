@@ -14,10 +14,9 @@ export default async function PaginaEditarObra({ params }: PageProps<"/obras/[id
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const { supabase } = await exigirSessaoCompleta();
-  const [{ data: obra }, opcoes, { data: plano }] = await Promise.all([
+  const [{ data: obra }, opcoes] = await Promise.all([
     supabase.from("obras").select("*").eq("id", id).maybeSingle(),
     carregarOpcoes(supabase),
-    supabase.from("acoes_planilhas").select("caminho").eq("obra_id", id).maybeSingle(),
   ]);
   if (!obra) notFound();
 
@@ -30,7 +29,7 @@ export default async function PaginaEditarObra({ params }: PageProps<"/obras/[id
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Editar obra</h1>
       </div>
       <Cartao>
-        <FormularioObra acao={salvarObra.bind(null, id)} obra={{ ...obra, planilha_acoes: plano?.caminho }} empresas={opcoes.empresas} contratantes={opcoes.contratantes} />
+        <FormularioObra acao={salvarObra.bind(null, id)} obra={obra} empresas={opcoes.empresas} contratantes={opcoes.contratantes} />
       </Cartao>
       <Cartao titulo="Arquivar obra">
         <p className="mb-3 text-sm text-suave">

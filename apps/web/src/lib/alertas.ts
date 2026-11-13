@@ -5,7 +5,7 @@ export const DIAS_TERMINO_CONTRATO = 60;
 export const DIAS_SEM_MEDICAO = 35;
 export const DIAS_VENCIMENTO = 7;
 
-export type Alerta = { grupo: "Contratos" | "Prazos" | "Equipe" | "Riscos" | "Integrações"; grave: boolean; texto: string; href: string };
+export type Alerta = { grupo: "Contratos" | "Prazos" | "Equipe" | "Problemas" | "Integrações"; grave: boolean; texto: string; href: string };
 
 type Dados = {
   hoje: string;
@@ -17,7 +17,8 @@ type Dados = {
   vencimentos: { tipo: string | null; descricao: string | null; data: string | null }[];
   tarefasVencidas: number;
   cartoesParados: number;
-  riscosCriticos: number;
+  /** Problemas com GUT ≥ 64 ainda sem plano de ação. */
+  problemasCriticosSemPlano: number;
   integracoes: string[];
 };
 
@@ -44,11 +45,11 @@ export function montarAlertas(d: Dados): Alerta[] {
     const tipo = v.tipo ? TIPOS[v.tipo] : undefined;
     if (!tipo || !v.data || v.data > somarDias(d.hoje, DIAS_VENCIMENTO)) continue;
     const vencido = v.data < d.hoje;
-    alertas.push({ grupo: "Prazos", grave: vencido, texto: `${tipo}: ${v.descricao}. ${vencido ? "Venceu" : "Vence"} em ${dataCivil(v.data)}.`, href: v.tipo === "decisao" ? "/riscos" : v.tipo === "marco" ? "/planejamento" : "/contratos" });
+    alertas.push({ grupo: "Prazos", grave: vencido, texto: `${tipo}: ${v.descricao}. ${vencido ? "Venceu" : "Vence"} em ${dataCivil(v.data)}.`, href: v.tipo === "decisao" ? "/problemas" : v.tipo === "marco" ? "/planejamento" : "/contratos" });
   }
 
   if (d.cartoesParados > 0) alertas.push({ grupo: "Equipe", grave: false, texto: `${plural(d.cartoesParados, "cartão parado", "cartões parados")} há 14 dias ou mais.`, href: "/equipe" });
-  if (d.riscosCriticos > 0) alertas.push({ grupo: "Riscos", grave: true, texto: `${plural(d.riscosCriticos, "risco crítico aberto", "riscos críticos abertos")}.`, href: "/riscos" });
+  if (d.problemasCriticosSemPlano > 0) alertas.push({ grupo: "Problemas", grave: true, texto: `${plural(d.problemasCriticosSemPlano, "problema crítico sem plano de ação", "problemas críticos sem plano de ação")}.`, href: "/problemas" });
 
   return alertas.sort((a, b) => Number(b.grave) - Number(a.grave));
 }

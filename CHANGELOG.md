@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.22.0] — 2026-11-13 — Limpeza
+### Removido
+- Tela **Riscos e decisões** e as abas de riscos e decisões da obra: os **Problemas** fazem esse papel. Painel, Alertas e relatório da obra passam a mostrar problemas.
+- Leitura da planilha do plano de ações: campo na obra, `cc_agente.acoes` e os atalhos `atualizar-acoes.cmd` e `agendar-plano-de-acoes.cmd`.
+- Ferramenta `listar_riscos` do assistente no Claude.
+
 ## [0.21.0] — 2026-11-13 — Lembrete em horário livre
 ### Adicionado
 - O lembrete das ações busca horário livre no Google Agenda, em blocos de pomodoro, de segunda a sexta, das 08:00 às 16:00, sem o almoço (RN-49i).

@@ -75,8 +75,8 @@ Cada regra tem um identificador (RN-xx) para ser citada em código, testes e ADR
 - **RN-49c** Tarefa da equipe: cada item de checklist vale 1, e o cartão sem checklist vale 1. Cartão concluído resolve todos os seus itens. Desde 13/11/2026, os pontos de tudo o que o cartão resolve, itens e cartão, são divididos igualmente entre os responsáveis do cartão, independentemente de quem marcou no Trello, e a soma das pessoas bate com o total. Tarefa sem responsável fica no fim da lista e fora dos totais e das listas. A tela Equipe não tem posições: ordena por tarefas resolvidas, porque percentual sobre a carga pune quem recebe mais trabalho.
 
 ## 5. Riscos e decisões
-- **RN-50** Severidade = probabilidade × impacto (1 a 25). **Crítico** quando ≥ 15, **alto** de 8 a 14, **moderado** até 7.
-- **RN-51** Uma decisão com status `tomada` precisa ter o texto da decisão registrado.
+- **RN-50** (retirada da tela em 13/11/2026, substituída pela RN-49h) Severidade = probabilidade × impacto (1 a 25). **Crítico** quando ≥ 15, **alto** de 8 a 14, **moderado** até 7.
+- **RN-51** (retirada da tela em 13/11/2026) Uma decisão com status `tomada` precisa ter o texto da decisão registrado.
 
 ## 6. Integrações
 - **RN-60** Cada tipo de informação tem **uma fonte oficial** (ADR 0004). As demais ferramentas são espelhos.
