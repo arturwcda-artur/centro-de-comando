@@ -104,7 +104,7 @@ export default async function Painel({ searchParams }: PageProps<"/">) {
 
       <section aria-label="Pendências e financeiro" className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Indicador rotulo="Atividades vencidas" valor={p.tarefasVencidas} detalhe={`${p.tarefasHoje} vencem hoje`} tom={p.tarefasVencidas ? "alerta" : undefined} />
-        <Indicador rotulo="Riscos críticos" valor={p.riscosCriticos} detalhe="severidade ≥ 15" tom={p.riscosCriticos ? "atencao" : undefined} />
+        <Indicador rotulo="Problemas críticos" valor={p.problemasCriticos} detalhe="GUT ≥ 64, em aberto" tom={p.problemasCriticos ? "atencao" : undefined} />
         <Indicador rotulo="Valor contratado" valor={brl(i.valorContratado, true)} detalhe={`Medido ${brl(i.valorMedido, true)}`} />
         <Indicador rotulo="Avanço financeiro" valor={pct(i.pctFinanceiroCarteira)} detalhe={`Recebido ${brl(i.valorRecebido, true)}`} />
       </section>
@@ -167,15 +167,17 @@ export default async function Painel({ searchParams }: PageProps<"/">) {
           )}
         </Cartao>
 
-        <Cartao titulo="Decisões pendentes">
-          {p.decisoesPendentes.length === 0 ? (
-            <EstadoVazio>Nenhuma decisão pendente.</EstadoVazio>
+        <Cartao titulo="Problemas mais graves">
+          {p.problemasGraves.length === 0 ? (
+            <EstadoVazio>Nenhum problema em aberto.</EstadoVazio>
           ) : (
             <ul className="space-y-2">
-              {p.decisoesPendentes.map((d) => (
-                <li key={d.id} className="flex items-center gap-2 text-sm">
-                  <span className="min-w-0 flex-1 truncate">{d.problema}</span>
-                  <span className="shrink-0 text-xs text-suave">{dataCivil(d.prazo)}</span>
+              {p.problemasGraves.map((d) => (
+                <li key={d.id}>
+                  <Link href={`/problemas/${d.id}`} className="flex items-center gap-2 text-sm hover:text-marca">
+                    <span className="w-8 shrink-0 text-xs tabular-nums text-suave">{d.gut}</span>
+                    <span className="min-w-0 flex-1 truncate">{d.titulo}</span>
+                  </Link>
                 </li>
               ))}
             </ul>

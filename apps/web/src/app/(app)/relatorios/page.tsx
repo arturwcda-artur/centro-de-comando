@@ -38,7 +38,7 @@ export default async function PaginaRelatorios() {
       </Cartao>
 
       <Cartao titulo="Situação da obra">
-        <p className="mb-3 text-sm text-suave">PDF com prazo, Curva S, contrato, medições, aditivos, riscos e tarefas.</p>
+        <p className="mb-3 text-sm text-suave">PDF com prazo, Curva S, contrato, medições, aditivos, problemas e tarefas.</p>
         {obrasComDados.length === 0 ? (
           <EstadoVazio>Nenhuma obra com cronograma ou contrato.</EstadoVazio>
         ) : (

@@ -12,17 +12,17 @@ type Cliente = Awaited<ReturnType<typeof criarClienteServidor>>;
 /** Lê as fontes dos alertas. A consulta falhar vira erro, para a tela não dizer "tudo em dia" sem ter olhado. */
 export async function carregarAlertas(supabase: Cliente) {
   const hoje = hojeSP();
-  const [contratos, versoes, medicoes, vencimentos, tarefas, riscos, conectores, equipe] = await Promise.all([
+  const [contratos, versoes, medicoes, vencimentos, tarefas, problemas, conectores, equipe] = await Promise.all([
     supabase.from("v_contratos_resumo").select("contrato_id, numero, obra_id, data_termino_vigente, saldo_a_medir"),
     supabase.from("cronograma_versoes").select("id, obra_id").eq("tipo", "vigente").order("importado_em", { ascending: false }),
     supabase.from("medicoes").select("contrato_id, periodo_fim").neq("situacao", "cancelada"),
     supabase.from("v_vencimentos").select("tipo, descricao, data").in("tipo", ["marco", "recebimento_previsto", "decisao"]),
     supabase.from("v_tarefas_priorizadas").select("id", { count: "exact", head: true }).eq("vencida", true),
-    supabase.from("v_riscos_criticos").select("id", { count: "exact", head: true }),
+    supabase.from("problemas").select("id", { count: "exact", head: true }).eq("status", "aberto").gte("gut", 64),
     supabase.from("conectores").select("nome_exibicao, ativo, estado_conexao, ultima_sync_em, intervalo_minutos, pausado_ate"),
     carregarCartoesEquipe(supabase),
   ]);
-  const erro = [contratos, versoes, medicoes, vencimentos, tarefas, riscos, conectores].find((r) => r.error)?.error;
+  const erro = [contratos, versoes, medicoes, vencimentos, tarefas, problemas, conectores].find((r) => r.error)?.error;
   if (erro) throw new Error(erro.message);
 
   // A versão mais recente de cada obra é a que vale
@@ -50,7 +50,7 @@ export async function carregarAlertas(supabase: Cliente) {
     vencimentos: vencimentos.data ?? [],
     tarefasVencidas: tarefas.count ?? 0,
     cartoesParados: cartoesParados(equipe.cartoes, new Date()).length,
-    riscosCriticos: riscos.count ?? 0,
+    problemasCriticosSemPlano: problemas.count ?? 0,
     integracoes: alertasConectores(conectores.data ?? [], new Date()),
   });
 }

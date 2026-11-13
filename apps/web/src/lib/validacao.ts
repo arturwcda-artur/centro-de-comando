@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CATEGORIAS_NOTION, PRIORIDADES_NOTION, SITUACOES_ADITIVO, SITUACOES_MEDICAO, STATUS_DECISAO, STATUS_RISCO, TIPOS_ADITIVO, TIPOS_LANCAMENTO, STATUS_TAREFA, SITUACOES_OBRA, TIPOS_TAREFA, UFS } from "@/lib/dominio";
+import { CATEGORIAS_NOTION, PRIORIDADES_NOTION, SITUACOES_ADITIVO, SITUACOES_MEDICAO, TIPOS_ADITIVO, TIPOS_LANCAMENTO, STATUS_TAREFA, SITUACOES_OBRA, TIPOS_TAREFA, UFS } from "@/lib/dominio";
 
 /** Valida os formulários no servidor (nunca confiar no navegador). Campos vazios viram null. */
 
@@ -50,7 +50,6 @@ export const obraSchema = z
     data_inicio: dataOpcional,
     data_termino_prevista: dataOpcional,
     pasta_local: textoOpcional(500),
-    planilha_acoes: textoOpcional(500),
     observacoes: textoOpcional(),
   })
   .refine((o) => !o.data_inicio || !o.data_termino_prevista || o.data_termino_prevista >= o.data_inicio, {
@@ -92,32 +91,6 @@ export const fornecedorSchema = z.object({
   especialidade: textoOpcional(200),
   contato: textoOpcional(200),
 });
-
-export const riscoSchema = z.object({
-  obra_id: z.uuid("Obra inválida."),
-  descricao: texto("Descrição", 1000),
-  origem: textoOpcional(200),
-  categoria: textoOpcional(100),
-  probabilidade: nota15("Probabilidade"),
-  impacto: nota15("Impacto"),
-  responsavel_id: uuidOpcional,
-  prazo: dataOpcional,
-  plano_resposta: textoOpcional(),
-  status: z.enum(STATUS_RISCO.map((s) => s.valor) as [string, ...string[]]).default("aberto"),
-});
-
-export const decisaoSchema = z
-  .object({
-    obra_id: z.uuid("Obra inválida."),
-    problema: texto("Problema", 1000),
-    decisao: textoOpcional(),
-    responsavel_id: uuidOpcional,
-    prazo: dataOpcional,
-    status: z.enum(STATUS_DECISAO.map((s) => s.valor) as [string, ...string[]]).default("pendente"),
-    data_decisao: dataOpcional,
-    resultado: textoOpcional(),
-  })
-  .refine((d) => d.status !== "tomada" || !!d.decisao, { message: "Registre o texto da decisão (RN-51).", path: ["decisao"] });
 
 export const tarefaSchema = z
   .object({

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { montarAlertas } from "./alertas";
 
-const base = { hoje: "2026-11-05", contratos: [], terminos: {}, ultimaMedicao: {}, vencimentos: [], tarefasVencidas: 0, cartoesParados: 0, riscosCriticos: 0, integracoes: [] };
+const base = { hoje: "2026-11-05", contratos: [], terminos: {}, ultimaMedicao: {}, vencimentos: [], tarefasVencidas: 0, cartoesParados: 0, problemasCriticosSemPlano: 0, integracoes: [] };
 const contrato = (extra = {}) => ({ contrato_id: "c1", numero: "01/2026", obra_id: "o1", data_termino_vigente: "2027-03-30", saldo_a_medir: 100, ...extra });
 const textos = (extra: Partial<Parameters<typeof montarAlertas>[0]>) => montarAlertas({ ...base, ...extra }).map((a) => a.texto);
 
@@ -59,7 +59,7 @@ describe("alertas de prazo", () => {
 
 describe("ordem", () => {
   it("graves vêm primeiro", () => {
-    const r = montarAlertas({ ...base, cartoesParados: 2, riscosCriticos: 1, integracoes: ["Trello: erro"] });
+    const r = montarAlertas({ ...base, cartoesParados: 2, problemasCriticosSemPlano: 1, integracoes: ["Trello: erro"] });
     expect(r.map((a) => a.grave)).toEqual([true, true, false]);
   });
 });

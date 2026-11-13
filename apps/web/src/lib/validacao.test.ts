@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aprovacaoSchema, compromissoSchema, decisaoSchema, empresaSchema, executadoAnteriorSchema, mensagemDoBanco, obraSchema, riscoSchema, validar } from "./validacao";
+import { aprovacaoSchema, compromissoSchema, empresaSchema, executadoAnteriorSchema, mensagemDoBanco, obraSchema, validar } from "./validacao";
 import { nivelSeveridade } from "./dominio";
 
 const UUID = "00000000-0000-4000-8000-000000000001";
@@ -30,20 +30,10 @@ describe("validação de obras", () => {
   });
 });
 
-describe("validação de cadastros, riscos e decisões", () => {
+describe("validação de cadastros", () => {
   it("CNPJ aceita máscara e exige 14 dígitos", () => {
     expect(validar(empresaSchema, { razao_social: "X", cnpj: "12.345.678/0001-90" }).dados?.cnpj).toBe("12345678000190");
     expect(validar(empresaSchema, { razao_social: "X", cnpj: "123" }).erros?.cnpj).toMatch(/14 dígitos/);
-  });
-
-  it("probabilidade e impacto de 1 a 5", () => {
-    const { erros } = validar(riscoSchema, { obra_id: UUID, descricao: "Chuva", probabilidade: "6", impacto: "0" });
-    expect(erros).toMatchObject({ probabilidade: expect.any(String), impacto: expect.any(String) });
-  });
-
-  it("decisão 'tomada' exige o texto da decisão (RN-51)", () => {
-    expect(validar(decisaoSchema, { obra_id: UUID, problema: "P", status: "tomada" }).erros?.decisao).toMatch(/RN-51/);
-    expect(validar(decisaoSchema, { obra_id: UUID, problema: "P", status: "tomada", decisao: "Fazer" }).erros).toBeNull();
   });
 
   it("aprovação aceita empresa nova digitada", () => {

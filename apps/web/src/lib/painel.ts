@@ -29,7 +29,7 @@ export async function carregarPainel(supabase: Cliente, filtros: Filtros) {
   let consultaObras = supabase.from("v_obra_resumo").select("*").order("nome");
   if (filtros.obraId) consultaObras = consultaObras.eq("obra_id", filtros.obraId);
 
-  const [obras, listaObras, tarefas, vencimentos, riscos, decisoes, eventosHoje, eventosSemana] = await Promise.all([
+  const [obras, listaObras, tarefas, vencimentos, problemasCriticos, problemas, eventosHoje, eventosSemana] = await Promise.all([
     consultaObras,
     supabase.from("obras").select("id, codigo, nome").is("arquivado_em", null).order("nome"),
     porObra(
@@ -43,15 +43,13 @@ export async function carregarPainel(supabase: Cliente, filtros: Filtros) {
     porObra(
       supabase.from("v_vencimentos").select("tipo, registro_id, obra_id, descricao, data").gte("data", hoje).lte("data", ate).order("data").limit(8),
     ),
-    porObra(supabase.from("v_riscos_criticos").select("id", { count: "exact", head: true })),
-    porObra(
-      supabase.from("decisoes").select("id, problema, prazo, obra_id").eq("status", "pendente").order("prazo", { ascending: true, nullsFirst: false }).limit(5),
-    ),
+    porObra(supabase.from("problemas").select("id", { count: "exact", head: true }).in("status", ["aberto", "em_andamento"]).gte("gut", 64)),
+    porObra(supabase.from("problemas").select("id, titulo, gut, obra_id").in("status", ["aberto", "em_andamento"]).order("gut", { ascending: false }).limit(5)),
     porObra(supabase.from("eventos").select("id, titulo, inicio, fim, dia_inteiro, local").is("cancelado_em", null).gte("inicio", inicioHoje).lte("inicio", fimHoje).order("inicio")),
     porObra(supabase.from("eventos").select("id", { count: "exact", head: true }).is("cancelado_em", null).gte("inicio", inicioHoje).lte("inicio", fimSemana)),
   ]);
 
-  const erro = [obras, listaObras, tarefas, vencimentos, riscos, decisoes, eventosHoje, eventosSemana].find((r) => r.error)?.error;
+  const erro = [obras, listaObras, tarefas, vencimentos, problemasCriticos, problemas, eventosHoje, eventosSemana].find((r) => r.error)?.error;
   const abertas = tarefas.data ?? [];
   const nomeObra = new Map((listaObras.data ?? []).map((o) => [o.id, o.nome]));
 
@@ -66,8 +64,8 @@ export async function carregarPainel(supabase: Cliente, filtros: Filtros) {
     tarefasHoje: abertas.filter((t) => t.vence_hoje).length,
     prioridades: abertas.slice(0, 6),
     vencimentos: vencimentos.data ?? [],
-    riscosCriticos: riscos.count ?? 0,
-    decisoesPendentes: decisoes.data ?? [],
+    problemasCriticos: problemasCriticos.count ?? 0,
+    problemasGraves: problemas.data ?? [],
     eventosHoje: eventosHoje.data ?? [],
     eventosSemana: eventosSemana.count ?? 0,
   };

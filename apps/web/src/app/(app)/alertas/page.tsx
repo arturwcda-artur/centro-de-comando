@@ -7,7 +7,7 @@ import { exigirSessaoCompleta } from "@/lib/sessao";
 
 export const metadata: Metadata = { title: "Alertas" };
 
-const GRUPOS: Alerta["grupo"][] = ["Integrações", "Contratos", "Prazos", "Riscos", "Equipe"];
+const GRUPOS: Alerta["grupo"][] = ["Integrações", "Problemas", "Contratos", "Prazos", "Equipe"];
 
 export default async function PaginaAlertas() {
   const { supabase } = await exigirSessaoCompleta();

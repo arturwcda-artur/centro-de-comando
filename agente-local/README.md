@@ -10,7 +10,6 @@ Programa Python executado no PC Windows pelo Agendador de Tarefas (ver ADR 0002)
 | `cc_agente.cronogramas` | leitura de `.mpp` via COM, somente leitura, e envio ao banco com papel restrito | 6 ✅ |
 | `cc_agente.medicoes` | leitura das planilhas de medição, item por item, por modelo | 7 ✅ |
 | `cc_agente.documentos` | índice das pastas das obras, sem cópia | 8 ✅ |
-| `cc_agente.acoes` | leitura do plano de ações da obra (aba AÇÕES da Central de Gestão), somente leitura | 12 ✅ |
 
 ## Configuração
 Arquivo `%USERPROFILE%\.centro-de-comando\agente.env`, **fora do repositório**. Também é possível indicar outro caminho com a variável `CC_AGENTE_CONFIG`. Veja [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md), seção D.

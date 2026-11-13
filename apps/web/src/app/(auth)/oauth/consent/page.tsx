@@ -31,7 +31,7 @@ export default async function PaginaConsentimento({ searchParams }: { searchPara
         </p>
       </div>
       <ul className="list-disc space-y-1 pl-5 text-sm">
-        <li>Lê obras, tarefas, contratos, vencimentos, riscos e decisões.</li>
+        <li>Lê obras, tarefas, contratos e vencimentos.</li>
         <li>Não grava nada e não vê conteúdo com credencial.</li>
         <li>Os dados consultados passam pela sua conta do Claude.</li>
         <li>Você pode revogar em Integrações.</li>
