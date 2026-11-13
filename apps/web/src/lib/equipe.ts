@@ -120,11 +120,11 @@ function fechar(linhas: Map<string, Acumulador>): LinhaEquipe[] {
 }
 
 /**
- * Decisão do proprietário em 05/11/2026: o item resolvido é de quem marcou no Trello, e a equipe
- * combina que cada um marca o que resolveu. O cartão é sempre dos responsáveis, porque encerrar um
- * cartão costuma ser ato de gestão. Com false, os itens também voltam aos responsáveis.
+ * Decisão do proprietário em 13/11/2026: os pontos são dos responsáveis do cartão, inclusive os dos
+ * itens de checklist, divididos igualmente entre eles. Quem marcou o item não muda o crédito.
+ * (Entre 05/11 e 13/11, o item ia para quem o marcou no Trello: true.)
  */
-export const CREDITO_POR_QUEM_MARCOU = true;
+export const CREDITO_POR_QUEM_MARCOU = false;
 
 function donosDoItem(i: ItemCartao, c: CartaoEquipe, resolvido: boolean, porQuemMarcou: boolean): string[] {
   if (!porQuemMarcou) return c.membros;
