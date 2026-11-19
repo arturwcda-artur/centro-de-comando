@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.26.2] — 2026-11-19
+### Corrigido
+- Sincronização: se o banco oscilar, tenta de novo até 3 vezes antes de falhar, e o erro passa a dizer o motivo em vez de "undefined".
+
 ## [0.26.1] — 2026-11-13
 ### Alterado
 - Cartão criado a partir da ação 5W2H leva só o O quê, o Quem e o Quando (e a prioridade). O responsável é sugerido também pelo nome escrito em "Quem: outro nome".

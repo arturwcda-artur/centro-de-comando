@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aplicar, executarConector } from '../src/motor.js';
+import { aplicar, executarConector, tentarDeNovo, textoDoErro } from '../src/motor.js';
 
 /** Banco falso mínimo: só o que o motor usa (select…eq…range e upsert por fonte+id_externo). */
 function bancoFalso() {
@@ -72,5 +72,27 @@ describe('conector pausado', () => {
     });
     expect(executou).toBe(false);
     expect(r).toMatchObject({ ok: true, lidos: 0 });
+  });
+});
+
+describe('instabilidade do banco', () => {
+  it('tenta de novo quando o banco falha e segue quando ele volta', async () => {
+    let n = 0;
+    const r = await tentarDeNovo(async () => (++n < 3 ? { data: null, error: {} } : { data: { id: 'x' }, error: null }), { esperaMs: 1 });
+    expect(r).toEqual({ data: { id: 'x' }, error: null });
+    expect(n).toBe(3);
+  });
+
+  it('desiste depois das tentativas e devolve o último erro, também quando a chamada lança', async () => {
+    let n = 0;
+    const r = await tentarDeNovo(async () => { n++; throw new Error('fetch failed'); }, { tentativas: 2, esperaMs: 1 });
+    expect(n).toBe(2);
+    expect(r.error.message).toBe('fetch failed');
+  });
+
+  it('erro sem mensagem vira um texto que se entende', () => {
+    expect(textoDoErro({})).toBe('sem resposta do banco (instabilidade passageira)');
+    expect(textoDoErro({ code: '503', details: 'Service Unavailable' })).toBe('503 · Service Unavailable');
+    expect(textoDoErro({ message: 'x' })).toBe('x');
   });
 });

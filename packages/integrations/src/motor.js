@@ -9,11 +9,35 @@ import { hashDe } from './util.js';
 
 const LOTE = 200;
 
+/** Texto do erro do banco, mesmo quando a resposta não traz mensagem (ex.: instabilidade passageira). */
+export function textoDoErro(erro) {
+  if (!erro) return 'erro desconhecido';
+  return erro.message || [erro.code, erro.details, erro.hint].filter(Boolean).join(' · ') || 'sem resposta do banco (instabilidade passageira)';
+}
+
+/**
+ * Repete uma chamada ao banco que voltou com erro, esperando um pouco entre as tentativas.
+ * Uma oscilação passageira do Supabase não derruba a sincronização inteira.
+ */
+export async function tentarDeNovo(chamada, { tentativas = 3, esperaMs = 3000 } = {}) {
+  let resultado;
+  for (let i = 1; i <= tentativas; i++) {
+    try {
+      resultado = await chamada();
+    } catch (e) {
+      resultado = { data: null, error: { message: e instanceof Error ? e.message : String(e) } };
+    }
+    if (!resultado.error || i === tentativas) return resultado;
+    await new Promise((r) => setTimeout(r, esperaMs * i));
+  }
+  return resultado;
+}
+
 async function existentes(supabase, tabela, fonte) {
   const mapa = new Map();
   for (let de = 0; ; de += 1000) {
     const { data, error } = await supabase.from(tabela).select('id, id_externo, hash_conteudo').eq('fonte', fonte).range(de, de + 999);
-    if (error) throw new Error(`leitura de ${tabela}: ${error.message}`);
+    if (error) throw new Error(`leitura de ${tabela}: ${textoDoErro(error)}`);
     for (const r of data) mapa.set(r.id_externo, r);
     if (data.length < 1000) return mapa;
   }
@@ -46,7 +70,7 @@ export async function aplicar(supabase, { tabela, fonte, registros, agora = new 
   for (const lote of [novos, alterados]) {
     for (let i = 0; i < lote.length; i += LOTE) {
       const { error } = await supabase.from(tabela).upsert(lote.slice(i, i + LOTE), { onConflict: 'fonte,id_externo' });
-      if (error) throw new Error(`gravação em ${tabela}: ${error.message}`);
+      if (error) throw new Error(`gravação em ${tabela}: ${textoDoErro(error)}`);
     }
   }
   return { lidos: registros.length, criados, atualizados, ignorados: registros.length - criados - atualizados, itens };
@@ -59,13 +83,15 @@ export async function executarConector(supabase, { ferramenta, nome, gatilho = '
   if (atual?.pausado_ate && Date.parse(atual.pausado_ate) > Date.now()) {
     return { ok: true, lidos: 0, criados: 0, atualizados: 0, ignorados: 0, mensagem: `${nome}: pausado` };
   }
-  const { data: conector, error: e1 } = await supabase
-    .from('conectores')
-    // Sem "modo": a autorização de escrita é do proprietário e a sincronização nunca a altera
-    .upsert({ ferramenta, nome_exibicao: nome, ativo: true, intervalo_minutos: intervaloMin }, { onConflict: 'ferramenta' })
-    .select('id')
-    .single();
-  if (e1) throw new Error(`registro do conector ${ferramenta}: ${e1.message}`);
+  const { data: conector, error: e1 } = await tentarDeNovo(() =>
+    supabase
+      .from('conectores')
+      // Sem "modo": a autorização de escrita é do proprietário e a sincronização nunca a altera
+      .upsert({ ferramenta, nome_exibicao: nome, ativo: true, intervalo_minutos: intervaloMin }, { onConflict: 'ferramenta' })
+      .select('id')
+      .single(),
+  );
+  if (e1) throw new Error(`registro do conector ${ferramenta}: ${textoDoErro(e1)}`);
   const { data: execucao } = await supabase.from('sync_execucoes').insert({ conector_id: conector.id, gatilho }).select('id').single();
 
   const fim = (dados) => supabase.from('sync_execucoes').update({ finalizado_em: new Date().toISOString(), ...dados }).eq('id', execucao.id);
