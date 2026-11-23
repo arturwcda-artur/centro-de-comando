@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
 import { GraficoSemanas } from "@/components/grafico-semanas";
-import { DIAS_PARADA, QUADRO_EQUIPE, SEM_RESPONSAVEL, type Geracao, type LinhaEquipe, type PosicaoEvolucao, type Resolvida } from "@/lib/equipe";
+import { DIAS_PARADA, QUADRO_EQUIPE, QUADROS_EQUIPE, SEM_RESPONSAVEL, quadroEquipeDe, type Geracao, type LinhaEquipe, type PosicaoEvolucao, type Resolvida } from "@/lib/equipe";
 import { PERIODOS, carregarCartoesEquipe, carregarGeracaoEquipe, montarGeracao, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -219,10 +219,12 @@ function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
 }
 
 export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe">) {
-  const { periodo: bruto } = await searchParams;
+  const { periodo: bruto, quadro: quadroBruto } = await searchParams;
   const periodo = periodoDe(bruto);
+  const quadro = quadroEquipeDe(quadroBruto);
+  const sufixoQuadro = quadro === QUADRO_EQUIPE ? "" : `&quadro=${encodeURIComponent(quadro)}`;
   const { supabase } = await exigirSessaoCompleta();
-  const [{ cartoes, idMembro }, dadosGeracao] = await Promise.all([carregarCartoesEquipe(supabase), carregarGeracaoEquipe(supabase)]);
+  const [{ cartoes, idMembro }, dadosGeracao] = await Promise.all([carregarCartoesEquipe(supabase, quadro), carregarGeracaoEquipe(supabase, quadro)]);
   const geracao = montarGeracao(dadosGeracao, periodo.dias);
   const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, ranking, resolvidasNoPeriodo, resolvidasAntes, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
 
@@ -238,14 +240,27 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Equipe</h1>
-        <p className="text-sm text-suave">Quadro {QUADRO_EQUIPE}, conforme a última sincronização do Trello.</p>
+        <p className="text-sm text-suave">Quadro {quadro}, conforme a última sincronização do Trello.</p>
       </div>
+
+      <nav aria-label="Quadro" className="flex flex-wrap gap-1 border-b border-borda">
+        {QUADROS_EQUIPE.map((q) => (
+          <Link
+            key={q}
+            href={`/equipe?periodo=${periodo.valor}${q === QUADRO_EQUIPE ? "" : `&quadro=${encodeURIComponent(q)}`}`}
+            aria-current={q === quadro ? "page" : undefined}
+            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm ${q === quadro ? "border-marca font-medium" : "border-transparent text-suave hover:text-texto"}`}
+          >
+            {q}
+          </Link>
+        ))}
+      </nav>
 
       <nav aria-label="Período" className="flex flex-wrap gap-2">
         {PERIODOS.map((p) => (
           <Link
             key={p.valor}
-            href={`/equipe?periodo=${p.valor}`}
+            href={`/equipe?periodo=${p.valor}${sufixoQuadro}`}
             aria-current={p.valor === periodo.valor ? "page" : undefined}
             className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${p.valor === periodo.valor ? "border-marca bg-marca-suave" : "border-borda hover:bg-superficie-2"}`}
           >

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL, cartoesParados, detalharResolvidas, geracaoPorPessoa, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, ehDoQuadroDaEquipe, quadroEquipeDe, cartoesParados, detalharResolvidas, geracaoPorPessoa, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
 
 const hoje = "2026-11-05";
 const cartao = (extra: Partial<CartaoEquipe> = {}): CartaoEquipe => ({ status: "a_fazer", prazo: null, concluido_em: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › CEF-01`, membros: ["Ana"], ...extra });
@@ -420,3 +420,17 @@ describe("ranking de evolução: quem não entregou nada", () => {
   });
 });
 
+
+describe("quadros da equipe", () => {
+  it("escolhe o quadro pelo nome e volta ao padrão quando não reconhece", () => {
+    expect(quadroEquipeDe("Gestão empresarial")).toBe("Gestão empresarial");
+    expect(quadroEquipeDe("Outro quadro")).toBe(QUADRO_EQUIPE);
+    expect(quadroEquipeDe(undefined)).toBe(QUADRO_EQUIPE);
+  });
+  it("reconhece cartões dos dois quadros e só deles", () => {
+    expect(ehDoQuadroDaEquipe(`${QUADRO_EQUIPE} › CEF-01`)).toBe(true);
+    expect(ehDoQuadroDaEquipe("Gestão empresarial › A FAZER")).toBe(true);
+    expect(ehDoQuadroDaEquipe("Objetivos › Metas")).toBe(false);
+    expect(ehDoQuadroDaEquipe(null)).toBe(false);
+  });
+});

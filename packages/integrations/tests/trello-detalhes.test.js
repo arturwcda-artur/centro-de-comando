@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { criarCartaoDeComentario, listasDoCartao } from '../src/escrita.js';
-import { QUADRO_DETALHADO, aplicarDetalhes, cartaoImportavel, criacoesDoHistorico, conclusoesDeItens, conclusoesDoHistorico, criacaoDoCartao, datasDoCartao, lerDetalhes, prazosDoHistorico, textoSensivel } from '../src/trello.js';
+import { QUADRO_DETALHADO, QUADROS_DETALHADOS, aplicarDetalhes, juntarDetalhes, cartaoImportavel, criacoesDoHistorico, conclusoesDeItens, conclusoesDoHistorico, criacaoDoCartao, datasDoCartao, lerDetalhes, prazosDoHistorico, textoSensivel } from '../src/trello.js';
 
 // Dados de TESTE no formato da API. Nenhuma chamada real é feita.
 const cred = { chave: 'k', token: 't' };
@@ -20,8 +20,19 @@ function apiFalsa(rotas) {
 }
 
 describe('quadro detalhado', () => {
-  it('é só o quadro combinado', () => {
+  it('são os quadros combinados: o da equipe e o de gestão empresarial', () => {
     expect(QUADRO_DETALHADO).toBe('Obras do Grupo - C.SALLES');
+    expect(QUADROS_DETALHADOS).toEqual(['Obras do Grupo - C.SALLES', 'Gestão empresarial']);
+  });
+
+  it('junta os detalhes dos dois quadros sem repetir membro', () => {
+    const vazio = { membros: [], itens: [], criacoes: [], comentarios: [], vinculos: [], datas: [] };
+    const a = { ...vazio, membros: [{ id_externo: 'm1', nome: 'Ana' }], comentarios: [{ id_externo: 'c1' }] };
+    const b = { ...vazio, membros: [{ id_externo: 'm1', nome: 'Ana' }, { id_externo: 'm2', nome: 'Bia' }], comentarios: [{ id_externo: 'c2' }] };
+    expect(juntarDetalhes(null, a)).toBe(a);
+    const j = juntarDetalhes(a, b);
+    expect(j.membros.map((m) => m.id_externo)).toEqual(['m1', 'm2']);
+    expect(j.comentarios.map((c) => c.id_externo)).toEqual(['c1', 'c2']);
   });
 });
 

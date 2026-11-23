@@ -8,6 +8,22 @@ const API = 'https://api.trello.com/1';
 export const PESSOA_EQUIPE = 'Equipe (Trello)';
 /** Único quadro com membros, comentários, checklists e arquivados (ADR 0017). */
 export const QUADRO_DETALHADO = 'Obras do Grupo - C.SALLES';
+/** Quadros com leitura completa (membros, comentários, checklists e histórico). Decisão do proprietário em 23/11/2026. */
+export const QUADROS_DETALHADOS = [QUADRO_DETALHADO, 'Gestão empresarial'];
+
+/** Soma os detalhes de vários quadros. Um membro presente em dois quadros entra uma vez só. */
+export function juntarDetalhes(a, b) {
+  if (!a) return b;
+  const membros = new Map([...a.membros, ...b.membros].map((m) => [m.id_externo, m]));
+  return {
+    membros: [...membros.values()],
+    itens: [...a.itens, ...b.itens],
+    criacoes: [...a.criacoes, ...b.criacoes],
+    comentarios: [...a.comentarios, ...b.comentarios],
+    vinculos: [...a.vinculos, ...b.vinculos],
+    datas: [...a.datas, ...b.datas],
+  };
+}
 const LOTE = 200;
 
 function chamar(caminho, { chave, token }, params = {}) {
@@ -266,7 +282,7 @@ export async function lerTrello(credenciais, { idEquipe }) {
   const registros = [];
   let detalhes = null;
   for (const q of quadros) {
-    const detalhado = q.name === QUADRO_DETALHADO;
+    const detalhado = QUADROS_DETALHADOS.includes(q.name);
     const [listas, cartoes] = await Promise.all([
       chamar(`/boards/${q.id}/lists`, credenciais, { fields: 'name', filter: 'all' }),
       chamar(`/boards/${q.id}/cards`, credenciais, { filter: detalhado ? 'all' : 'open', fields: 'name,desc,due,dueComplete,idList,idMembers,url,dateLastActivity,closed' }),
@@ -285,7 +301,7 @@ export async function lerTrello(credenciais, { idEquipe }) {
       const conclusoes = conclusoesDoHistorico(historico);
       const prazos = prazosDoHistorico(historico);
       const datas = importados.map((c) => datasDoCartao(c, nomeLista.get(c.idList), conclusoes, prazos));
-      detalhes = { ...(await lerDetalhes(credenciais, q.id)), vinculos, datas };
+      detalhes = juntarDetalhes(detalhes, { ...(await lerDetalhes(credenciais, q.id)), vinculos, datas });
     }
   }
   return { registros, quadros: quadros.length, detalhes };
