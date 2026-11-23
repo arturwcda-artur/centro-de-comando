@@ -28,6 +28,13 @@ async function tokenDoGoogle(supabase) {
   return data ?? null;
 }
 
+/** Cartões que são espelho de tarefas do sistema: não podem voltar como tarefas importadas. */
+async function cartoesEspelho(supabase) {
+  const { data, error } = await supabase.from('tarefas').select('trello_cartao_id').not('trello_cartao_id', 'is', null).limit(10000);
+  if (error) throw new Error(`leitura dos cartões espelho: ${error.message}`);
+  return new Set(data.map((t) => t.trello_cartao_id));
+}
+
 /** Quadro pessoal "tarefas" (RN-49l): só grava no Trello com a gravação autorizada pelo proprietário. */
 async function quadroPessoal(supabase) {
   const { data: conector } = await supabase.from('conectores').select('modo, escrita_autorizada_em').eq('ferramenta', 'trello').maybeSingle();
@@ -52,7 +59,8 @@ async function principal() {
     resultados.push(
       await executarConector(supabase, { ferramenta: 'trello', nome: 'Trello', gatilho }, async () => {
         const idEquipe = await trello.idPessoaEquipe(supabase);
-        const { registros, quadros, detalhes } = await trello.lerTrello({ chave: env.TRELLO_API_KEY, token: env.TRELLO_TOKEN }, { idEquipe });
+        const espelhos = await cartoesEspelho(supabase);
+        const { registros, quadros, detalhes } = await trello.lerTrello({ chave: env.TRELLO_API_KEY, token: env.TRELLO_TOKEN }, { idEquipe, espelhos });
         const r = await aplicar(supabase, { tabela: 'tarefas', fonte: 'trello', registros });
         const canceladas = await trello.cancelarAusentes(supabase, registros.map((x) => x.id_externo));
         const d = detalhes ? await trello.aplicarDetalhes(supabase, detalhes) : null;
