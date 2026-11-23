@@ -6,6 +6,9 @@ import { buscar, cortar, dataSP } from './util.js';
 
 const API = 'https://api.trello.com/1';
 export const PESSOA_EQUIPE = 'Equipe (Trello)';
+/** Quadro pessoal do proprietário: espelho das tarefas criadas no sistema (RN-49l), não é importado. */
+export const QUADRO_PESSOAL = 'tarefas';
+export const ehQuadroPessoal = (nome) => (nome ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim() === QUADRO_PESSOAL;
 /** Único quadro com membros, comentários, checklists e arquivados (ADR 0017). */
 export const QUADRO_DETALHADO = 'Obras do Grupo - C.SALLES';
 /** Quadros com leitura completa (membros, comentários, checklists e histórico). Decisão do proprietário em 23/11/2026. */
@@ -282,6 +285,8 @@ export async function lerTrello(credenciais, { idEquipe }) {
   const registros = [];
   let detalhes = null;
   for (const q of quadros) {
+    // O quadro pessoal "tarefas" é espelho das tarefas do sistema (RN-49l): não vira tarefa importada
+    if (ehQuadroPessoal(q.name)) continue;
     const detalhado = QUADROS_DETALHADOS.includes(q.name);
     const [listas, cartoes] = await Promise.all([
       chamar(`/boards/${q.id}/lists`, credenciais, { fields: 'name', filter: 'all' }),

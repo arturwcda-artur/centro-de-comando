@@ -3,14 +3,17 @@ import { concluirCartaoTrello } from "@cc/integrations/src/escrita.js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { podeConcluir } from "@/lib/dominio";
+import { espelharNoTrello } from "@/lib/espelho-trello";
+import { dataCivil, hojeSP } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { UUID } from "@/lib/obras";
-import { mensagemDoBanco, tarefaRapidaSchema, tarefaSchema, validar, type EstadoFormulario } from "@/lib/validacao";
+import { conclusaoSchema, mensagemDoBanco, tarefaRapidaSchema, tarefaSchema, validar, type EstadoFormulario } from "@/lib/validacao";
 
 function revalidarTudo() {
   revalidatePath("/tarefas", "layout");
   revalidatePath("/meu-dia");
   revalidatePath("/");
+  revalidatePath("/problemas", "layout");
 }
 
 /**
@@ -35,9 +38,11 @@ export async function salvarTarefa(id: string | null, _: EstadoFormulario, fd: F
       .update({ ...registro, concluida_em: dados.status === "concluida" ? (atual.data.concluida_em ?? concluida_em) : null })
       .eq("id", id);
     if (error) return { erro: mensagemDoBanco(error) };
+    await espelharNoTrello(supabase, [id]);
   } else {
-    const { error } = await supabase.from("tarefas").insert({ ...registro, concluida_em });
+    const { data, error } = await supabase.from("tarefas").insert({ ...registro, concluida_em }).select("id").single();
     if (error) return { erro: mensagemDoBanco(error) };
+    await espelharNoTrello(supabase, [data.id]);
   }
   revalidarTudo();
   redirect("/tarefas");
@@ -48,8 +53,9 @@ export async function criarTarefaRapida(_: EstadoFormulario, fd: FormData): Prom
   const { supabase } = await exigirSessaoCompleta();
   const { dados, erros } = validar(tarefaRapidaSchema, fd);
   if (!dados) return { erros };
-  const { error } = await supabase.from("tarefas").insert(dados);
+  const { data, error } = await supabase.from("tarefas").insert(dados).select("id").single();
   if (error) return { erro: mensagemDoBanco(error) };
+  await espelharNoTrello(supabase, [data.id]);
   revalidarTudo();
   return { ok: true, mensagem: "Tarefa adicionada." };
 }
@@ -102,13 +108,72 @@ export async function concluirTarefa(id: string, _: EstadoFormulario): Promise<E
     .update({ status: "concluida", concluida_em: new Date().toISOString(), aguardando_pessoa_id: null, hash_conteudo: null })
     .eq("id", id);
   if (error) return { erro: mensagemDoBanco(error) };
+  if (t.fonte === "manual") await espelharNoTrello(supabase, [id]);
   revalidarTudo();
   return { ok: true };
+}
+
+/**
+ * Conclui uma tarefa criada no sistema registrando a saída/decisão (RN-49m). A decisão fica na obra
+ * da tarefa e vai como comentário no cartão do quadro "tarefas". Com a ressalva de que afeta o
+ * planejamento, nasce a tarefa de atualizar o cronograma; o arquivo do Project nunca é alterado aqui.
+ */
+export async function concluirComDecisao(id: string, _: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
+  const { supabase } = await exigirSessaoCompleta();
+  if (!UUID.test(id)) return { erro: "Tarefa inválida." };
+  const { dados, erros } = validar(conclusaoSchema, fd);
+  if (!dados) return { erros };
+  const { data: t } = await supabase.from("tarefas").select("codigo, titulo, obra_id, fonte, status, responsavel_id, importancia, impacto").eq("id", id).maybeSingle();
+  if (!t) return { erro: "Tarefa não encontrada." };
+  if (t.fonte !== "manual") return { erro: "Use o botão Concluir: esta tarefa vem do Trello." };
+  if (!podeConcluir({ ...t, fonte: "manual" })) return { erro: "Esta tarefa já está encerrada." };
+
+  const agora = new Date();
+  const { error } = await supabase.from("tarefas").update({ status: "concluida", concluida_em: agora.toISOString(), aguardando_pessoa_id: null }).eq("id", id);
+  if (error) return { erro: mensagemDoBanco(error) };
+
+  const novas: string[] = [];
+  if (dados.decisao) {
+    const { error: e1 } = await supabase.from("decisoes").insert({
+      obra_id: t.obra_id,
+      tarefa_id: id,
+      problema: t.titulo,
+      decisao: dados.decisao,
+      status: "tomada",
+      data_decisao: hojeSP(agora),
+      afeta_planejamento: dados.afeta_planejamento,
+    });
+    if (e1) return { erro: `Tarefa concluída, mas a decisão não foi registrada: ${mensagemDoBanco(e1)}` };
+    if (dados.afeta_planejamento) {
+      const { data: nova, error: e2 } = await supabase
+        .from("tarefas")
+        .insert({
+          titulo: `Atualizar o planejamento: ${dados.decisao}`.slice(0, 300),
+          descricao: `Decisão tomada em ${dataCivil(hojeSP(agora))} ao concluir a tarefa #${t.codigo} "${t.titulo}":\n\n${dados.decisao}\n\nAvaliar o efeito no cronograma vigente e, se alterar, salvar a nova revisão em VALIDOS.`.slice(0, 4000),
+          obra_id: t.obra_id,
+          tipo: "acao",
+          categoria: "Planejamento",
+          importancia: Math.max(t.importancia ?? 3, 4),
+          impacto: Math.max(t.impacto ?? 3, 4),
+          critica: true,
+        })
+        .select("id")
+        .single();
+      if (e2) return { erro: `Decisão registrada, mas a tarefa de atualizar o planejamento não foi criada: ${mensagemDoBanco(e2)}` };
+      novas.push(nova.id);
+    }
+  }
+
+  await espelharNoTrello(supabase, [id], dados.decisao ? `Saída / decisão:\n${dados.decisao}${dados.afeta_planejamento ? "\n\n⚠ Afeta o planejamento da obra." : ""}` : undefined);
+  await espelharNoTrello(supabase, novas);
+  revalidarTudo();
+  redirect(`/tarefas/${id}`);
 }
 
 export async function reabrirTarefa(id: string) {
   const { supabase } = await exigirSessaoCompleta();
   if (!UUID.test(id)) return;
   await supabase.from("tarefas").update({ status: "a_fazer", concluida_em: null }).eq("id", id).eq("fonte", "manual");
+  await espelharNoTrello(supabase, [id]);
   revalidarTudo();
 }

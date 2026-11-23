@@ -77,7 +77,7 @@ export async function listasDoQuadroPorNome(credenciais, nomeQuadro) {
  * Cria um cartão a partir de uma ação 5W2H (RN-49k): lista, membro, prazo e etiqueta de prioridade.
  * A etiqueta é reaproveitada pelo nome; se o quadro ainda não tiver, é criada. Nada é excluído.
  */
-export async function criarCartaoNoQuadro(credenciais, { nomeQuadro, idLista, titulo, descricao, prazo, idMembro, prioridade }) {
+export async function criarCartaoNoQuadro(credenciais, { nomeQuadro, idLista, titulo, descricao, prazo, idMembro, prioridade, idCartaoExistente }) {
   const quadro = await quadroPorNome(credenciais, nomeQuadro);
   const listas = await listasDoQuadro(credenciais, quadro.id);
   if (!listas.some((l) => l.id === idLista)) throw new Error('A lista escolhida não pertence a este quadro');
@@ -96,6 +96,9 @@ export async function criarCartaoNoQuadro(credenciais, { nomeQuadro, idLista, ti
     const usada = achada ?? (await postar('/labels', { name: etiqueta.nome, color: etiqueta.cor, idBoard: quadro.id }));
     params.idLabels = usada.id;
   }
-  const novo = await postar('/cards', params);
+  // Ação que já tem cartão no quadro pessoal: o mesmo cartão muda de quadro, sem duplicar (RN-49l)
+  const novo = idCartaoExistente
+    ? await buscar(`${TRELLO}/cards/${idCartaoExistente}?${new URLSearchParams({ ...params, idBoard: quadro.id, dueComplete: 'false', ...auth })}`, { method: 'PUT', headers: { Accept: 'application/json' } }, 'Trello').then((r) => r.json())
+    : await postar('/cards', params);
   return { id: novo.id, url: novo.shortUrl, lista: listas.find((l) => l.id === idLista).nome };
 }

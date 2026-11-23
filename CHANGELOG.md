@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.28.0] — 2026-11-23 — Quadro tarefas e decisões
+### Adicionado
+- Toda tarefa criada no sistema, inclusive ação 5W2H, ganha um cartão no quadro pessoal **tarefas** do Trello; concluir aqui leva o cartão para **concluidos**, e concluir lá conclui aqui (RN-49l).
+- Tarefa: **Concluir com saída / decisão**, com a ressalva **Afeta o planejamento da obra**, que cria a tarefa de atualizar o cronograma (RN-49m). Problemas: atalho **Concluir com decisão** em cada ação.
+- Migration `0036_quadro_tarefas_e_decisoes.sql`.
+
 ## [0.27.0] — 2026-11-23 — Quadro Gestão empresarial
 ### Adicionado
 - O quadro **Gestão empresarial** do Trello passa a ter o mesmo tratamento do quadro da equipe: membros, comentários, checklists, datas de conclusão e quem criou cartões.
