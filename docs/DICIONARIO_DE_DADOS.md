@@ -248,6 +248,8 @@ Arquivos do MS Project acompanhados pelo agente local.
 | status_sync | text | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| tarefa_id | uuid |  | tarefas | Tarefa em cuja conclusão a decisão foi tomada. |
+| afeta_planejamento | boolean | sim |  | Ressalva: a decisão altera o planejamento (cronograma) da obra e precisa ser avaliada nele. |
 
 ## Tabela `dependencias`
 
@@ -746,6 +748,7 @@ Problemas das obras, priorizados por G × U × T. Cada um tem ações 5W2H em ta
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 | problema_id | uuid |  | problemas | Problema que esta ação 5W2H resolve. |
+| trello_cartao_id | text |  |  | Cartão espelho no quadro pessoal "tarefas" do Trello (só tarefas criadas no sistema). A tarefa continua sendo editada aqui. |
 
 ## Tabela `trello_cartao_datas`
 
