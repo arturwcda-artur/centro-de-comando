@@ -110,6 +110,13 @@ Avaliação de uma decisão no cronograma vigente: efeito calculado, conflitos e
 | decidido_em | timestamp with time zone | sim |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| atividade_uid | integer |  |  | UID da atividade no Project, para achá-la na nova revisão. |
+| inicio_esperado | date |  |  |  |
+| fim_esperado | date |  |  |  |
+| versao_conferida_id | uuid |  | cronograma_versoes |  |
+| conferencia | text |  |  | Resultado da conferência da nova revisão contra a rota aprovada (RN-49o). |
+| conferencia_detalhe | text |  |  |  |
+| conferida_em | timestamp with time zone |  |  |  |
 
 ## Tabela `avanco_fisico`
 

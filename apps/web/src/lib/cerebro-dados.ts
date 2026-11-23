@@ -25,7 +25,7 @@ export async function carregarAvaliacao(supabase: Cliente, decisaoId: string) {
     ? await Promise.all([
         supabase
           .from("atividades_cronograma")
-          .select("id, edt, nome, resumo, marco, critica, inicio_previsto, fim_previsto, duracao_dias, percentual")
+          .select("id, uid_project, edt, nome, resumo, marco, critica, inicio_previsto, fim_previsto, duracao_dias, percentual")
           .eq("versao_id", versao.id)
           .order("uid_project")
           .limit(5000),

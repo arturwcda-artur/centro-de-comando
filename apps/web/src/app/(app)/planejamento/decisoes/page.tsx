@@ -11,7 +11,7 @@ export default async function PaginaDecisoes() {
   const { supabase } = await exigirSessaoCompleta();
   const [decisoes, avaliacoes] = await Promise.all([
     supabase.from("decisoes").select("id, problema, decisao, data_decisao, obras(codigo)").eq("afeta_planejamento", true).order("data_decisao", { ascending: false }).limit(200),
-    supabase.from("avaliacoes_planejamento").select("decisao_id, situacao, variacao_uteis"),
+    supabase.from("avaliacoes_planejamento").select("decisao_id, situacao, variacao_uteis, conferencia"),
   ]);
   const porDecisao = new Map((avaliacoes.data ?? []).map((a) => [a.decisao_id, a]));
   const lista = decisoes.data ?? [];
@@ -32,6 +32,8 @@ export default async function PaginaDecisoes() {
           <Etiqueta tom="atencao">Avaliar</Etiqueta>
         ) : a.situacao === "nao_alterar" ? (
           <Etiqueta>Não altera</Etiqueta>
+        ) : a.conferencia ? (
+          <Etiqueta tom={a.conferencia === "conforme" ? "ok" : "alerta"}>{a.conferencia === "conforme" ? "Revisão conforme" : "Revisão diferente"}</Etiqueta>
         ) : (
           <Etiqueta tom={(a.variacao_uteis ?? 0) > 0 ? "alerta" : "ok"}>{a.variacao_uteis ? `${a.variacao_uteis > 0 ? "+" : ""}${a.variacao_uteis} d úteis` : "Término mantido"}</Etiqueta>
         )}
