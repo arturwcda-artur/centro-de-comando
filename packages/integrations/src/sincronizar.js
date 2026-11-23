@@ -11,6 +11,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { aplicar, executarConector, somar } from './motor.js';
 import * as trello from './trello.js';
+import { sincronizarQuadroPessoal } from './espelho.js';
 import * as google from './google-ical.js';
 import * as agenda from './google.js';
 import { vincularDocumentos } from './google-drive.js';
@@ -25,6 +26,18 @@ async function tokenDoGoogle(supabase) {
   const { data, error } = await supabase.rpc('ler_credencial_servico', { p_ferramenta: 'google' });
   if (error) console.log('Google Agenda: cofre indisponível, usando iCal.');
   return data ?? null;
+}
+
+/** Quadro pessoal "tarefas" (RN-49l): só grava no Trello com a gravação autorizada pelo proprietário. */
+async function quadroPessoal(supabase) {
+  const { data: conector } = await supabase.from('conectores').select('modo, escrita_autorizada_em').eq('ferramenta', 'trello').maybeSingle();
+  if (conector?.modo !== 'leitura_escrita' || !conector.escrita_autorizada_em) return '; quadro tarefas: gravação não autorizada';
+  try {
+    const p = await sincronizarQuadroPessoal(supabase, { chave: env.TRELLO_API_KEY, token: env.TRELLO_TOKEN });
+    return `; quadro tarefas: ${p.criados} cartões criados, ${p.levados} atualizados, ${p.trazidos} conclusões trazidas`;
+  } catch (e) {
+    return `; quadro tarefas: ${e instanceof Error ? e.message : 'falha'}`;
+  }
 }
 
 async function principal() {
@@ -44,7 +57,8 @@ async function principal() {
         const canceladas = await trello.cancelarAusentes(supabase, registros.map((x) => x.id_externo));
         const d = detalhes ? await trello.aplicarDetalhes(supabase, detalhes) : null;
         const extra = d ? `; quadros da equipe: ${d.membros} membros, ${d.comentarios} comentários, ${d.itens} itens de checklist, ${d.criacoes} cartões e checklists criados` : '';
-        return { ...r, mensagem: `${quadros} quadros, ${registros.length} cartões, ${canceladas} arquivados/excluídos marcados como cancelados${extra}` };
+        const pessoal = await quadroPessoal(supabase);
+        return { ...r, mensagem: `${quadros} quadros, ${registros.length} cartões, ${canceladas} arquivados/excluídos marcados como cancelados${extra}${pessoal}` };
       }),
     );
   } else console.log('Trello: sem segredos, ignorado.');

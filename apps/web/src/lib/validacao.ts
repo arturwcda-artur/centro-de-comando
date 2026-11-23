@@ -115,6 +115,17 @@ export const tarefaSchema = z
     path: ["aguardando_pessoa_id"],
   });
 
+/** Conclusão com saída/decisão (RN-49m). A ressalva de planejamento exige a decisão escrita. */
+export const conclusaoSchema = z
+  .object({
+    decisao: textoOpcional(2000),
+    afeta_planejamento: z
+      .string()
+      .optional()
+      .transform((v) => v === "on" || v === "true"),
+  })
+  .refine((c) => !c.afeta_planejamento || !!c.decisao, { message: "Escreva a decisão que altera o planejamento.", path: ["decisao"] });
+
 export const tarefaRapidaSchema = z.object({
   titulo: texto("Título", 300),
   prazo: dataOpcional,

@@ -756,6 +756,8 @@ export type Database = {
           risco_id: string | null
           status: string
           status_sync: string
+          afeta_planejamento: boolean
+          tarefa_id: string | null
         }
         Insert: {
           atualizado_em?: string
@@ -777,6 +779,8 @@ export type Database = {
           risco_id?: string | null
           status?: string
           status_sync?: string
+          afeta_planejamento?: boolean
+          tarefa_id?: string | null
         }
         Update: {
           atualizado_em?: string
@@ -798,6 +802,8 @@ export type Database = {
           risco_id?: string | null
           status?: string
           status_sync?: string
+          afeta_planejamento?: boolean
+          tarefa_id?: string | null
         }
         Relationships: [
           {
@@ -2467,6 +2473,7 @@ export type Database = {
           tarefa_pai_id: string | null
           tipo: string
           titulo: string
+          trello_cartao_id: string | null
         }
         Insert: {
           aguardando_pessoa_id?: string | null
@@ -2494,6 +2501,7 @@ export type Database = {
           tarefa_pai_id?: string | null
           tipo?: string
           titulo: string
+          trello_cartao_id?: string | null
         }
         Update: {
           aguardando_pessoa_id?: string | null
@@ -2521,6 +2529,7 @@ export type Database = {
           tarefa_pai_id?: string | null
           tipo?: string
           titulo?: string
+          trello_cartao_id?: string | null
         }
         Relationships: [
           {

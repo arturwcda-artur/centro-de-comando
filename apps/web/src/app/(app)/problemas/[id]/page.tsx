@@ -118,6 +118,11 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
                           <Link href={`/problemas/${id}/acoes/${a.id}`} className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">
                             Editar
                           </Link>
+                          {!feita && (
+                            <Link href={`/tarefas/${a.id}`} title="Concluir registrando a saída ou a decisão" className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">
+                              Concluir com decisão
+                            </Link>
+                          )}
                           <form action={alternarAcao.bind(null, id, a.id, !feita)}>
                             <button className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">{feita ? "Reabrir" : "Concluir"}</button>
                           </form>

@@ -1,0 +1,10 @@
+type Credenciais = { chave: string; token: string };
+export type QuadroPessoal = { id: string; abertos: string; concluidos: string };
+export type TarefaEspelho = { titulo: string; prazo: string | null; status: string; trello_cartao_id: string | null; atualizado_em?: string };
+export const QUADRO_PESSOAL: string;
+export function ehQuadroPessoal(nome: string | null | undefined): boolean;
+export function lerQuadroPessoal(credenciais: Credenciais): Promise<QuadroPessoal>;
+export function camposDoCartao(tarefa: TarefaEspelho, quadro: QuadroPessoal): Record<string, string>;
+export function espelharTarefa(credenciais: Credenciais, quadro: QuadroPessoal, tarefa: TarefaEspelho): Promise<string>;
+export function comentarNoCartao(credenciais: Credenciais, idCartao: string, texto: string): Promise<void>;
+export function quemPrevalece(tarefa: TarefaEspelho, cartao: { idList: string; dueComplete?: boolean; dateLastActivity?: string }, quadro: QuadroPessoal): "sistema" | "trello" | null;
