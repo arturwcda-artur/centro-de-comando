@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.28.1] — 2026-11-23
+### Corrigido
+- Os cartões que já existiam no quadro **tarefas** voltam a ser importados; só os cartões espelho criados pelo sistema ficam de fora.
+
 ## [0.28.0] — 2026-11-23 — Quadro tarefas e decisões
 ### Adicionado
 - Toda tarefa criada no sistema, inclusive ação 5W2H, ganha um cartão no quadro pessoal **tarefas** do Trello; concluir aqui leva o cartão para **concluidos**, e concluir lá conclui aqui (RN-49l).

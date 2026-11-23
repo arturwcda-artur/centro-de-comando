@@ -279,14 +279,12 @@ export async function aplicarDetalhes(supabase, { membros, vinculos, comentarios
 }
 
 /** Lê todos os quadros abertos do usuário e devolve as tarefas mapeadas. */
-export async function lerTrello(credenciais, { idEquipe }) {
+export async function lerTrello(credenciais, { idEquipe, espelhos = new Set() }) {
   const eu = await chamar('/members/me', credenciais, { fields: 'id' });
   const quadros = await chamar('/members/me/boards', credenciais, { filter: 'open', fields: 'name' });
   const registros = [];
   let detalhes = null;
   for (const q of quadros) {
-    // O quadro pessoal "tarefas" é espelho das tarefas do sistema (RN-49l): não vira tarefa importada
-    if (ehQuadroPessoal(q.name)) continue;
     const detalhado = QUADROS_DETALHADOS.includes(q.name);
     const [listas, cartoes] = await Promise.all([
       chamar(`/boards/${q.id}/lists`, credenciais, { fields: 'name', filter: 'all' }),
@@ -296,7 +294,8 @@ export async function lerTrello(credenciais, { idEquipe }) {
     const importados = [];
     for (const c of cartoes) {
       const lista = nomeLista.get(c.idList);
-      if (listaSensivel(lista) || cartaoSensivel(c) || !cartaoImportavel(c, lista)) continue;
+      // Cartão espelho de tarefa do sistema (RN-49l) não vira tarefa importada; os demais cartões do quadro, sim
+      if (espelhos.has(c.id) || listaSensivel(lista) || cartaoSensivel(c) || !cartaoImportavel(c, lista)) continue;
       registros.push(mapearCartao(c, { quadro: q.name, lista, meuId: eu.id, idEquipe }));
       importados.push(c);
     }

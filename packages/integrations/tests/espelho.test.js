@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { lerTrello } from '../src/trello.js';
 import { camposDoCartao, ehQuadroPessoal, quemPrevalece, sincronizarQuadroPessoal } from '../src/espelho.js';
 
 // Dados de TESTE no formato da API. Nenhuma chamada real é feita.
@@ -81,5 +82,21 @@ describe('sincronizarQuadroPessoal', () => {
       'GET /1/boards/Q/lists': [{ id: 'L1', name: 'tarefas' }],
     });
     await expect(sincronizarQuadroPessoal(bancoFalso([]), cred)).rejects.toThrow('uma de concluídos');
+  });
+});
+
+describe('lerTrello com o quadro pessoal', () => {
+  it('importa os cartões do quadro tarefas, menos os espelhos', async () => {
+    apiFalsa({
+      'GET /1/members/me': { id: 'eu' },
+      'GET /1/members/me/boards': [{ id: 'Q', name: 'tarefas' }],
+      'GET /1/boards/Q/lists': [{ id: 'L1', name: 'tarefas' }],
+      'GET /1/boards/Q/cards': [
+        { id: 'antigo', name: 'Cartão antigo', idList: 'L1', idMembers: [] },
+        { id: 'espelho', name: 'Tarefa do sistema', idList: 'L1', idMembers: [] },
+      ],
+    });
+    const { registros } = await lerTrello(cred, { idEquipe: 'e', espelhos: new Set(['espelho']) });
+    expect(registros.map((r) => r.id_externo)).toEqual(['antigo']);
   });
 });
