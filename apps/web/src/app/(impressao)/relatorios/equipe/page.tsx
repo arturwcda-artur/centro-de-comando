@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { GraficoSemanas } from "@/components/grafico-semanas";
 import { FolhaRelatorio, NumerosRelatorio, SecaoRelatorio } from "@/components/relatorio";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL } from "@/lib/equipe";
+import { SEM_RESPONSAVEL, quadroEquipeDe } from "@/lib/equipe";
 import { carregarCartoesEquipe, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
 import { dataHora } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -13,13 +13,15 @@ const comSinal = (n: number | null) => (n === null ? "—" : n > 0 ? `+${quantid
 const dias = (d: number | null) => (d === null ? "—" : `${quantidade(d)} dias`);
 
 export default async function RelatorioEquipe({ searchParams }: PageProps<"/relatorios/equipe">) {
-  const periodo = periodoDe((await searchParams).periodo);
+  const params = await searchParams;
+  const periodo = periodoDe(params.periodo);
+  const quadro = quadroEquipeDe(params.quadro);
   const { supabase } = await exigirSessaoCompleta();
-  const { cartoes, ultimaSync } = await carregarCartoesEquipe(supabase);
+  const { cartoes, ultimaSync } = await carregarCartoesEquipe(supabase, quadro);
   const p = montarPainelEquipe(cartoes, periodo.dias);
 
   return (
-    <FolhaRelatorio titulo="KPI da equipe" subtitulo={`${QUADRO_EQUIPE} · ${periodo.rotulo}`} fonte={`Trello, sincronizado em ${dataHora(ultimaSync)}`} geradoEm={dataHora(new Date().toISOString())}>
+    <FolhaRelatorio titulo="KPI da equipe" subtitulo={`${quadro} · ${periodo.rotulo}`} fonte={`Trello, sincronizado em ${dataHora(ultimaSync)}`} geradoEm={dataHora(new Date().toISOString())}>
       <NumerosRelatorio
         itens={[
           ["Tarefas resolvidas", quantidade(p.total?.resolvidas ?? 0)],

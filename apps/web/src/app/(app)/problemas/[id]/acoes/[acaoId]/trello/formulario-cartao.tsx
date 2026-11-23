@@ -22,7 +22,7 @@ export function FormularioCartao({ acao, listas, membros, valores }: Props) {
       {estado.erro && <Aviso>{estado.erro}</Aviso>}
       <CampoTexto nome="titulo" rotulo="Título do cartão" required defaultValue={valores.titulo} erro={e.titulo} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <CampoSelecao nome="lista" rotulo="Lista no quadro da equipe" required opcoes={listas} vazio="— selecione —" defaultValue={valores.lista ?? ""} erro={e.lista} />
+        <CampoSelecao nome="lista" rotulo="Quadro e lista" required opcoes={listas} vazio="— selecione —" defaultValue={valores.lista ?? ""} erro={e.lista} />
         <CampoSelecao nome="membro" rotulo="Responsável no Trello" opcoes={membros} vazio="— sem responsável —" defaultValue={valores.membro ?? ""} erro={e.membro} />
         <CampoTexto nome="prazo" rotulo="Data de entrega" type="date" defaultValue={valores.prazo ?? ""} erro={e.prazo} />
         <CampoSelecao nome="prioridade" rotulo="Prioridade" required opcoes={PRIORIDADES} defaultValue={valores.prioridade} erro={e.prioridade} ajuda="Vira uma etiqueta colorida no cartão." />

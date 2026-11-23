@@ -2,6 +2,12 @@ import { hojeSP } from "@/lib/formato";
 
 /** Painel da equipe do quadro Obras do Grupo - C.SALLES (ADR 0017). Sem acesso ao banco, para poder testar. */
 export const QUADRO_EQUIPE = "Obras do Grupo - C.SALLES";
+/** Quadros com tratamento de equipe; o primeiro é o padrão. Gestão empresarial entrou em 23/11/2026. */
+export const QUADROS_EQUIPE = [QUADRO_EQUIPE, "Gestão empresarial"] as const;
+/** Quadro escolhido na tela; qualquer outro valor volta ao padrão. */
+export const quadroEquipeDe = (valor: unknown): string => (QUADROS_EQUIPE as readonly string[]).find((q) => q === valor) ?? QUADRO_EQUIPE;
+/** O cartão é de um dos quadros da equipe (categoria "Quadro › Lista"). */
+export const ehDoQuadroDaEquipe = (categoria: string | null | undefined) => QUADROS_EQUIPE.some((q) => categoria?.startsWith(`${q} › `));
 export const SEM_RESPONSAVEL = "Sem responsável";
 
 /** Item de checklist de um cartão. */

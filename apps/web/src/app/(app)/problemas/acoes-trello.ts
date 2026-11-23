@@ -2,7 +2,7 @@
 import { criarCartaoNoQuadro } from "@cc/integrations/src/escrita.js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { QUADRO_EQUIPE } from "@/lib/equipe";
+import { QUADROS_EQUIPE } from "@/lib/equipe";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { cartaoDaAcaoSchema, mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
@@ -18,6 +18,10 @@ export async function criarCartaoDaAcao(problemaId: string, acaoId: string, _: E
   if (!UUID.test(problemaId) || !UUID.test(acaoId)) return { erro: "Ação inválida." };
   const { dados, erros } = validar(cartaoDaAcaoSchema, fd);
   if (!dados) return { erros };
+  // A opção da lista vem como "posição do quadro:id da lista"
+  const [posicao, idLista] = dados.lista.split(":");
+  const nomeQuadro = QUADROS_EQUIPE[Number(posicao)];
+  if (!nomeQuadro || !idLista) return { erros: { lista: "Escolha o quadro e a lista." } };
 
   const { TRELLO_API_KEY, TRELLO_TOKEN } = process.env;
   if (!TRELLO_API_KEY || !TRELLO_TOKEN) return { erro: "Gravação no Trello ainda não configurada no servidor." };
@@ -47,7 +51,7 @@ export async function criarCartaoDaAcao(problemaId: string, acaoId: string, _: E
   try {
     novo = await criarCartaoNoQuadro(
       { chave: TRELLO_API_KEY, token: TRELLO_TOKEN },
-      { nomeQuadro: QUADRO_EQUIPE, idLista: dados.lista, titulo: dados.titulo, prazo: dados.prazo, idMembro: membro?.id_externo, prioridade: dados.prioridade },
+      { nomeQuadro, idLista, titulo: dados.titulo, prazo: dados.prazo, idMembro: membro?.id_externo, prioridade: dados.prioridade },
     );
     await supabase.from("operacoes_externas").update({ status: "sucesso", id_externo: novo.id, detalhe: novo.url, executado_em: new Date().toISOString() }).eq("id", operacao.id);
   } catch (e) {
@@ -59,7 +63,7 @@ export async function criarCartaoDaAcao(problemaId: string, acaoId: string, _: E
   // A ação passa a ser o espelho do cartão: a sincronização atualiza esta mesma linha
   const { error: e2 } = await supabase
     .from("tarefas")
-    .update({ fonte: "trello", id_externo: novo.id, titulo: dados.titulo, prazo: dados.prazo, categoria: `${QUADRO_EQUIPE} › ${novo.lista}`.slice(0, 100), status_sync: "sincronizado" })
+    .update({ fonte: "trello", id_externo: novo.id, titulo: dados.titulo, prazo: dados.prazo, categoria: `${nomeQuadro} › ${novo.lista}`.slice(0, 100), status_sync: "sincronizado" })
     .eq("id", acaoId);
   if (e2) return { erro: `Cartão criado no Trello, mas a ação não foi ligada a ele: ${mensagemDoBanco(e2)}` };
   if (membro) {

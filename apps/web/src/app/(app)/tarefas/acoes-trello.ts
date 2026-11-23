@@ -1,7 +1,7 @@
 "use server";
 import { criarCartaoDeComentario } from "@cc/integrations/src/escrita.js";
 import { revalidatePath } from "next/cache";
-import { QUADRO_EQUIPE } from "@/lib/equipe";
+import { ehDoQuadroDaEquipe } from "@/lib/equipe";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { cartaoDeComentarioSchema, mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
@@ -32,7 +32,7 @@ export async function transformarEmCartao(comentarioId: string, _: EstadoFormula
 
   const { data: comentario } = await supabase.from("trello_comentarios").select("texto, tarefas(id, id_externo, categoria)").eq("id", comentarioId).maybeSingle();
   const tarefa = comentario?.tarefas;
-  if (!comentario || !tarefa?.id_externo || !tarefa.categoria?.startsWith(`${QUADRO_EQUIPE} › `)) return { erro: "Comentário não encontrado neste quadro." };
+  if (!comentario || !tarefa?.id_externo || !ehDoQuadroDaEquipe(tarefa.categoria)) return { erro: "Comentário não encontrado neste quadro." };
 
   const { data: conector } = await supabase.from("conectores").select("modo, escrita_autorizada_em").eq("ferramenta", "trello").maybeSingle();
   if (conector?.modo !== "leitura_escrita" || !conector.escrita_autorizada_em) return { erro: "Gravação no Trello não autorizada." };

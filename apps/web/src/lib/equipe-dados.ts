@@ -14,14 +14,14 @@ export const PERIODOS = [
 export const periodoDe = (valor: unknown) => PERIODOS.find((p) => p.valor === valor) ?? PERIODOS[0];
 
 /** Cartões do quadro com itens e membros. A tela Equipe e o relatório KPI usam esta mesma leitura. */
-export async function carregarCartoesEquipe(supabase: Cliente) {
+export async function carregarCartoesEquipe(supabase: Cliente, quadro: string = QUADRO_EQUIPE) {
   const [membros, tarefas, conector] = await Promise.all([
     supabase.from("trello_membros").select("id, nome"),
     supabase
       .from("tarefas")
       .select("id, titulo, atualizado_em_origem, status, prazo, concluida_em, categoria, tarefa_membros(trello_membros(nome)), trello_cartao_datas(criado_em, concluido_em, prazo_original, prazo_alteracoes), cartoes_rotina(tarefa_id)")
       .eq("fonte", "trello")
-      .like("categoria", `${QUADRO_EQUIPE} › %`),
+      .like("categoria", `${quadro} › %`),
     supabase.from("conectores").select("ultima_sync_em").eq("ferramenta", "trello").maybeSingle(),
   ]);
 
@@ -54,10 +54,10 @@ export async function carregarCartoesEquipe(supabase: Cliente) {
 }
 
 /** Cartões criados, checklists e comentários do quadro da equipe, com o autor. */
-export async function carregarGeracaoEquipe(supabase: Cliente) {
+export async function carregarGeracaoEquipe(supabase: Cliente, quadro: string = QUADRO_EQUIPE) {
   const [criacoes, comentarios] = await Promise.all([
-    supabase.from("trello_criacoes").select("tipo, data, membro:trello_membros(nome)"),
-    supabase.from("trello_comentarios").select("autor, data, tarefas!inner(categoria)").like("tarefas.categoria", `${QUADRO_EQUIPE} › %`),
+    supabase.from("trello_criacoes").select("tipo, data, membro:trello_membros(nome), tarefas!inner(categoria)").like("tarefas.categoria", `${quadro} › %`),
+    supabase.from("trello_comentarios").select("autor, data, tarefas!inner(categoria)").like("tarefas.categoria", `${quadro} › %`),
   ]);
   if (criacoes.error) throw new Error(criacoes.error.message);
   if (comentarios.error) throw new Error(comentarios.error.message);

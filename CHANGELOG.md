@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.27.0] — 2026-11-23 — Quadro Gestão empresarial
+### Adicionado
+- O quadro **Gestão empresarial** do Trello passa a ter o mesmo tratamento do quadro da equipe: membros, comentários, checklists, datas de conclusão e quem criou cartões.
+- Menu Equipe e relatório KPI: escolha do quadro (Obras do Grupo - C.SALLES ou Gestão empresarial).
+- Cartão criado a partir da ação 5W2H pode ir para qualquer um dos dois quadros.
+
 ## [0.26.2] — 2026-11-19
 ### Corrigido
 - Sincronização: se o banco oscilar, tenta de novo até 3 vezes antes de falhar, e o erro passa a dizer o motivo em vez de "undefined".
