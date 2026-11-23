@@ -735,6 +735,74 @@ export type Database = {
           },
         ]
       }
+      avaliacoes_planejamento: {
+        Row: {
+          id: string
+          decisao_id: string
+          obra_id: string | null
+          versao_id: string | null
+          atividade_id: string | null
+          atividade_nome: string | null
+          tipo_mudanca: string | null
+          dias: number | null
+          situacao: string
+          termino_antes: string | null
+          termino_depois: string | null
+          variacao_uteis: number | null
+          conflitos: string[]
+          rota: string | null
+          decidido_em: string
+          criado_em: string
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          decisao_id: string
+          obra_id?: string | null
+          versao_id?: string | null
+          atividade_id?: string | null
+          atividade_nome?: string | null
+          tipo_mudanca?: string | null
+          dias?: number | null
+          situacao: string
+          termino_antes?: string | null
+          termino_depois?: string | null
+          variacao_uteis?: number | null
+          conflitos?: string[]
+          rota?: string | null
+          decidido_em?: string
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          decisao_id?: string
+          obra_id?: string | null
+          versao_id?: string | null
+          atividade_id?: string | null
+          atividade_nome?: string | null
+          tipo_mudanca?: string | null
+          dias?: number | null
+          situacao?: string
+          termino_antes?: string | null
+          termino_depois?: string | null
+          variacao_uteis?: number | null
+          conflitos?: string[]
+          rota?: string | null
+          decidido_em?: string
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_planejamento_decisao_id_fkey"
+            columns: ["decisao_id"]
+            isOneToOne: true
+            referencedRelation: "decisoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decisoes: {
         Row: {
           atualizado_em: string
@@ -758,6 +826,7 @@ export type Database = {
           status_sync: string
           afeta_planejamento: boolean
           tarefa_id: string | null
+          tarefa_planejamento_id: string | null
         }
         Insert: {
           atualizado_em?: string
@@ -781,6 +850,7 @@ export type Database = {
           status_sync?: string
           afeta_planejamento?: boolean
           tarefa_id?: string | null
+          tarefa_planejamento_id?: string | null
         }
         Update: {
           atualizado_em?: string
@@ -804,6 +874,7 @@ export type Database = {
           status_sync?: string
           afeta_planejamento?: boolean
           tarefa_id?: string | null
+          tarefa_planejamento_id?: string | null
         }
         Relationships: [
           {

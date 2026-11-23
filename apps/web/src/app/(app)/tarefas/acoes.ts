@@ -134,22 +134,18 @@ export async function concluirComDecisao(id: string, _: EstadoFormulario, fd: Fo
 
   const novas: string[] = [];
   if (dados.decisao) {
-    const { error: e1 } = await supabase.from("decisoes").insert({
-      obra_id: t.obra_id,
-      tarefa_id: id,
-      problema: t.titulo,
-      decisao: dados.decisao,
-      status: "tomada",
-      data_decisao: hojeSP(agora),
-      afeta_planejamento: dados.afeta_planejamento,
-    });
-    if (e1) return { erro: `Tarefa concluída, mas a decisão não foi registrada: ${mensagemDoBanco(e1)}` };
+    // Com a ressalva, nasce primeiro a tarefa de atualizar o planejamento, para a decisão apontar para ela
+    let tarefaPlanejamento: string | null = null;
     if (dados.afeta_planejamento) {
       const { data: nova, error: e2 } = await supabase
         .from("tarefas")
         .insert({
           titulo: `Atualizar o planejamento: ${dados.decisao}`.slice(0, 300),
-          descricao: `Decisão tomada em ${dataCivil(hojeSP(agora))} ao concluir a tarefa #${t.codigo} "${t.titulo}":\n\n${dados.decisao}\n\nAvaliar o efeito no cronograma vigente e, se alterar, salvar a nova revisão em VALIDOS.`.slice(0, 4000),
+          descricao: `Decisão tomada em ${dataCivil(hojeSP(agora))} ao concluir a tarefa #${t.codigo} "${t.titulo}":
+
+${dados.decisao}
+
+Avaliar em Planejamento → Decisões no planejamento: o sistema calcula o efeito no cronograma vigente e a rota de alteração.`.slice(0, 4000),
           obra_id: t.obra_id,
           tipo: "acao",
           categoria: "Planejamento",
@@ -159,9 +155,21 @@ export async function concluirComDecisao(id: string, _: EstadoFormulario, fd: Fo
         })
         .select("id")
         .single();
-      if (e2) return { erro: `Decisão registrada, mas a tarefa de atualizar o planejamento não foi criada: ${mensagemDoBanco(e2)}` };
+      if (e2) return { erro: `Tarefa concluída, mas a tarefa de atualizar o planejamento não foi criada: ${mensagemDoBanco(e2)}` };
+      tarefaPlanejamento = nova.id;
       novas.push(nova.id);
     }
+    const { error: e1 } = await supabase.from("decisoes").insert({
+      obra_id: t.obra_id,
+      tarefa_id: id,
+      tarefa_planejamento_id: tarefaPlanejamento,
+      problema: t.titulo,
+      decisao: dados.decisao,
+      status: "tomada",
+      data_decisao: hojeSP(agora),
+      afeta_planejamento: dados.afeta_planejamento,
+    });
+    if (e1) return { erro: `Tarefa concluída, mas a decisão não foi registrada: ${mensagemDoBanco(e1)}` };
   }
 
   await espelharNoTrello(supabase, [id], dados.decisao ? `Saída / decisão:\n${dados.decisao}${dados.afeta_planejamento ? "\n\n⚠ Afeta o planejamento da obra." : ""}` : undefined);

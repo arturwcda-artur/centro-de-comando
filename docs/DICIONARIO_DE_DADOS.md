@@ -87,6 +87,30 @@ Planilha da Central de Gestão (aba AÇÕES) acompanhada pelo agente local, uma 
 | atualizado_em | timestamp with time zone | sim |  |  |
 | custo | numeric(14,2) |  |  |  |
 
+## Tabela `avaliacoes_planejamento`
+
+Avaliação de uma decisão no cronograma vigente: efeito calculado, conflitos e rota de alteração do Project (RN-49n).
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| decisao_id | uuid | sim | decisoes |  |
+| obra_id | uuid |  | obras |  |
+| versao_id | uuid |  | cronograma_versoes |  |
+| atividade_id | uuid |  | atividades_cronograma |  |
+| atividade_nome | text |  |  |  |
+| tipo_mudanca | text |  |  |  |
+| dias | numeric(8,2) |  |  |  |
+| situacao | text | sim |  |  |
+| termino_antes | date |  |  |  |
+| termino_depois | date |  |  |  |
+| variacao_uteis | integer |  |  |  |
+| conflitos | text[] | sim |  |  |
+| rota | text |  |  |  |
+| decidido_em | timestamp with time zone | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `avanco_fisico`
 
 Série temporal da Curva S (percentuais acumulados).
@@ -250,6 +274,7 @@ Arquivos do MS Project acompanhados pelo agente local.
 | atualizado_em | timestamp with time zone | sim |  |  |
 | tarefa_id | uuid |  | tarefas | Tarefa em cuja conclusão a decisão foi tomada. |
 | afeta_planejamento | boolean | sim |  | Ressalva: a decisão altera o planejamento (cronograma) da obra e precisa ser avaliada nele. |
+| tarefa_planejamento_id | uuid |  | tarefas | Tarefa "Atualizar o planejamento" criada pela ressalva (RN-49m). |
 
 ## Tabela `dependencias`
 

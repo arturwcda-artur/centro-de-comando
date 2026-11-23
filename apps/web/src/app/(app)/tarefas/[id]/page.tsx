@@ -23,7 +23,7 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
     supabase.from("tarefas").select("*").eq("id", id).maybeSingle(),
     carregarOpcoes(supabase),
     supabase.from("obras").select("id, codigo, nome").is("arquivado_em", null).order("codigo"),
-    supabase.from("decisoes").select("id, decisao, data_decisao, afeta_planejamento").eq("tarefa_id", id).order("criado_em"),
+    supabase.from("decisoes").select("id, decisao, data_decisao, afeta_planejamento, avaliacoes_planejamento(situacao)").eq("tarefa_id", id).order("criado_em"),
   ]);
   const t = tarefa.data;
   if (!t) notFound();
@@ -91,6 +91,14 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
                 <p className="mt-1 text-xs text-suave">
                   {dataCivil(d.data_decisao)}
                   {d.afeta_planejamento && " · afeta o planejamento da obra"}
+                  {d.afeta_planejamento && (
+                    <>
+                      {" · "}
+                      <Link href={`/planejamento/decisoes/${d.id}`} className="text-marca hover:underline">
+                        {d.avaliacoes_planejamento ? "ver avaliação no planejamento" : "avaliar no planejamento →"}
+                      </Link>
+                    </>
+                  )}
                 </p>
               </li>
             ))}

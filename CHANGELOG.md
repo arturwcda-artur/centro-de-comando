@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.29.0] — 2026-11-23 — Cérebro do planejamento
+### Adicionado
+- **Planejamento → Decisões no planejamento**: para cada decisão que afeta o planejamento, o sistema calcula no cronograma vigente as atividades que andam junto, o novo término, os conflitos (prazo contratual, caminho crítico, marcos, mês de medição) e a rota para alterar o Project. Você aprova ou não altera (RN-49n).
+- Migration `0037_cerebro_do_planejamento.sql`.
+
 ## [0.28.1] — 2026-11-23
 ### Corrigido
 - Os cartões que já existiam no quadro **tarefas** voltam a ser importados; só os cartões espelho criados pelo sistema ficam de fora.
