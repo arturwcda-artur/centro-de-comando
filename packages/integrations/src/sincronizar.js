@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { aplicar, executarConector, somar } from './motor.js';
 import * as trello from './trello.js';
 import { sincronizarQuadroPessoal } from './espelho.js';
+import { conferirRevisoes } from './conferencia.js';
 import * as google from './google-ical.js';
 import * as agenda from './google.js';
 import { vincularDocumentos } from './google-drive.js';
@@ -54,6 +55,14 @@ async function principal() {
   }
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
   const resultados = [];
+
+  // Antes do Trello: a tarefa concluída pela conferência já vai para "concluidos" nesta mesma rodada (RN-49o)
+  try {
+    const c = await conferirRevisoes(supabase);
+    console.log(`Conferência das revisões: ${c.conformes} conformes, ${c.divergentes} divergentes, ${c.aguardando} aguardando nova revisão.`);
+  } catch (e) {
+    console.log(`Conferência das revisões: ${e instanceof Error ? e.message : 'falha'}`);
+  }
 
   if (env.TRELLO_API_KEY && env.TRELLO_TOKEN) {
     resultados.push(

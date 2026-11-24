@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.30.0] — 2026-11-23 — Conferência da nova revisão
+### Adicionado
+- O agente do computador passa a ler sozinho a revisão mais nova do cronograma vigente salva na mesma pasta (ex.: REV-06 → REV-07).
+- A sincronização confere a nova revisão contra a alteração aprovada: conforme conclui a tarefa "Atualizar o cronograma"; divergente mostra o que ficou diferente (RN-49o).
+- Migration `0038_conferencia_da_revisao.sql`.
+
 ## [0.29.0] — 2026-11-23 — Cérebro do planejamento
 ### Adicionado
 - **Planejamento → Decisões no planejamento**: para cada decisão que afeta o planejamento, o sistema calcula no cronograma vigente as atividades que andam junto, o novo término, os conflitos (prazo contratual, caminho crítico, marcos, mês de medição) e a rota para alterar o Project. Você aprova ou não altera (RN-49n).

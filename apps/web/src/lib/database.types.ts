@@ -754,6 +754,13 @@ export type Database = {
           decidido_em: string
           criado_em: string
           atualizado_em: string
+          atividade_uid: number | null
+          inicio_esperado: string | null
+          fim_esperado: string | null
+          versao_conferida_id: string | null
+          conferencia: string | null
+          conferencia_detalhe: string | null
+          conferida_em: string | null
         }
         Insert: {
           id?: string
@@ -773,6 +780,13 @@ export type Database = {
           decidido_em?: string
           criado_em?: string
           atualizado_em?: string
+          atividade_uid?: number | null
+          inicio_esperado?: string | null
+          fim_esperado?: string | null
+          versao_conferida_id?: string | null
+          conferencia?: string | null
+          conferencia_detalhe?: string | null
+          conferida_em?: string | null
         }
         Update: {
           id?: string
@@ -792,6 +806,13 @@ export type Database = {
           decidido_em?: string
           criado_em?: string
           atualizado_em?: string
+          atividade_uid?: number | null
+          inicio_esperado?: string | null
+          fim_esperado?: string | null
+          versao_conferida_id?: string | null
+          conferencia?: string | null
+          conferencia_detalhe?: string | null
+          conferida_em?: string | null
         }
         Relationships: [
           {
@@ -3301,6 +3322,7 @@ export type Database = {
         Returns: {
           caminho: string
           id: string
+          papel: string
           ultimo_hash: string
         }[]
       }
@@ -3329,6 +3351,10 @@ export type Database = {
       }
       registrar_erro_acoes: {
         Args: { p_arquivo: string; p_erro: string }
+        Returns: undefined
+      }
+      seguir_revisao_cronograma: {
+        Args: { p_arquivo: string; p_caminho: string }
         Returns: undefined
       }
       registrar_erro_cronograma: {

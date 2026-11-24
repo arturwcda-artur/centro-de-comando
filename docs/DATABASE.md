@@ -33,6 +33,7 @@ PostgreSQL no Supabase. O esquema é definido só por migrations SQL versionadas
 | `0035_situacao_do_problema.sql` | situação do problema acompanha as ações, inclusive cartões do Trello (RN-49k) |
 | `0036_quadro_tarefas_e_decisoes.sql` | cartão espelho da tarefa no quadro pessoal "tarefas" e decisão registrada ao concluir, com a ressalva de planejamento (RN-49l, RN-49m) |
 | `0037_cerebro_do_planejamento.sql` | avaliação da decisão no cronograma vigente: efeito, conflitos, rota e situação aprovada/não altera (RN-49n) |
+| `0038_conferencia_da_revisao.sql` | o vigente segue a revisão mais nova da pasta; o esperado da alteração aprovada e o resultado da conferência (RN-49o) |
 | `0033_sem_notion.sql` | tarefas do Notion passam a manuais e o conector do Notion fica inativo (ADR 0024) |
 | `0032_problemas.sql` | problemas no sistema, tarefas.problema_id e importação única do plano de ações da planilha (ADR 0023) |
 | `0031_trello_criacoes.sql` | quem criou cartões e checklists no quadro da equipe (RN-49e) |

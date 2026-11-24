@@ -33,11 +33,15 @@ class AppFalso:
 class BancoFalso:
     def __init__(self):
         self.importados = []
+        self.seguidos = []
         self.erros = []
 
     def importar(self, payload):
         self.importados.append(payload)
         return "criada"
+
+    def seguir_revisao(self, arquivo_id, caminho):
+        self.seguidos.append((arquivo_id, caminho))
 
     def registrar_erro(self, arquivo_id, mensagem):
         self.erros.append((arquivo_id, mensagem))
@@ -181,3 +185,32 @@ def test_registrar_execucao_nao_derruba_a_leitura():
             raise RuntimeError("sem conexão")
 
     c.registrar_execucao(Quebrada(), "msproject", 1, 0, 0, "ok")
+
+
+def test_revisao_mais_nova_na_mesma_pasta(tmp_path):
+    for nome in ["NILLS-CRN-001_REV-06_Cronograma.mpp", "NILLS-CRN-001_REV-07_Cronograma.mpp", "NILLS-CRN-001_REV-08_Outro.mpp", "~$NILLS-CRN-001_REV-09_Cronograma.mpp"]:
+        (tmp_path / nome).write_bytes(b"x")
+    assert c.revisao_mais_nova(tmp_path / "NILLS-CRN-001_REV-06_Cronograma.mpp").name == "NILLS-CRN-001_REV-07_Cronograma.mpp"
+    assert c.revisao_mais_nova(tmp_path / "NILLS-CRN-001_REV-07_Cronograma.mpp") is None
+    (tmp_path / "PLANO_RETOMADA_PRF_REV02.mpp").write_bytes(b"x")
+    (tmp_path / "PLANO_RETOMADA_PRF_REV03.mpp").write_bytes(b"x")
+    assert c.revisao_mais_nova(tmp_path / "PLANO_RETOMADA_PRF_REV02.mpp").name == "PLANO_RETOMADA_PRF_REV03.mpp"
+    assert c.revisao_mais_nova(tmp_path / "CRONOGRAMA.mpp") is None
+
+
+def test_vigente_segue_a_revisao_nova_e_le_ela(tmp_path):
+    (tmp_path / "X_REV-01.mpp").write_bytes(b"velho")
+    (tmp_path / "X_REV-02.mpp").write_bytes(b"novo")
+    banco = BancoFalso()
+    arquivos = [{**registro(tmp_path / "X_REV-01.mpp"), "papel": "vigente"}]
+    rodar(arquivos, banco)
+    assert banco.seguidos == [("a1", str(tmp_path / "X_REV-02.mpp"))]
+    assert len(banco.importados) == 1
+
+
+def test_linha_de_base_nao_segue_revisao(tmp_path):
+    (tmp_path / "X_REV-01.mpp").write_bytes(b"velho")
+    (tmp_path / "X_REV-02.mpp").write_bytes(b"novo")
+    banco = BancoFalso()
+    rodar([{**registro(tmp_path / "X_REV-01.mpp"), "papel": "linha_base"}], banco)
+    assert banco.seguidos == []

@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -23,6 +24,24 @@ TIPOS_DEPENDENCIA = {0: "TT", 1: "TI", 2: "IT", 3: "II"}  # PjTaskLinkType
 MINUTOS_POR_DIA_PADRAO = 480
 
 log = logging.getLogger("cc_agente.cronogramas")
+
+REVISAO = re.compile(r"rev[-_ ]?(\d+)", re.IGNORECASE)
+
+
+def revisao_mais_nova(caminho: Path) -> Path | None:
+    """Outro .mpp na mesma pasta, com o mesmo nome e número de revisão maior (ex.: REV-06 → REV-07). RN-49o."""
+    achados = list(REVISAO.finditer(caminho.stem))
+    if not achados or not caminho.parent.is_dir():
+        return None
+    m = achados[-1]
+    antes, depois = caminho.stem[: m.start(1)], caminho.stem[m.end(1) :]
+    padrao = re.compile(re.escape(antes) + r"(\d+)" + re.escape(depois) + re.escape(caminho.suffix), re.IGNORECASE)
+    atual, melhor = int(m.group(1)), None
+    for f in caminho.parent.iterdir():
+        achado = padrao.fullmatch(f.name)
+        if f.is_file() and achado and int(achado.group(1)) > atual and (melhor is None or int(achado.group(1)) > melhor[0]):
+            melhor = (int(achado.group(1)), f)
+    return melhor[1] if melhor else None
 
 
 def sha256_arquivo(caminho: Path | str) -> str:
@@ -98,6 +117,12 @@ def processar(arquivos, banco, *, abrir_project, fechar_project, project_aberto,
     pendentes = []
     for a in arquivos:
         caminho = Path(a["caminho"])
+        # O vigente segue a revisão mais nova salva na mesma pasta; a anterior fica como histórico
+        nova = revisao_mais_nova(caminho) if a.get("papel") == "vigente" else None
+        if nova:
+            banco.seguir_revisao(a["id"], str(nova))
+            log.info("Nova revisão do cronograma: %s → %s", caminho.name, nova.name)
+            caminho = nova
         if not caminho.is_file():
             banco.registrar_erro(a["id"], "Arquivo não encontrado")
             resumo["erros"] += 1
@@ -156,8 +181,12 @@ class Banco:
 
     def listar(self) -> list[dict]:
         with self.conexao.cursor() as cur:
-            cur.execute("select id::text, caminho, ultimo_hash from public.listar_cronogramas_agente()")
-            return [{"id": i, "caminho": c, "ultimo_hash": h} for i, c, h in cur.fetchall()]
+            cur.execute("select id::text, caminho, ultimo_hash, papel from public.listar_cronogramas_agente()")
+            return [{"id": i, "caminho": c, "ultimo_hash": h, "papel": p} for i, c, h, p in cur.fetchall()]
+
+    def seguir_revisao(self, arquivo_id: str, caminho: str) -> None:
+        with self.conexao.cursor() as cur:
+            cur.execute("select public.seguir_revisao_cronograma(%s, %s)", (arquivo_id, caminho))
 
     def importar(self, payload: dict) -> str:
         with self.conexao.cursor() as cur:

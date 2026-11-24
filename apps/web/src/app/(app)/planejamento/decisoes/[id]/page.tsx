@@ -61,6 +61,14 @@ export default async function PaginaAvaliarDecisao({ params, searchParams }: Pag
             <span className="text-xs text-suave">em {dataHora(avaliacao.decidido_em)}</span>
           </p>
         )}
+        {avaliacao?.situacao === "aprovada" &&
+          (avaliacao.conferida_em ? (
+            <div className={`mt-3 rounded-lg px-3 py-2 text-sm ${avaliacao.conferencia === "conforme" ? "bg-ok-suave text-ok" : "bg-alerta-suave text-alerta"}`}>
+              <strong>Nova revisão {avaliacao.conferencia === "conforme" ? "conforme a rota" : "diferente da rota"}</strong> (conferida em {dataHora(avaliacao.conferida_em)}). {avaliacao.conferencia_detalhe}
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-suave">Aguardando a nova revisão em VALIDOS. Quando ela for lida, o sistema confere se ficou como a rota previa.</p>
+          ))}
       </Cartao>
 
       {!d.obra_id ? (
