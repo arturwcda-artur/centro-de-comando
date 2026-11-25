@@ -105,20 +105,25 @@ export async function alternarAcao(problemaId: string, acaoId: string, concluir:
     .from("tarefas")
     .update(concluir ? { status: "concluida", concluida_em: new Date().toISOString() } : { status: "a_fazer", concluida_em: null })
     .eq("id", acaoId)
-    .eq("problema_id", problemaId);
+    .eq("problema_id", problemaId)
+    .eq("fonte", "manual"); // ação do Trello acompanha o cartão
   await espelharNoTrello(supabase, [acaoId]);
   // Última ação concluída resolve o problema; reabrir uma ação volta para Resolvendo
   await atualizarSituacao(supabase, problemaId);
   revalidar(problemaId);
 }
 
-/** Conclui o problema direto, encerrando as ações que faltavam; ou reabre (RN-49h). */
+/**
+ * Conclui o problema direto, encerrando as ações criadas no sistema que faltavam; ou reabre (RN-49h).
+ * Ações que vieram do Trello não são tocadas: a situação delas acompanha o cartão. Se fossem
+ * concluídas só aqui, o cartão seguiria aberto no Trello e a sincronização não corrigiria.
+ */
 export async function concluirProblema(problemaId: string, concluir: boolean) {
   const { supabase } = await exigirSessaoCompleta();
   if (!UUID.test(problemaId)) return;
   const agora = new Date().toISOString();
   if (concluir) {
-    const { data: encerradas } = await supabase.from("tarefas").update({ status: "concluida", concluida_em: agora }).eq("problema_id", problemaId).not("status", "in", "(concluida,cancelada)").select("id");
+    const { data: encerradas } = await supabase.from("tarefas").update({ status: "concluida", concluida_em: agora }).eq("problema_id", problemaId).eq("fonte", "manual").not("status", "in", "(concluida,cancelada)").select("id");
     await espelharNoTrello(supabase, (encerradas ?? []).map((a) => a.id));
     await supabase.from("problemas").update({ status: "resolvido", resolvido_em: agora }).eq("id", problemaId);
   } else {
