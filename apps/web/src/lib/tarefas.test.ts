@@ -29,8 +29,8 @@ describe("quem pode concluir pelo sistema (RN-48)", () => {
     expect(podeConcluir({ fonte: "trello", responsavel_id: null, status: "a_fazer" })).toBe(true);
   });
 
-  it("cartão de terceiros no Trello não pode", () => {
-    expect(podeConcluir({ fonte: "trello", responsavel_id: "equipe", status: "a_fazer" })).toBe(false);
+  it("cartão da equipe no Trello também pode: o proprietário administra os quadros", () => {
+    expect(podeConcluir({ fonte: "trello", responsavel_id: "equipe", status: "a_fazer" })).toBe(true);
   });
 
   it("tarefa já encerrada não pode", () => {

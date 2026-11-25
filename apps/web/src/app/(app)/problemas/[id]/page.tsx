@@ -104,15 +104,22 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
                     <p className={`font-medium ${feita ? "line-through" : ""}`}>{d?.o_que ?? a.titulo}</p>
                     <div className="flex shrink-0 gap-2">
                       {noTrello ? (
-                        <a
-                          href={`https://trello.com/c/${a.id_externo}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="A situação desta ação acompanha o cartão no Trello"
-                          className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2"
-                        >
-                          Ver no Trello
-                        </a>
+                        <>
+                          {!feita && (
+                            <Link href={`/tarefas/${a.id}`} title="Conclui também no Trello" className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">
+                              Concluir
+                            </Link>
+                          )}
+                          <a
+                            href={`https://trello.com/c/${a.id_externo}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="A situação desta ação acompanha o cartão no Trello"
+                            className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2"
+                          >
+                            Ver no Trello
+                          </a>
+                        </>
                       ) : (
                         <>
                           <Link href={`/problemas/${id}/acoes/${a.id}`} className="rounded-lg border border-borda px-2.5 py-1 text-xs hover:bg-superficie-2">
