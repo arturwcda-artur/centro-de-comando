@@ -78,7 +78,7 @@ export async function concluirTarefa(id: string, _: EstadoFormulario): Promise<E
 
   const { data: t } = await supabase.from("tarefas").select("fonte, id_externo, responsavel_id, status").eq("id", id).maybeSingle();
   if (!t) return { erro: "Tarefa não encontrada." };
-  if (!podeConcluir(t)) return { erro: "Esta tarefa não pode ser concluída aqui: é de terceiros ou já está encerrada." };
+  if (!podeConcluir(t)) return { erro: "Esta tarefa não pode ser concluída aqui: já está encerrada ou a origem não permite." };
 
   if (t.fonte !== "manual") {
     if (!t.id_externo) return { erro: "Tarefa sem vínculo com a origem." };

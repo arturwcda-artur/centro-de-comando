@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.31.0] — 2026-11-25
+### Alterado
+- Cartões do Trello da equipe também podem ser concluídos pelo sistema: o cartão vai para a lista de concluídos do quadro (RN-48). Na tela do problema, as ações do Trello ganham o botão **Concluir**.
+
 ## [0.30.1] — 2026-11-25
 ### Corrigido
 - **Concluir problema** não encerra mais, só no sistema, as ações que vieram do Trello. Antes o cartão seguia aberto no Trello e sumia da lista de tarefas (RN-49h).

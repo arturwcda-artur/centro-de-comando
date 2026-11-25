@@ -50,7 +50,7 @@ export function LinhaTarefa({ t, nomeObra, mostrarMotivos = true, responsaveis =
       ) : podeConcluir(t) ? (
         <BotaoConcluir id={t.id} titulo={t.titulo} />
       ) : (
-        <span className="inline-flex size-7 items-center justify-center text-[10px] text-suave" title={concluida ? `Concluída no ${t.fonte}` : "Tarefa de terceiros: só leitura"}>
+        <span className="inline-flex size-7 items-center justify-center text-[10px] text-suave" title={concluida ? `Concluída no ${t.fonte}` : "Só leitura: controlada na ferramenta de origem"}>
           {t.fonte?.slice(0, 2).toUpperCase()}
         </span>
       )}

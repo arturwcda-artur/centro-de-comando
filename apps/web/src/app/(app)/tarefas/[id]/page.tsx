@@ -51,7 +51,7 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
               ? "Ao concluir aqui, ela é concluída também na origem. Outras alterações são feitas na ferramenta de origem."
               : t.status === "concluida" || t.status === "cancelada"
                 ? "Já encerrada."
-                : "É uma tarefa de terceiros: só leitura, controlada na ferramenta de origem."}
+                : "Só leitura: controlada na ferramenta de origem."}
           </Aviso>
           {podeConcluir(t) && (
             <div className="mt-3 flex items-center gap-2 text-sm">
