@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Datas em America/Sao_Paulo.
 
+## [0.30.1] — 2026-11-25
+### Corrigido
+- **Concluir problema** não encerra mais, só no sistema, as ações que vieram do Trello. Antes o cartão seguia aberto no Trello e sumia da lista de tarefas (RN-49h).
+
 ## [0.30.0] — 2026-11-23 — Conferência da nova revisão
 ### Adicionado
 - O agente do computador passa a ler sozinho a revisão mais nova do cronograma vigente salva na mesma pasta (ex.: REV-06 → REV-07).
