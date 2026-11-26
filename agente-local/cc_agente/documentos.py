@@ -46,12 +46,17 @@ def _sem_acento(texto: str) -> str:
 
 
 def categoria_de(relativo: str) -> str:
-    """A categoria vem do prefixo da pasta de primeiro nível (RN-71)."""
+    """A categoria vem do prefixo da pasta de primeiro nível (RN-71). 16–97 = pasta própria da obra."""
     partes = relativo.split("/")
     if len(partes) < 2:
         return "outro"
     achado = re.match(r"(\d{2})[_ -]", partes[0])
-    return CATEGORIAS.get(achado.group(1), "outro") if achado else "outro"
+    if not achado:
+        return "outro"
+    numero = achado.group(1)
+    if numero in CATEGORIAS:
+        return CATEGORIAS[numero]
+    return "pasta_da_obra" if 16 <= int(numero) <= 97 else "outro"
 
 
 def ignorar(relativo: str) -> bool:

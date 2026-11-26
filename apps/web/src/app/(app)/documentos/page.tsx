@@ -12,6 +12,7 @@ export const metadata: Metadata = { title: "Documentos" };
 
 const CAMPO = "h-10 rounded-lg border border-borda bg-superficie px-2 text-sm";
 const rotuloCategoria = (valor: string | null) => CATEGORIAS_DOCUMENTO.find((c) => c.valor === valor)?.rotulo ?? "Outros";
+const nomeDaPasta = (pasta: string | null) => pasta?.split("/")[0].replace(/^\d{2}[_ -]+/, "").replace(/[_-]+/g, " ") || null;
 
 export default async function PaginaDocumentos({ searchParams }: PageProps<"/documentos">) {
   const params = await searchParams;
@@ -95,7 +96,7 @@ export default async function PaginaDocumentos({ searchParams }: PageProps<"/doc
                     <p className="truncate text-sm font-medium">{d.titulo}</p>
                   )}
                   <p className="truncate text-xs text-suave">
-                    {[codigo.get(d.obra_id ?? ""), rotuloCategoria(d.categoria), d.pasta, dataCivil(d.data_documento)].filter(Boolean).join(" · ")}
+                    {[codigo.get(d.obra_id ?? ""), d.categoria === "pasta_da_obra" ? (nomeDaPasta(d.pasta) ?? rotuloCategoria(d.categoria)) : rotuloCategoria(d.categoria), d.pasta, dataCivil(d.data_documento)].filter(Boolean).join(" · ")}
                   </p>
                   {d.trecho && (
                     <p className="mt-1 line-clamp-2 text-xs">
