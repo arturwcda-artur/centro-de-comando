@@ -3,10 +3,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { espelharNoTrello } from "@/lib/espelho-trello";
 import { hojeSP, somarDias } from "@/lib/formato";
-import { resultadoDecidido } from "@/lib/mesa-acoes";
+import { resultadoDecidido, resultadoNaoSeAplica } from "@/lib/mesa-acoes";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { UUID } from "@/lib/obras";
-import { decididoSchema, mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
+import { decididoSchema, mensagemDoBanco, naoSeAplicaSchema, validar, type EstadoFormulario } from "@/lib/validacao";
 
 const texto = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -32,6 +32,20 @@ export async function decidirItem(id: string, _: EstadoFormulario, fd: FormData)
   revalidatePath("/");
   // Gerar ação: abre o Delegar logo em seguida, com a decisão já tomada
   redirect(dados.gerar_acao ? `/?item=${id}&delegar=1` : "/");
+}
+
+/** "Não se aplica mais": o item sai da Mesa, com o motivo registrado. */
+export async function naoSeAplicaItem(id: string, _: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
+  if (!UUID.test(id)) return { erro: "Item inválido." };
+  const { supabase } = await exigirSessaoCompleta();
+  const { dados, erros } = validar(naoSeAplicaSchema, fd);
+  if (!dados) return { erros };
+  const { data: atual } = await supabase.from("decisoes").select("status").eq("id", id).maybeSingle();
+  if (atual?.status !== "pendente") return { erro: "Este item já foi tratado." };
+  const { error } = await supabase.from("decisoes").update({ status: "cancelada", resultado: resultadoNaoSeAplica(dados.motivo) }).eq("id", id);
+  if (error) return { erro: mensagemDoBanco(error) };
+  revalidatePath("/");
+  redirect("/");
 }
 
 export async function delegarItem(id: string, fd: FormData) {

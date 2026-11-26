@@ -1,5 +1,5 @@
-import { adiarItem, decidirItem, delegarItem } from "./acoes";
-import { FormularioDecidido } from "./formularios";
+import { adiarItem, decidirItem, delegarItem, naoSeAplicaItem } from "./acoes";
+import { FormularioDecidido, FormularioNaoSeAplica } from "./formularios";
 import { Cartao } from "@/components/ui";
 import { hojeSP } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -18,7 +18,7 @@ export async function DetalheItem({ decisaoId }: { decisaoId: string }) {
         {d.principio && <div><dt className="inline font-semibold">Por quê: </dt><dd className="inline">{d.principio}</dd></div>}
         {d.impacto && <div><dt className="inline font-semibold">Impacto: </dt><dd className="inline">{d.impacto}</dd></div>}
       </dl>
-      <div className="mt-3 grid gap-3 md:grid-cols-3 text-sm">
+      <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm">
         <FormularioDecidido acao={decidirItem.bind(null, d.id)} pessoas={(pessoas ?? []).map((p) => ({ valor: p.id, rotulo: p.nome }))} recomendacao={d.recomendacao ?? ""} hoje={hojeSP()} />
         <form action={delegarItem.bind(null, d.id)} className="space-y-1">
           <select name="responsavel_id" required className="w-full rounded border border-borda p-1">
@@ -27,6 +27,7 @@ export async function DetalheItem({ decisaoId }: { decisaoId: string }) {
           <input type="date" name="prazo" className="w-full rounded border border-borda p-1" />
           <button className="rounded border border-borda px-3 py-1">Delegar</button>
         </form>
+        <FormularioNaoSeAplica acao={naoSeAplicaItem.bind(null, d.id)} />
         <form action={adiarItem.bind(null, d.id)} className="space-y-1">
           <input type="date" name="adiar_ate" required className="w-full rounded border border-borda p-1" />
           <button className="rounded border border-borda px-3 py-1">Adiar</button>

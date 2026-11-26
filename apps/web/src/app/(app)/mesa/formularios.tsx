@@ -23,3 +23,15 @@ export function FormularioDecidido({ acao, pessoas, recomendacao, hoje }: { acao
     </form>
   );
 }
+
+/** "Não se aplica mais": o item sai da Mesa, com o motivo registrado. */
+export function FormularioNaoSeAplica({ acao }: { acao: Acao }) {
+  const [estado, enviar] = useActionState(acao, {});
+  return (
+    <form action={enviar} className="space-y-3" noValidate>
+      {estado.erro && <Aviso>{estado.erro}</Aviso>}
+      <CampoAreaTexto nome="motivo" rotulo="Motivo" required erro={estado.erros?.motivo} />
+      <BotaoEnviar variante="secundario">Não se aplica mais</BotaoEnviar>
+    </form>
+  );
+}
