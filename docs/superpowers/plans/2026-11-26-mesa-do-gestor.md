@@ -703,9 +703,9 @@ Proposta: PRF, Senado, ANP, Candangolândia → L7 Construtora; NILLS, Levorsse 
 - [ ] **Step 2: Gravar o vínculo**
 
 ```sql
-update public.obras set empresa_id = (select id from public.empresas where razao_social = 'L7 Construtora')
+update public.obras set empresa_id = (select id from public.empresas where nome_fantasia = 'L7 Construtora')
  where nome ilike any (array['%PRF%','%Senado%','%ANP%','%Candang%']);
-update public.obras set empresa_id = (select id from public.empresas where razao_social = 'CDN Engenharia')
+update public.obras set empresa_id = (select id from public.empresas where nome_fantasia = 'CDN Engenharia')
  where nome ilike any (array['%NILLS%','%Levorsse%','%container%','%manuten%']);
 ```
 Run via `npx.cmd supabase db query --remote --yes "<sql>"` e conferir com `select nome, empresa_id from public.obras order by nome`.
