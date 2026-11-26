@@ -47,7 +47,9 @@ sem_ler = lambda caminho: (None, False)  # noqa: E731
     ("05_Medicoes/a.xlsx", "medicoes"),
     ("01_Planejamento_e_Cronograma/x/y.mpp", "planejamento"),
     ("99_REVISAR/a.pdf", "revisar"),
-    ("16-pastas-compartilhadas/a.pdf", "outro"),
+    ("16-pastas-compartilhadas/a.pdf", "pasta_da_obra"),
+    ("17_Plano_de_Retomada/x.xlsx", "pasta_da_obra"),
+    ("98_OBSOLETOS/a.pdf", "outro"),
     ("solto.pdf", "outro"),
 ])
 def test_categoria_vem_da_pasta(relativo, categoria):

@@ -15,6 +15,7 @@ export const CATEGORIAS_DOCUMENTO = [
   { valor: "equipe_efetivo", rotulo: "Equipe" },
   { valor: "diario_obra", rotulo: "Diário de obra" },
   { valor: "terceirizados", rotulo: "Terceirizados" },
+  { valor: "pasta_da_obra", rotulo: "Pasta da obra" },
   { valor: "revisar", rotulo: "A revisar" },
   { valor: "outro", rotulo: "Outros" },
 ] as const;

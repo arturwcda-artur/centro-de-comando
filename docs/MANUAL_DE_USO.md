@@ -6,12 +6,26 @@ Guia curto do Centro de Comando. Endereço: https://centro-de-comando-chi.vercel
 
 | Quando | O que fazer | Onde |
 |---|---|---|
+| Todo dia | Decidir, aprovar e cobrar o que precisa de você | **Mesa do Gestor** (tela inicial) |
 | Todo dia | Ver prioridades e compromissos | **Meu dia** |
 | Todo dia | Ver o que pede atenção | **Alertas** |
 | Toda semana | Ver quanto a equipe resolveu | **Equipe** |
 | Toda semana | Conferir se as integrações estão em dia | **Integrações** |
 | Ao fechar medição | Salvar a planilha e conferir em **Contratos** | Pasta da obra |
 | A cada 3 meses | Rodar o teste de restauração | Ver abaixo |
+
+## Mesa do Gestor
+
+Tela inicial. Mostra só o que precisa da direção do gestor operacional no Grupo C.Salles, com filtro por empresa, obra e área.
+
+| Caixa | O que aparece |
+|---|---|
+| 🔴 Decidir | Decisões pendentes lançadas pelo assistente, com recomendação, motivo, impacto e prazo |
+| 🟠 Aprovar | Aprovações lançadas pelo assistente, medições elaboradas/enviadas e aditivos em análise |
+| 🟡 Cobrar | Tarefas delegadas vencidas ou sem movimento há 7 dias |
+| ⚠️ Alertas | Marcos e recebimentos dos próximos 15 dias, riscos críticos, contratos e integrações; marcos vencidos aparecem numa linha só |
+
+Clique numa decisão para: **Decidido** (registra), **Delegar** (vira tarefa e cartão no Trello; volta em Cobrar se atrasar) ou **Adiar** (volta na data escolhida). O painel executivo antigo fica em **/painel**.
 
 ## O que acontece sozinho
 

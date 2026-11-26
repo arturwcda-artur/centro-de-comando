@@ -58,7 +58,8 @@ describe("indicadores do painel", () => {
 describe("navegação", () => {
   it("rotas únicas e módulo ativo por prefixo", () => {
     expect(new Set(MODULOS.map((m) => m.href)).size).toBe(MODULOS.length);
-    expect(moduloAtivo("/")?.titulo).toBe("Painel");
+    expect(moduloAtivo("/")?.titulo).toBe("Mesa do Gestor");
+    expect(moduloAtivo("/painel")?.titulo).toBe("Painel executivo");
     expect(moduloAtivo("/obras/123")?.slug).toBe("obras");
     expect(moduloAtivo("/inexistente")).toBeUndefined();
   });
