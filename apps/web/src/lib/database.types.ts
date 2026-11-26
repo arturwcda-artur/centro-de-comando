@@ -295,6 +295,144 @@ export type Database = {
           },
         ]
       }
+      avaliacoes_planejamento: {
+        Row: {
+          atividade_id: string | null
+          atividade_nome: string | null
+          atividade_uid: number | null
+          atualizado_em: string
+          conferencia: string | null
+          conferencia_detalhe: string | null
+          conferida_em: string | null
+          conflitos: string[]
+          criado_em: string
+          decidido_em: string
+          decisao_id: string
+          dias: number | null
+          fim_esperado: string | null
+          id: string
+          inicio_esperado: string | null
+          obra_id: string | null
+          rota: string | null
+          situacao: string
+          termino_antes: string | null
+          termino_depois: string | null
+          tipo_mudanca: string | null
+          variacao_uteis: number | null
+          versao_conferida_id: string | null
+          versao_id: string | null
+        }
+        Insert: {
+          atividade_id?: string | null
+          atividade_nome?: string | null
+          atividade_uid?: number | null
+          atualizado_em?: string
+          conferencia?: string | null
+          conferencia_detalhe?: string | null
+          conferida_em?: string | null
+          conflitos?: string[]
+          criado_em?: string
+          decidido_em?: string
+          decisao_id: string
+          dias?: number | null
+          fim_esperado?: string | null
+          id?: string
+          inicio_esperado?: string | null
+          obra_id?: string | null
+          rota?: string | null
+          situacao: string
+          termino_antes?: string | null
+          termino_depois?: string | null
+          tipo_mudanca?: string | null
+          variacao_uteis?: number | null
+          versao_conferida_id?: string | null
+          versao_id?: string | null
+        }
+        Update: {
+          atividade_id?: string | null
+          atividade_nome?: string | null
+          atividade_uid?: number | null
+          atualizado_em?: string
+          conferencia?: string | null
+          conferencia_detalhe?: string | null
+          conferida_em?: string | null
+          conflitos?: string[]
+          criado_em?: string
+          decidido_em?: string
+          decisao_id?: string
+          dias?: number | null
+          fim_esperado?: string | null
+          id?: string
+          inicio_esperado?: string | null
+          obra_id?: string | null
+          rota?: string | null
+          situacao?: string
+          termino_antes?: string | null
+          termino_depois?: string | null
+          tipo_mudanca?: string | null
+          variacao_uteis?: number | null
+          versao_conferida_id?: string | null
+          versao_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_planejamento_atividade_id_fkey"
+            columns: ["atividade_id"]
+            isOneToOne: false
+            referencedRelation: "atividades_cronograma"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_planejamento_decisao_id_fkey"
+            columns: ["decisao_id"]
+            isOneToOne: true
+            referencedRelation: "decisoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_planejamento_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_planejamento_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "v_obra_resumo"
+            referencedColumns: ["obra_id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_planejamento_versao_conferida_id_fkey"
+            columns: ["versao_conferida_id"]
+            isOneToOne: false
+            referencedRelation: "cronograma_realizado"
+            referencedColumns: ["versao_id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_planejamento_versao_conferida_id_fkey"
+            columns: ["versao_conferida_id"]
+            isOneToOne: false
+            referencedRelation: "cronograma_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_planejamento_versao_id_fkey"
+            columns: ["versao_id"]
+            isOneToOne: false
+            referencedRelation: "cronograma_realizado"
+            referencedColumns: ["versao_id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_planejamento_versao_id_fkey"
+            columns: ["versao_id"]
+            isOneToOne: false
+            referencedRelation: "cronograma_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       avanco_fisico: {
         Row: {
           atualizado_em: string
@@ -735,169 +873,108 @@ export type Database = {
           },
         ]
       }
-      avaliacoes_planejamento: {
-        Row: {
-          id: string
-          decisao_id: string
-          obra_id: string | null
-          versao_id: string | null
-          atividade_id: string | null
-          atividade_nome: string | null
-          tipo_mudanca: string | null
-          dias: number | null
-          situacao: string
-          termino_antes: string | null
-          termino_depois: string | null
-          variacao_uteis: number | null
-          conflitos: string[]
-          rota: string | null
-          decidido_em: string
-          criado_em: string
-          atualizado_em: string
-          atividade_uid: number | null
-          inicio_esperado: string | null
-          fim_esperado: string | null
-          versao_conferida_id: string | null
-          conferencia: string | null
-          conferencia_detalhe: string | null
-          conferida_em: string | null
-        }
-        Insert: {
-          id?: string
-          decisao_id: string
-          obra_id?: string | null
-          versao_id?: string | null
-          atividade_id?: string | null
-          atividade_nome?: string | null
-          tipo_mudanca?: string | null
-          dias?: number | null
-          situacao: string
-          termino_antes?: string | null
-          termino_depois?: string | null
-          variacao_uteis?: number | null
-          conflitos?: string[]
-          rota?: string | null
-          decidido_em?: string
-          criado_em?: string
-          atualizado_em?: string
-          atividade_uid?: number | null
-          inicio_esperado?: string | null
-          fim_esperado?: string | null
-          versao_conferida_id?: string | null
-          conferencia?: string | null
-          conferencia_detalhe?: string | null
-          conferida_em?: string | null
-        }
-        Update: {
-          id?: string
-          decisao_id?: string
-          obra_id?: string | null
-          versao_id?: string | null
-          atividade_id?: string | null
-          atividade_nome?: string | null
-          tipo_mudanca?: string | null
-          dias?: number | null
-          situacao?: string
-          termino_antes?: string | null
-          termino_depois?: string | null
-          variacao_uteis?: number | null
-          conflitos?: string[]
-          rota?: string | null
-          decidido_em?: string
-          criado_em?: string
-          atualizado_em?: string
-          atividade_uid?: number | null
-          inicio_esperado?: string | null
-          fim_esperado?: string | null
-          versao_conferida_id?: string | null
-          conferencia?: string | null
-          conferencia_detalhe?: string | null
-          conferida_em?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "avaliacoes_planejamento_decisao_id_fkey"
-            columns: ["decisao_id"]
-            isOneToOne: true
-            referencedRelation: "decisoes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       decisoes: {
         Row: {
+          adiar_ate: string | null
+          afeta_planejamento: boolean
+          area: string | null
           atualizado_em: string
           atualizado_em_origem: string | null
           criado_em: string
           data_decisao: string | null
           decisao: string | null
+          empresa_id: string | null
           fonte: string
           hash_conteudo: string | null
           id: string
           id_externo: string | null
+          impacto: string | null
           importado_em: string | null
           obra_id: string | null
           prazo: string | null
+          principio: string | null
           problema: string
+          recomendacao: string | null
           responsavel_id: string | null
           resultado: string | null
           reuniao_id: string | null
           risco_id: string | null
           status: string
           status_sync: string
-          afeta_planejamento: boolean
           tarefa_id: string | null
           tarefa_planejamento_id: string | null
+          tipo: string
         }
         Insert: {
+          adiar_ate?: string | null
+          afeta_planejamento?: boolean
+          area?: string | null
           atualizado_em?: string
           atualizado_em_origem?: string | null
           criado_em?: string
           data_decisao?: string | null
           decisao?: string | null
+          empresa_id?: string | null
           fonte?: string
           hash_conteudo?: string | null
           id?: string
           id_externo?: string | null
+          impacto?: string | null
           importado_em?: string | null
           obra_id?: string | null
           prazo?: string | null
+          principio?: string | null
           problema: string
+          recomendacao?: string | null
           responsavel_id?: string | null
           resultado?: string | null
           reuniao_id?: string | null
           risco_id?: string | null
           status?: string
           status_sync?: string
-          afeta_planejamento?: boolean
           tarefa_id?: string | null
           tarefa_planejamento_id?: string | null
+          tipo?: string
         }
         Update: {
+          adiar_ate?: string | null
+          afeta_planejamento?: boolean
+          area?: string | null
           atualizado_em?: string
           atualizado_em_origem?: string | null
           criado_em?: string
           data_decisao?: string | null
           decisao?: string | null
+          empresa_id?: string | null
           fonte?: string
           hash_conteudo?: string | null
           id?: string
           id_externo?: string | null
+          impacto?: string | null
           importado_em?: string | null
           obra_id?: string | null
           prazo?: string | null
+          principio?: string | null
           problema?: string
+          recomendacao?: string | null
           responsavel_id?: string | null
           resultado?: string | null
           reuniao_id?: string | null
           risco_id?: string | null
           status?: string
           status_sync?: string
-          afeta_planejamento?: boolean
           tarefa_id?: string | null
           tarefa_planejamento_id?: string | null
+          tipo?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "decisoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "decisoes_obra_id_fkey"
             columns: ["obra_id"]
@@ -938,6 +1015,34 @@ export type Database = {
             columns: ["risco_id"]
             isOneToOne: false
             referencedRelation: "v_riscos_criticos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisoes_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisoes_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "v_tarefas_priorizadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisoes_tarefa_planejamento_id_fkey"
+            columns: ["tarefa_planejamento_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisoes_tarefa_planejamento_id_fkey"
+            columns: ["tarefa_planejamento_id"]
+            isOneToOne: false
+            referencedRelation: "v_tarefas_priorizadas"
             referencedColumns: ["id"]
           },
         ]
@@ -1207,32 +1312,46 @@ export type Database = {
           atualizado_em: string
           cnpj: string | null
           criado_em: string
+          empresa_mae_id: string | null
           id: string
           nome_fantasia: string | null
           observacoes: string | null
           razao_social: string
+          tipo: string
         }
         Insert: {
           arquivado_em?: string | null
           atualizado_em?: string
           cnpj?: string | null
           criado_em?: string
+          empresa_mae_id?: string | null
           id?: string
           nome_fantasia?: string | null
           observacoes?: string | null
           razao_social: string
+          tipo?: string
         }
         Update: {
           arquivado_em?: string | null
           atualizado_em?: string
           cnpj?: string | null
           criado_em?: string
+          empresa_mae_id?: string | null
           id?: string
           nome_fantasia?: string | null
           observacoes?: string | null
           razao_social?: string
+          tipo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "empresas_empresa_mae_id_fkey"
+            columns: ["empresa_mae_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       eventos: {
         Row: {
@@ -3304,6 +3423,20 @@ export type Database = {
       importar_cronograma: { Args: { payload: Json }; Returns: string }
       importar_documentos: { Args: { payload: Json }; Returns: number }
       importar_medicoes: { Args: { payload: Json }; Returns: string }
+      lancar_item_mesa: {
+        Args: {
+          p_area: string
+          p_empresa_id: string
+          p_impacto: string
+          p_obra_id: string
+          p_prazo: string
+          p_principio: string
+          p_problema: string
+          p_recomendacao: string
+          p_tipo: string
+        }
+        Returns: string
+      }
       ler_credencial: { Args: { p_ferramenta: string }; Returns: string }
       ler_credencial_servico: {
         Args: { p_ferramenta: string }
@@ -3353,10 +3486,6 @@ export type Database = {
         Args: { p_arquivo: string; p_erro: string }
         Returns: undefined
       }
-      seguir_revisao_cronograma: {
-        Args: { p_arquivo: string; p_caminho: string }
-        Returns: undefined
-      }
       registrar_erro_cronograma: {
         Args: { p_arquivo: string; p_erro: string }
         Returns: undefined
@@ -3381,6 +3510,10 @@ export type Database = {
       }
       salvar_credencial: {
         Args: { p_ferramenta: string; p_valor: string }
+        Returns: undefined
+      }
+      seguir_revisao_cronograma: {
+        Args: { p_arquivo: string; p_caminho: string }
         Returns: undefined
       }
       tamanho_do_banco: { Args: never; Returns: number }
