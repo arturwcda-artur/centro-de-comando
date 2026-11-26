@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CaixaMesa } from "./mesa/caixa";
+import { DetalheItem } from "./mesa/detalhe";
 import { carregarMesa } from "@/lib/mesa-dados";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
@@ -9,6 +10,7 @@ export default async function MesaDoGestor({ searchParams }: { searchParams: Pro
   const p = await searchParams;
   const { supabase } = await exigirSessaoCompleta();
   const m = await carregarMesa(supabase, p);
+  const item = typeof p.item === "string" ? p.item : null;
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <div>
@@ -34,6 +36,7 @@ export default async function MesaDoGestor({ searchParams }: { searchParams: Pro
         <button className="rounded bg-marca px-3 py-1 text-white">Filtrar</button>
       </form>
       {m.erro && <p className="text-sm text-alerta">{m.erro}</p>}
+      {item && <DetalheItem decisaoId={item} />}
       <div className="grid gap-4 md:grid-cols-2">
         <CaixaMesa titulo="🔴 Decidir" itens={m.caixas.decidir} nomeObra={m.nomeObra} nomeEmpresa={m.nomeEmpresa} vazio="Nada para decidir agora." />
         <CaixaMesa titulo="🟠 Aprovar" itens={m.caixas.aprovar} nomeObra={m.nomeObra} nomeEmpresa={m.nomeEmpresa} vazio="Nada aguardando aprovação." />
