@@ -25,7 +25,8 @@ export type Modulo = {
 };
 
 export const MODULOS: Modulo[] = [
-  { slug: "", href: "/", titulo: "Painel", descricao: "Visão executiva consolidada", icone: "painel", fase: 3, grupo: "Visão geral" },
+  { slug: "", href: "/", titulo: "Mesa do Gestor", descricao: "Só o que precisa da sua direção", icone: "painel", fase: 3, grupo: "Visão geral" },
+  { slug: "painel", href: "/painel", titulo: "Painel executivo", descricao: "Visão executiva consolidada das obras", icone: "painel", fase: 3, grupo: "Visão geral" },
   { slug: "meu-dia", href: "/meu-dia", titulo: "Meu dia", descricao: "Prioridades, compromissos e pendências do dia", icone: "dia", fase: 5, grupo: "Visão geral" },
   { slug: "alertas", href: "/alertas", titulo: "Alertas", descricao: "O que precisa de atenção agora", icone: "alertas", fase: 10, grupo: "Visão geral" },
   { slug: "obras", href: "/obras", titulo: "Obras", descricao: "Cadastro e ambiente individual de cada obra", icone: "obras", fase: 4, grupo: "Gestão" },
