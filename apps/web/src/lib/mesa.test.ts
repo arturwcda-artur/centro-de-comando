@@ -52,3 +52,20 @@ describe("caixa ALERTAS e filtros", () => {
     expect(montarMesa(d, { empresas: null, obraId: null, area: "compras" }).decidir.map((i) => i.decisaoId)).toEqual(["y"]);
   });
 });
+
+describe("ALERTAS sem repetição", () => {
+  const alerta = (texto: string, grave = false) => ({ grupo: "Prazos" as const, grave, texto, href: "/planejamento" });
+  it("tarefa e decisão não entram como vencimento", () => {
+    const v = (tipo: string) => ({ registro_id: tipo, tipo, descricao: tipo, obra_id: "o1", data: "2026-11-28" });
+    expect(montarMesa({ ...base, vencimentos: [v("tarefa"), v("decisao"), v("marco")] }, todos).alertas.map((i) => i.titulo)).toEqual(["marco"]);
+  });
+  it("junta marcos vencidos numa linha e descarta repetidos", () => {
+    const m = montarMesa({ ...base, alertas: [
+      alerta("Marco: A. Venceu em 10/11/2026.", true), alerta("Marco: B. Venceu em 12/11/2026.", true),
+      alerta("Marco: C. Vence em 28/11/2026."), alerta("Decisão: X. Vence em 30/11/2026."),
+      alerta("8 tarefas vencidas.", true), { grupo: "Equipe" as const, grave: false, texto: "5 cartões parados há 14 dias ou mais.", href: "/equipe" },
+      { grupo: "Contratos" as const, grave: true, texto: "Contrato 1/2026: termina antes do cronograma.", href: "/contratos/c1" },
+    ] }, todos);
+    expect(m.alertas.map((i) => i.titulo).sort()).toEqual(["2 marcos vencidos no cronograma — revisar a programação", "Contrato 1/2026: termina antes do cronograma."]);
+  });
+});

@@ -45,11 +45,22 @@ export function montarMesa(d: DadosMesa, f: FiltroMesa): Record<Caixa, ItemMesa[
 
   const limiteVenc = somarDias(d.hoje, DIAS_VENCIMENTO_MESA);
   for (const v of d.vencimentos) {
+    // tarefas ficam em COBRAR e decisões em DECIDIR: aqui só marcos e recebimentos
+    if (v.tipo !== "marco" && v.tipo !== "recebimento_previsto") continue;
     if (!v.data || v.data < d.hoje || v.data > limiteVenc) continue;
     add({ chave: `venc:${v.tipo}:${v.registro_id}`, caixa: "alertas", titulo: v.descricao ?? "Vencimento", obraId: v.obra_id, area: v.tipo === "recebimento_previsto" ? "financeiro" : "obras", responsavel: null, prazo: v.data, gravidade: 2, recomendacao: null, href: v.obra_id ? `/obras/${v.obra_id}` : "/alertas", decisaoId: null });
   }
   for (const r of d.riscosCriticos) add({ chave: `risco:${r.id}`, caixa: "alertas", titulo: `Risco crítico: ${r.titulo}`, obraId: r.obra_id, area: "obras", responsavel: null, prazo: null, gravidade: 3, recomendacao: null, href: r.obra_id ? `/obras/${r.obra_id}` : "/alertas", decisaoId: null });
-  for (const a of d.alertas) add({ chave: `alerta:${a.texto}`, caixa: "alertas", titulo: a.texto, obraId: null, area: AREA_DO_ALERTA[a.grupo], responsavel: null, prazo: null, gravidade: a.grave ? 3 : 1, recomendacao: null, href: a.href, decisaoId: null });
+  // Alertas RN-83 sem repetir o que já está nas outras caixas; marcos vencidos viram uma linha só
+  let marcosVencidos = 0;
+  for (const a of d.alertas) {
+    if (/^(Marco|Decisão|Recebimento): .* Vence em /.test(a.texto)) continue;
+    if (/^Marco: .* Venceu em /.test(a.texto)) { marcosVencidos++; continue; }
+    if (/^Decisão: .* Venceu em /.test(a.texto)) continue;
+    if (/tarefas? vencidas?.$|cart(ão|ões) parados? há/.test(a.texto)) continue;
+    add({ chave: `alerta:${a.texto}`, caixa: "alertas", titulo: a.texto, obraId: null, area: AREA_DO_ALERTA[a.grupo], responsavel: null, prazo: null, gravidade: a.grave ? 3 : 1, recomendacao: null, href: a.href, decisaoId: null });
+  }
+  if (marcosVencidos > 0) add({ chave: "alerta:marcos-vencidos", caixa: "alertas", titulo: `${marcosVencidos} ${marcosVencidos === 1 ? "marco vencido" : "marcos vencidos"} no cronograma — revisar a programação`, obraId: null, area: "obras", responsavel: null, prazo: null, gravidade: 3, recomendacao: null, href: "/planejamento", decisaoId: null });
 
   const passa = (i: ItemMesa) =>
     (!f.empresas || (i.empresaId !== null && f.empresas.includes(i.empresaId))) &&
