@@ -84,3 +84,26 @@ describe("mensagens e severidade", () => {
     expect(nivelSeveridade(7).rotulo).toBe("Moderado");
   });
 });
+
+describe("validação da Mesa do Gestor", () => {
+  it("decidido: exige o texto e aceita 'eu'", async () => {
+    const { decididoSchema } = await import("./validacao");
+    const ok = validar(decididoSchema, { decisao: " Aprovar ", quem: "eu", quando: "2026-11-26", afeta_planejamento: "on" });
+    expect(ok.dados).toMatchObject({ decisao: "Aprovar", quem: "eu", afeta_planejamento: true, gerar_acao: false });
+    const ruim = validar(decididoSchema, { decisao: "", quem: "fulano", quando: "26/11" });
+    expect(ruim.erros).toMatchObject({ decisao: "O que foi decidido é obrigatório.", quem: "Seleção inválida.", quando: "Informe a data da decisão." });
+  });
+  it("não se aplica mais: motivo obrigatório", async () => {
+    const { naoSeAplicaSchema } = await import("./validacao");
+    expect(validar(naoSeAplicaSchema, { motivo: "  " }).erros?.motivo).toBe("Motivo é obrigatório.");
+    expect(validar(naoSeAplicaSchema, { motivo: "Obra parada" }).dados?.motivo).toBe("Obra parada");
+  });
+  it("delegar: título obrigatório e descrição opcional", async () => {
+    const { delegarSchema } = await import("./validacao");
+    const base = { quadro: "0", lista: "abc", membro: UUID, prioridade: "media", prazo: "" };
+    const ok = validar(delegarSchema, { ...base, titulo: "Pedir cotação", descricao: "" });
+    expect(ok.dados).toMatchObject({ quadro: 0, titulo: "Pedir cotação", descricao: null, prazo: null });
+    expect(validar(delegarSchema, { ...base, titulo: " " }).erros?.titulo).toBe("Título do cartão é obrigatório.");
+    expect(validar(delegarSchema, { ...base, titulo: "x", membro: "" }).erros?.membro).toBe("Escolha a pessoa.");
+  });
+});

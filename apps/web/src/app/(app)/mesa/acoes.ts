@@ -3,20 +3,35 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { espelharNoTrello } from "@/lib/espelho-trello";
 import { hojeSP, somarDias } from "@/lib/formato";
+import { resultadoDecidido } from "@/lib/mesa-acoes";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { UUID } from "@/lib/obras";
+import { decididoSchema, mensagemDoBanco, validar, type EstadoFormulario } from "@/lib/validacao";
 
 const texto = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-export async function decidirItem(id: string, fd: FormData) {
-  if (!UUID.test(id)) return;
+/** "Decidido": grava a decisão com quem decidiu e quando (pode ter sido fora da Mesa). */
+export async function decidirItem(id: string, _: EstadoFormulario, fd: FormData): Promise<EstadoFormulario> {
+  if (!UUID.test(id)) return { erro: "Item inválido." };
   const { supabase } = await exigirSessaoCompleta();
-  const decisao = texto(fd, "decisao");
-  if (!decisao) redirect(`/?item=${id}&erro=decisao`);
-  const { error } = await supabase.from("decisoes").update({ decisao, status: "tomada", data_decisao: hojeSP() }).eq("id", id);
-  if (error) redirect(`/?item=${id}&erro=gravar`);
+  const { dados, erros } = validar(decididoSchema, fd);
+  if (!dados) return { erros };
+  let nome: string | null = null;
+  if (dados.quem !== "eu") {
+    const { data: pessoa } = await supabase.from("pessoas").select("nome").eq("id", dados.quem).is("arquivado_em", null).maybeSingle();
+    if (!pessoa) return { erros: { quem: "Pessoa não encontrada." } };
+    nome = pessoa.nome;
+  }
+  const { data: atual } = await supabase.from("decisoes").select("status").eq("id", id).maybeSingle();
+  if (atual?.status !== "pendente") return { erro: "Este item já foi tratado." };
+  const { error } = await supabase
+    .from("decisoes")
+    .update({ decisao: dados.decisao, status: "tomada", data_decisao: dados.quando, afeta_planejamento: dados.afeta_planejamento, resultado: resultadoDecidido(nome) })
+    .eq("id", id);
+  if (error) return { erro: mensagemDoBanco(error) };
   revalidatePath("/");
-  redirect("/");
+  // Gerar ação: abre o Delegar logo em seguida, com a decisão já tomada
+  redirect(dados.gerar_acao ? `/?item=${id}&delegar=1` : "/");
 }
 
 export async function delegarItem(id: string, fd: FormData) {

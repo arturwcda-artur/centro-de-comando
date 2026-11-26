@@ -288,3 +288,26 @@ export const cartaoDaAcaoSchema = z.object({
   prazo: dataOpcional,
   prioridade: z.enum(["alta", "media", "baixa"], { error: "Escolha a prioridade." }),
 });
+
+/** Mesa do Gestor: "Decidido". Quem decidiu é "eu" ou o id de uma pessoa. */
+export const decididoSchema = z.object({
+  decisao: texto("O que foi decidido", 2000),
+  quem: z.union([z.literal("eu"), z.uuid("Seleção inválida.")], { error: "Diga quem decidiu." }),
+  quando: z.iso.date("Informe a data da decisão."),
+  afeta_planejamento: z.string().optional().transform((v) => v === "on" || v === "true"),
+  gerar_acao: z.string().optional().transform((v) => v === "on" || v === "true"),
+});
+
+/** Mesa do Gestor: "Não se aplica mais". */
+export const naoSeAplicaSchema = z.object({ motivo: texto("Motivo", 1000) });
+
+/** Mesa do Gestor: "Delegar". Título e descrição são digitados pelo gestor, nunca pré-preenchidos. */
+export const delegarSchema = z.object({
+  quadro: z.coerce.number({ error: "Escolha o quadro." }).int("Escolha o quadro.").min(0, "Escolha o quadro."),
+  lista: texto("Lista", 40),
+  membro: z.uuid("Escolha a pessoa."),
+  prazo: dataOpcional,
+  prioridade: z.enum(["alta", "media", "baixa"], { error: "Escolha a prioridade." }),
+  titulo: texto("Título do cartão", 300),
+  descricao: textoOpcional(3000),
+});
