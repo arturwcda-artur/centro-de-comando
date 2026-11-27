@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Cartao, Etiqueta } from "@/components/ui";
 import { dataCivil } from "@/lib/formato";
 import { AREAS, avaliarProntidao, datasDeReferencia, resumoPorArea, type Situacao } from "@/lib/prontidao";
-import { carregarDadosProntidao } from "@/lib/prontidao-dados";
+import { carregarDadosProntidao, carregarGatilhos } from "@/lib/prontidao-dados";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
 const COR: Record<Situacao, { rotulo: string; tom: "alerta" | "atencao" | "ok" | "neutro" }> = {
@@ -18,10 +18,11 @@ const COR: Record<Situacao, { rotulo: string; tom: "alerta" | "atencao" | "ok" |
  */
 export async function SalaDeSituacao({ obras }: { obras: { id: string; codigo: string; situacao: string }[] }) {
   const { supabase } = await exigirSessaoCompleta();
+  const g = await carregarGatilhos(supabase);
   const linhas = await Promise.all(
     obras.map(async (o) => {
       const dados = await carregarDadosProntidao(supabase, o.id).catch(() => null);
-      return { ...o, resumo: dados ? resumoPorArea(avaliarProntidao(dados)) : null, datas: dados ? datasDeReferencia(dados) : null };
+      return { ...o, resumo: dados ? resumoPorArea(avaliarProntidao(dados, g)) : null, datas: dados ? datasDeReferencia(dados) : null };
     }),
   );
   // Por exceção: quem tem falta sobe

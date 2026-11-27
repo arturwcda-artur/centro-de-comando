@@ -1,6 +1,8 @@
 /** Regras da Mesa do Gestor (spec 2026-11-26). Sem banco, para poder testar. */
 import type { Alerta } from "@/lib/alertas";
 import { somarDias } from "@/lib/formato";
+import { GATILHOS_PADRAO, type Gatilhos } from "@/lib/gatilhos";
+import { situacaoDaOrdem } from "@/lib/ordens";
 import type { ItemProntidao } from "@/lib/prontidao";
 
 export type Area = "obras" | "compras" | "pessoas" | "financeiro";
@@ -18,10 +20,12 @@ export type DadosMesa = {
   alertas: Alerta[];
   /** Faltas e vencidos da ficha de prontidão das obras piloto (RN-49r). */
   prontidao?: (ItemProntidao & { obraId: string })[];
+  /** Ordens concluídas que o gestor ainda não conferiu (RN-49t). */
+  ordensConcluidas?: { id: string; titulo: string; obra_id: string | null; responsavel: string }[];
+  gatilhos?: Gatilhos;
 };
 export type FiltroMesa = { empresas: string[] | null; obraId: string | null; area: Area | null };
 
-export const DIAS_SEM_MOVIMENTO = 7;
 export const DIAS_VENCIMENTO_MESA = 15;
 
 const AREA_DO_ALERTA: Record<Alerta["grupo"], Area> = { Contratos: "financeiro", Prazos: "obras", Equipe: "pessoas", Problemas: "obras", "Integrações": "obras" };
@@ -38,13 +42,14 @@ export function montarMesa(d: DadosMesa, f: FiltroMesa): Record<Caixa, ItemMesa[
   for (const m of d.medicoesPendentes) add({ chave: `medicao:${m.id}`, caixa: "aprovar", titulo: `Aprovar medição ${m.numero ?? ""}`.trim(), obraId: m.obra_id, area: "financeiro", responsavel: null, prazo: m.data_fim, gravidade: 2, recomendacao: null, href: `/contratos/${m.contrato_id}`, decisaoId: null });
   for (const a of d.aditivosPendentes) add({ chave: `aditivo:${a.id}`, caixa: "aprovar", titulo: `Analisar aditivo ${a.numero ?? ""}`.trim(), obraId: a.obra_id, area: "financeiro", responsavel: null, prazo: null, gravidade: 2, recomendacao: null, href: `/contratos/${a.contrato_id}`, decisaoId: null });
 
-  const limiteParado = somarDias(d.hoje, -DIAS_SEM_MOVIMENTO);
+  // Ordens delegadas: cobra pelos gatilhos do gestor (RN-49t, RN-49u)
   for (const t of d.tarefasDelegadas) {
-    const vencida = !!t.prazo && t.prazo < d.hoje;
-    const parada = t.atualizado_em.slice(0, 10) < limiteParado;
-    if (!vencida && !parada) continue;
-    add({ chave: `tarefa:${t.id}`, caixa: "cobrar", titulo: vencida ? `${t.titulo} (vencida)` : `${t.titulo} (sem movimento)`, obraId: t.obra_id, area: "obras", responsavel: t.responsavel, prazo: t.prazo, gravidade: vencida ? 3 : 1, recomendacao: null, href: `/tarefas/${t.id}`, decisaoId: null });
+    const s = situacaoDaOrdem({ status: "a_fazer", prazo: t.prazo, atualizado_em: t.atualizado_em, concluida_em: null, ordem_conferida_em: null }, d.hoje, d.gatilhos ?? GATILHOS_PADRAO);
+    if (!s.cobrar) continue;
+    add({ chave: `tarefa:${t.id}`, caixa: "cobrar", titulo: `${t.titulo} (${s.texto.toLowerCase()})`, obraId: t.obra_id, area: "obras", responsavel: t.responsavel, prazo: t.prazo, gravidade: s.codigo === "vencida" ? 3 : 1, recomendacao: null, href: `/tarefas/${t.id}`, decisaoId: null });
   }
+  for (const o of d.ordensConcluidas ?? [])
+    add({ chave: `conferir:${o.id}`, caixa: "aprovar", titulo: `Conferir ordem concluída: ${o.titulo}`, obraId: o.obra_id, area: "obras", responsavel: o.responsavel, prazo: null, gravidade: 1, recomendacao: null, href: "/ordens", decisaoId: null });
 
   const limiteVenc = somarDias(d.hoje, DIAS_VENCIMENTO_MESA);
   for (const v of d.vencimentos) {

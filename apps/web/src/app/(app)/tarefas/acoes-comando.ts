@@ -42,7 +42,7 @@ export async function fazerEu(id: string, estado: EstadoFormulario, fd: FormData
   const resultado = await criarLembreteDeAcao(id, estado, fd);
   if (!resultado.ok) return resultado;
   const { data: eu } = await supabase.from("pessoas").select("id").eq("eh_usuario", true).is("arquivado_em", null).limit(1).maybeSingle();
-  await supabase.from("tarefas").update({ responsavel_id: eu?.id ?? null }).eq("id", id);
+  await supabase.from("tarefas").update({ responsavel_id: eu?.id ?? null, ordem_tipo: "comigo", ordem_em: new Date().toISOString() }).eq("id", id);
   revalidar(id);
   return { ok: true, mensagem: `${resultado.mensagem} A tarefa ficou com você.` };
 }
@@ -100,6 +100,8 @@ export async function delegarTarefa(id: string, _: EstadoFormulario, fd: FormDat
       categoria: `${nomeQuadro} › ${novo.lista}`.slice(0, 100),
       status_sync: "sincronizado",
       trello_cartao_id: null,
+      ordem_tipo: "delegada",
+      ordem_em: new Date().toISOString(),
     })
     .eq("id", id);
   if (error) return { erro: `Cartão criado no Trello, mas a tarefa não foi ligada a ele: ${mensagemDoBanco(error)}` };
