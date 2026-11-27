@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUADRO_EQUIPE, SEM_RESPONSAVEL, ehDoQuadroDaEquipe, quadroEquipeDe, cartoesParados, detalharResolvidas, geracaoPorPessoa, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
+import { QUADRO_EQUIPE, SEM_RESPONSAVEL, ehDoQuadroDaEquipe, visivelNasListas, quadroEquipeDe, cartoesParados, detalharResolvidas, geracaoPorPessoa, rankingEvolucao, fluxoPorSemana, resumirEquipe, tarefasQueEntraram, tituloDoComentario, type CartaoEquipe, type ItemCartao } from "./equipe";
 
 const hoje = "2026-11-05";
 const cartao = (extra: Partial<CartaoEquipe> = {}): CartaoEquipe => ({ status: "a_fazer", prazo: null, concluido_em: null, criado_em: "2026-10-01T12:00:00Z", prazo_original: null, prazo_alteracoes: 0, categoria: `${QUADRO_EQUIPE} › CEF-01`, membros: ["Ana"], ...extra });
@@ -433,5 +433,15 @@ describe("quadros da equipe", () => {
     expect(ehDoQuadroDaEquipe("Gestão empresarial › A FAZER")).toBe(true);
     expect(ehDoQuadroDaEquipe("Objetivos › Metas")).toBe(false);
     expect(ehDoQuadroDaEquipe(null)).toBe(false);
+  });
+});
+
+describe("cartões da equipe nas listas (RN-49w)", () => {
+  it("aparece se não é da equipe, se é meu ou se é ordem minha", () => {
+    const ordens = new Set(["o1"]);
+    expect(visivelNasListas({ id: "x", categoria: "Objetivos › A fazer", minha: false }, ordens)).toBe(true);
+    expect(visivelNasListas({ id: "x", categoria: `${QUADRO_EQUIPE} › PRF`, minha: false }, ordens)).toBe(false);
+    expect(visivelNasListas({ id: "x", categoria: `${QUADRO_EQUIPE} › PRF`, minha: true }, ordens)).toBe(true);
+    expect(visivelNasListas({ id: "o1", categoria: `${QUADRO_EQUIPE} › PRF`, minha: false }, ordens)).toBe(true);
   });
 });

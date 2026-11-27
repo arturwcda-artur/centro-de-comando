@@ -10,6 +10,13 @@ export const quadroEquipeDe = (valor: unknown): string => (QUADROS_EQUIPE as rea
 export const ehDoQuadroDaEquipe = (categoria: string | null | undefined) => QUADROS_EQUIPE.some((q) => categoria?.startsWith(`${q} › `));
 export const SEM_RESPONSAVEL = "Sem responsável";
 
+/**
+ * RN-49w: nas listas do proprietário (Tarefas), cartão do quadro da equipe só aparece se for dele
+ * (membro) ou uma ordem dele. Os demais vivem no Trello e no painel Equipe.
+ */
+export const visivelNasListas = (t: { id: string | null; categoria: string | null; minha?: boolean | null }, ordens: Set<string>) =>
+  !ehDoQuadroDaEquipe(t.categoria) || !!t.minha || (!!t.id && ordens.has(t.id));
+
 /** Item de checklist de um cartão. */
 export type ItemCartao = {
   /** Texto do item, para mostrar o que foi resolvido. */
