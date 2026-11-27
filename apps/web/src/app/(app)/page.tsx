@@ -37,7 +37,7 @@ export default async function MesaDoGestor({ searchParams }: { searchParams: Pro
       </form>
       {m.erro && <p className="text-sm text-alerta">{m.erro}</p>}
       {typeof p.erro === "string" && <p className="text-sm text-alerta">Não foi possível gravar. Confira o preenchimento e tente de novo.</p>}
-      {item && <DetalheItem decisaoId={item} />}
+      {item && <DetalheItem decisaoId={item} delegar={p.delegar === "1"} />}
       <div className="grid gap-4 md:grid-cols-2">
         <CaixaMesa titulo="🔴 Decidir" itens={m.caixas.decidir} nomeObra={m.nomeObra} nomeEmpresa={m.nomeEmpresa} vazio="Nada para decidir agora." />
         <CaixaMesa titulo="🟠 Aprovar" itens={m.caixas.aprovar} nomeObra={m.nomeObra} nomeEmpresa={m.nomeEmpresa} vazio="Nada aguardando aprovação." />

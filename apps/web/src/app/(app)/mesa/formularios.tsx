@@ -1,5 +1,5 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { BotaoEnviar, CampoAreaTexto, CampoSelecao, CampoTexto } from "@/components/formulario";
 import { Aviso } from "@/components/ui";
 import type { EstadoFormulario } from "@/lib/validacao";
@@ -32,6 +32,30 @@ export function FormularioNaoSeAplica({ acao }: { acao: Acao }) {
       {estado.erro && <Aviso>{estado.erro}</Aviso>}
       <CampoAreaTexto nome="motivo" rotulo="Motivo" required erro={estado.erros?.motivo} />
       <BotaoEnviar variante="secundario">Não se aplica mais</BotaoEnviar>
+    </form>
+  );
+}
+
+type Quadro = { nome: string; listas: Opcao[] };
+
+/** "Delegar": cria o cartão no quadro da equipe. Título sugerido (assunto da decisão) e descrição vazia, ambos editáveis pelo gestor. */
+export function FormularioDelegar({ acao, quadros, membros, prioridades, tituloInicial }: { acao: Acao; quadros: Quadro[]; membros: Opcao[]; prioridades: readonly Opcao[]; tituloInicial: string }) {
+  const [estado, enviar] = useActionState(acao, {});
+  const [quadro, setQuadro] = useState("0");
+  const e = estado.erros ?? {};
+  return (
+    <form action={enviar} className="space-y-3" noValidate>
+      {estado.erro && <Aviso>{estado.erro}</Aviso>}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <CampoSelecao nome="quadro" rotulo="Quadro" required opcoes={quadros.map((q, i) => ({ valor: String(i), rotulo: q.nome }))} value={quadro} onChange={(ev) => setQuadro(ev.target.value)} erro={e.quadro} />
+        <CampoSelecao nome="lista" rotulo="Lista" required key={quadro} opcoes={quadros[Number(quadro)]?.listas ?? []} vazio="— selecione —" defaultValue="" erro={e.lista} />
+        <CampoSelecao nome="membro" rotulo="Pessoa" required opcoes={membros} vazio="— selecione —" defaultValue="" erro={e.membro} />
+        <CampoTexto nome="prazo" rotulo="Prazo" type="date" defaultValue="" erro={e.prazo} />
+        <CampoSelecao nome="prioridade" rotulo="Prioridade" required opcoes={prioridades} defaultValue="media" erro={e.prioridade} />
+      </div>
+      <CampoTexto nome="titulo" rotulo="Título do cartão" required defaultValue={tituloInicial} erro={e.titulo} />
+      <CampoAreaTexto nome="descricao" rotulo="Descrição" defaultValue="" erro={e.descricao} />
+      <BotaoEnviar>Delegar</BotaoEnviar>
     </form>
   );
 }
