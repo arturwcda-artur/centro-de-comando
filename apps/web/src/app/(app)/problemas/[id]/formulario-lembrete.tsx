@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { BotaoEnviar, CampoSelecao, CampoTexto } from "@/components/formulario";
 import { Aviso } from "@/components/ui";
 import { DURACAO_PADRAO, DURACOES } from "@/lib/pomodoro";
+import type { EstadoFormulario } from "@/lib/validacao";
 import { buscarHorarioLivre, criarLembreteDeAcao } from "../../agenda/acoes";
 
 const dataBr = (iso: string) => iso.split("-").reverse().join("/");
@@ -13,9 +14,9 @@ const semana = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString(
  * Lembrete em blocos de pomodoro: primeiro busca horários livres no Google Agenda (seg a sex,
  * 08:00 às 16:00, sem o almoço), depois cria o evento no horário escolhido (RN-49i).
  */
-export function FormularioLembrete({ tarefaId, dataSugerida, prazo }: { tarefaId: string; dataSugerida: string; prazo: string | null }) {
+export function FormularioLembrete({ tarefaId, dataSugerida, prazo, acao, rotulo = "Criar lembrete neste horário" }: { tarefaId: string; dataSugerida: string; prazo: string | null; acao?: (estado: EstadoFormulario, fd: FormData) => Promise<EstadoFormulario>; rotulo?: string }) {
   const [busca, buscar] = useActionState(buscarHorarioLivre, {});
-  const [criado, criar] = useActionState(criarLembreteDeAcao.bind(null, tarefaId), {});
+  const [criado, criar] = useActionState(acao ?? criarLembreteDeAcao.bind(null, tarefaId), {});
 
   if (criado.ok)
     return (
@@ -55,7 +56,7 @@ export function FormularioLembrete({ tarefaId, dataSugerida, prazo }: { tarefaId
                   </label>
                 ))}
               </fieldset>
-              <BotaoEnviar>Criar lembrete neste horário</BotaoEnviar>
+              <BotaoEnviar>{rotulo}</BotaoEnviar>
             </>
           )}
         </form>

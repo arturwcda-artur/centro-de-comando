@@ -8,7 +8,7 @@ import { hojeSP } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
 /** Listas de cada quadro da equipe, só leitura. */
-async function lerQuadros(): Promise<{ quadros: { nome: string; listas: { valor: string; rotulo: string }[] }[]; falha: string | null }> {
+export async function lerQuadros(): Promise<{ quadros: { nome: string; listas: { valor: string; rotulo: string }[] }[]; falha: string | null }> {
   const { TRELLO_API_KEY, TRELLO_TOKEN } = process.env;
   if (!TRELLO_API_KEY || !TRELLO_TOKEN) return { quadros: [], falha: "Não foi possível ler o Trello agora." };
   try {
