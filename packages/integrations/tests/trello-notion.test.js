@@ -44,5 +44,9 @@ describe('Trello', () => {
     const r = mapearCartao({ ...base, idMembers: ['outro'], dueComplete: true }, { quadro: 'Obras', lista: 'A fazer', meuId: 'eu', idEquipe: 'EQ' });
     expect(r).toMatchObject({ responsavel_id: 'EQ', status: 'concluida', concluida_em: '2026-11-01T10:00:00.000Z' });
   });
-});
 
+  it('no quadro da equipe, cartão sem membro vai para a equipe (RN-49w)', () => {
+    expect(mapearCartao({ ...base, idMembers: [] }, { quadro: 'Obras do Grupo - C.SALLES', lista: 'PRF', meuId: 'eu', idEquipe: 'EQ' }).responsavel_id).toBe('EQ');
+    expect(mapearCartao({ ...base, idMembers: [] }, { quadro: 'Objetivos', lista: 'A fazer', meuId: 'eu', idEquipe: 'EQ' }).responsavel_id).toBeNull();
+  });
+});

@@ -68,7 +68,9 @@ export function statusDaLista(nomeLista) {
  */
 export function mapearCartao(cartao, { quadro, lista, meuId, idEquipe }) {
   const status = cartao.dueComplete ? 'concluida' : statusDaLista(lista);
-  const meu = !cartao.idMembers?.length || cartao.idMembers.includes(meuId);
+  // No quadro da equipe, cartão sem membro é da equipe, não do proprietário (Doutrina, RN-49w)
+  const equipe = QUADROS_DETALHADOS.includes(quadro);
+  const meu = cartao.idMembers?.includes(meuId) || (!equipe && !cartao.idMembers?.length);
   return {
     id_externo: cartao.id,
     titulo: cortar(cartao.name, 300) ?? '(cartão sem título)',

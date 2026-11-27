@@ -25,11 +25,12 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
   const visao = (VISOES_TAREFA.find((v) => v.valor === params.visao)?.valor ?? "todas") as VisaoTarefa;
   const obraId = typeof params.obra === "string" && UUID.test(params.obra) ? params.obra : null;
   const fonte = ORIGENS.some((o) => o.valor === params.origem) ? (params.origem as string) : null;
+  const incluirEquipe = params.equipe === "1";
   const { supabase } = await exigirSessaoCompleta();
 
   const [lista, contagem, obras, responsaveis] = await Promise.all([
-    tarefasDaVisao(supabase, visao, obraId, fonte, quadro, membro),
-    contarVisoes(supabase),
+    tarefasDaVisao(supabase, visao, obraId, fonte, quadro, membro, incluirEquipe),
+    contarVisoes(supabase, incluirEquipe),
     supabase.from("obras").select("id, codigo, nome").is("arquivado_em", null).order("codigo"),
     carregarResponsaveis(supabase),
   ]);
@@ -45,7 +46,7 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
       return { ...m, quantidade: dele.length, link: linkWhatsApp(mensagem, m.telefone) };
     })
     .filter((m) => m.quantidade > 0);
-  const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}${quadro ? `&quadro=${encodeURIComponent(quadro)}` : ""}${membro ? `&membro=${membro}` : ""}`;
+  const sufixo = `${obraId ? `&obra=${obraId}` : ""}${fonte ? `&origem=${fonte}` : ""}${quadro ? `&quadro=${encodeURIComponent(quadro)}` : ""}${membro ? `&membro=${membro}` : ""}${incluirEquipe ? "&equipe=1" : ""}`;
 
   return (
     <div className="space-y-5">
@@ -113,6 +114,19 @@ export default async function PaginaTarefas({ searchParams }: PageProps<"/tarefa
           );
         })}
       </nav>
+
+      {!quadro && !membro && contagem.daEquipeOcultas > 0 && (
+        <p className="text-xs text-suave">
+          {incluirEquipe ? (
+            <Link href={`/tarefas?visao=${visao}${sufixo.replace("&equipe=1", "")}`} className="underline">Esconder os cartões da equipe que não são ordens suas</Link>
+          ) : (
+            <>
+              {contagem.daEquipeOcultas} cartões da equipe que não são ordens suas ficam no Trello e no painel Equipe.{" "}
+              <Link href={`/tarefas?visao=${visao}${sufixo}&equipe=1`} className="underline">Mostrar também</Link>
+            </>
+          )}
+        </p>
+      )}
 
       {envios.length > 0 && (
         <Cartao titulo="Enviar por WhatsApp">
