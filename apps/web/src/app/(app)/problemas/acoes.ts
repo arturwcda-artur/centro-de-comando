@@ -1,7 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { espelharNoTrello } from "@/lib/espelho-trello";
 import { UUID } from "@/lib/obras";
 import { acao5w2hSchema, problemaSchema, situacaoPelasAcoes } from "@/lib/problemas";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -89,8 +88,6 @@ export async function salvarAcao5w2h(problemaId: string, acaoId: string | null, 
     .from("acoes_detalhes")
     .upsert({ tarefa_id: tarefaId as string, o_que: dados.o_que, por_que: dados.por_que, onde: dados.onde, quem: dados.quem, como: dados.como, quanto: dados.quanto }, { onConflict: "tarefa_id" });
   if (error) return { erro: mensagemDoBanco(error) };
-
-  await espelharNoTrello(supabase, [tarefaId as string]);
   // Com plano, o problema sai de Pendentes e vai para Resolvendo
   await atualizarSituacao(supabase, problemaId);
   revalidar(problemaId);
@@ -107,7 +104,6 @@ export async function alternarAcao(problemaId: string, acaoId: string, concluir:
     .eq("id", acaoId)
     .eq("problema_id", problemaId)
     .eq("fonte", "manual"); // ação do Trello acompanha o cartão
-  await espelharNoTrello(supabase, [acaoId]);
   // Última ação concluída resolve o problema; reabrir uma ação volta para Resolvendo
   await atualizarSituacao(supabase, problemaId);
   revalidar(problemaId);
@@ -123,8 +119,7 @@ export async function concluirProblema(problemaId: string, concluir: boolean) {
   if (!UUID.test(problemaId)) return;
   const agora = new Date().toISOString();
   if (concluir) {
-    const { data: encerradas } = await supabase.from("tarefas").update({ status: "concluida", concluida_em: agora }).eq("problema_id", problemaId).eq("fonte", "manual").not("status", "in", "(concluida,cancelada)").select("id");
-    await espelharNoTrello(supabase, (encerradas ?? []).map((a) => a.id));
+    await supabase.from("tarefas").update({ status: "concluida", concluida_em: agora }).eq("problema_id", problemaId).eq("fonte", "manual").not("status", "in", "(concluida,cancelada)");
     await supabase.from("problemas").update({ status: "resolvido", resolvido_em: agora }).eq("id", problemaId);
   } else {
     const { count } = await supabase.from("tarefas").select("id", { count: "exact", head: true }).eq("problema_id", problemaId);

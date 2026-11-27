@@ -11,7 +11,7 @@ export function FormularioConclusao({ acao }: { acao: (estado: EstadoFormulario,
   return (
     <form action={enviar} className="space-y-3" noValidate>
       {estado.erro && <Aviso>{estado.erro}</Aviso>}
-      <CampoAreaTexto nome="decisao" rotulo="Saída / decisão (opcional)" rows={3} erro={e.decisao} ajuda="Fica registrada na obra e vai como comentário no cartão do quadro tarefas." />
+      <CampoAreaTexto nome="decisao" rotulo="Saída / decisão (opcional)" rows={3} erro={e.decisao} ajuda="Fica registrada na obra." />
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="afeta_planejamento" className="mt-0.5 size-4 accent-[var(--marca)]" />
         <span>
