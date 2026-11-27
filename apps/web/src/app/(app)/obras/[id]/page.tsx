@@ -7,6 +7,7 @@ import { rotuloSituacao } from "@/lib/dominio";
 import { brl, dataCivil, dataHora, pct } from "@/lib/formato";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
+import { FichaProntidao } from "./prontidao";
 
 export const metadata: Metadata = { title: "Obra" };
 
@@ -84,6 +85,8 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
           </span>
         ))}
       </nav>
+
+      {aba === "visao" && <FichaProntidao obraId={id} codigo={o.codigo} />}
 
       {aba === "visao" && (
         <div className="grid gap-4 lg:grid-cols-3">

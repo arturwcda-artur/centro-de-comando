@@ -69,3 +69,11 @@ describe("ALERTAS sem repetição", () => {
     expect(m.alertas.map((i) => i.titulo).sort()).toEqual(["2 marcos vencidos no cronograma — revisar a programação", "Contrato 1/2026: termina antes do cronograma."]);
   });
 });
+
+describe("ficha de prontidão na Mesa (RN-49r)", () => {
+  it("falta da obra piloto entra em ALERTAS, com a empresa da obra e link para a ficha", () => {
+    const m = montarMesa({ ...base, prontidao: [{ chave: "medicao-mes", area: "Medição", titulo: "Medição do mês", situacao: "falta", detalhe: "falta a medição de 10/2026.", obraId: "o1" }] }, todos);
+    expect(m.alertas).toHaveLength(1);
+    expect(m.alertas[0]).toMatchObject({ titulo: "Medição do mês: falta a medição de 10/2026.", empresaId: "L7", area: "financeiro", gravidade: 3, href: "/obras/o1#prontidao" });
+  });
+});

@@ -1,6 +1,7 @@
 /** Regras da Mesa do Gestor (spec 2026-11-26). Sem banco, para poder testar. */
 import type { Alerta } from "@/lib/alertas";
 import { somarDias } from "@/lib/formato";
+import type { ItemProntidao } from "@/lib/prontidao";
 
 export type Area = "obras" | "compras" | "pessoas" | "financeiro";
 export type Caixa = "decidir" | "aprovar" | "cobrar" | "alertas";
@@ -15,6 +16,8 @@ export type DadosMesa = {
   vencimentos: { registro_id: string | null; tipo: string | null; descricao: string | null; obra_id: string | null; data: string | null }[];
   riscosCriticos: { id: string; titulo: string; obra_id: string | null }[];
   alertas: Alerta[];
+  /** Faltas e vencidos da ficha de prontidão das obras piloto (RN-49r). */
+  prontidao?: (ItemProntidao & { obraId: string })[];
 };
 export type FiltroMesa = { empresas: string[] | null; obraId: string | null; area: Area | null };
 
@@ -60,6 +63,8 @@ export function montarMesa(d: DadosMesa, f: FiltroMesa): Record<Caixa, ItemMesa[
     if (/tarefas? vencidas?.$|cart(ão|ões) parados? há/.test(a.texto)) continue;
     add({ chave: `alerta:${a.texto}`, caixa: "alertas", titulo: a.texto, obraId: null, area: AREA_DO_ALERTA[a.grupo], responsavel: null, prazo: null, gravidade: a.grave ? 3 : 1, recomendacao: null, href: a.href, decisaoId: null });
   }
+  for (const p of d.prontidao ?? [])
+    add({ chave: `prontidao:${p.obraId}:${p.chave}`, caixa: "alertas", titulo: `${p.titulo}: ${p.detalhe}`, obraId: p.obraId, area: p.area === "Medição" || p.area === "Contrato" ? "financeiro" : "obras", responsavel: null, prazo: null, gravidade: p.situacao === "falta" ? 3 : 2, recomendacao: null, href: `/obras/${p.obraId}#prontidao`, decisaoId: null });
   if (marcosVencidos > 0) add({ chave: "alerta:marcos-vencidos", caixa: "alertas", titulo: `${marcosVencidos} ${marcosVencidos === 1 ? "marco vencido" : "marcos vencidos"} no cronograma — revisar a programação`, obraId: null, area: "obras", responsavel: null, prazo: null, gravidade: 3, recomendacao: null, href: "/planejamento", decisaoId: null });
 
   const passa = (i: ItemMesa) =>
