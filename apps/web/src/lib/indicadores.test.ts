@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calcularIndicadores, type ObraResumo } from "./indicadores";
-import { MODULOS, moduloAtivo } from "./navegacao";
+import { MENUS, MODULOS, moduloAtivo } from "./navegacao";
 
 // Linhas de teste da view v_obra_resumo — não são obras reais.
 function obra(campos: Partial<ObraResumo>): ObraResumo {
@@ -62,5 +62,12 @@ describe("navegação", () => {
     expect(moduloAtivo("/painel")?.titulo).toBe("Painel executivo");
     expect(moduloAtivo("/obras/123")?.slug).toBe("obras");
     expect(moduloAtivo("/inexistente")).toBeUndefined();
+  });
+  it("menu de 5 itens; todo módulo mora em um deles e cada item abre um módulo", () => {
+    expect(MENUS.map((m) => m.nome)).toEqual(["Mesa", "Obras", "Agenda", "Equipe", "Configurações"]);
+    for (const m of MODULOS) expect(MENUS.some((x) => x.nome === m.menu)).toBe(true);
+    for (const x of MENUS) expect(moduloAtivo(x.href)?.menu).toBe(x.nome);
+    expect(moduloAtivo("/painel")?.menu).toBe("Obras");
+    expect(moduloAtivo("/tarefas/abc")?.menu).toBe("Mesa");
   });
 });

@@ -5,46 +5,51 @@ import { Menu, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IconeModulo } from "@/components/icone-modulo";
 import { Marca } from "@/components/marca";
-import { FASE_ATUAL, MODULOS, moduloAtivo, type Modulo } from "@/lib/navegacao";
+import { MENUS, MODULOS, moduloAtivo } from "@/lib/navegacao";
 
-const GRUPOS: Modulo["grupo"][] = ["Visão geral", "Gestão", "Controle", "Sistema"];
+const LINK = "flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition";
+const ATIVO = "bg-lateral-ativo font-medium text-white";
+const INATIVO = "text-lateral-texto hover:bg-lateral-ativo/60 hover:text-white";
 
+/**
+ * Menu de 5 itens (Doutrina do Centro de Comando): Mesa, Obras, Agenda, Equipe e Configurações.
+ * As demais telas aparecem como subitens só do item aberto, para nada sumir.
+ */
 function Itens({ rodape, aoNavegar }: { rodape: ReactNode; aoNavegar?: () => void }) {
   const ativo = moduloAtivo(usePathname());
   return (
     <div className="flex h-full flex-col">
       <div className="px-4 py-5">
-        <Link href="/" aria-label="Ir para o painel">
+        <Link href="/" aria-label="Ir para a Mesa">
           <Marca clara />
         </Link>
       </div>
-      <nav aria-label="Módulos" className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-        {GRUPOS.map((grupo) => (
-          <div key={grupo}>
-            <p className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-lateral-texto/60">{grupo}</p>
-            <ul className="space-y-0.5">
-              {MODULOS.filter((m) => m.grupo === grupo).map((m) => {
-                const atual = ativo?.href === m.href;
-                return (
-                  <li key={m.href}>
-                    <Link
-                      href={m.href}
-                      onClick={aoNavegar}
-                      aria-current={atual ? "page" : undefined}
-                      className={`flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition ${
-                        atual ? "bg-lateral-ativo font-medium text-white" : "text-lateral-texto hover:bg-lateral-ativo/60 hover:text-white"
-                      }`}
-                    >
-                      <IconeModulo icone={m.icone} />
-                      <span className="flex-1 truncate">{m.titulo}</span>
-                      {m.fase > FASE_ATUAL && <span className="text-[10px] text-lateral-texto/50">F{m.fase}</span>}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+      <nav aria-label="Módulos" className="flex-1 overflow-y-auto px-3 pb-4">
+        <ul className="space-y-0.5">
+          {MENUS.map((menu) => {
+            const aberto = ativo?.menu === menu.nome;
+            const subitens = MODULOS.filter((m) => m.menu === menu.nome && m.href !== menu.href);
+            return (
+              <li key={menu.nome}>
+                <Link href={menu.href} onClick={aoNavegar} aria-current={ativo?.href === menu.href ? "page" : undefined} className={`${LINK} ${ativo?.href === menu.href ? ATIVO : aberto ? "font-medium text-white" : INATIVO}`}>
+                  <IconeModulo icone={menu.icone} />
+                  <span className="flex-1 truncate">{menu.nome}</span>
+                </Link>
+                {aberto && subitens.length > 0 && (
+                  <ul className="mb-2 ml-5 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
+                    {subitens.map((m) => (
+                      <li key={m.href}>
+                        <Link href={m.href} onClick={aoNavegar} aria-current={ativo?.href === m.href ? "page" : undefined} className={`${LINK} py-1.5 ${ativo?.href === m.href ? ATIVO : INATIVO}`}>
+                          <span className="flex-1 truncate">{m.titulo}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </nav>
       <div className="border-t border-white/5 p-3">{rodape}</div>
     </div>

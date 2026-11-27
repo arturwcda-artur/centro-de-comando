@@ -14,11 +14,14 @@ export const metadata: Metadata = { title: "Obra" };
 const ABAS = [
   { id: "visao", rotulo: "Visão geral" },
 ] as const;
-const FUTURAS = [
-  { rotulo: "Tarefas", fase: 5 },
-  { rotulo: "Planejamento", fase: 6 },
-  { rotulo: "Contratos e medições", fase: 7 },
-  { rotulo: "Documentos", fase: 8 },
+/** O que mora dentro da obra (Doutrina do Centro de Comando): cada aba abre a tela já filtrada nela. */
+const DENTRO_DA_OBRA = (id: string, contratoId: string | null) => [
+  { rotulo: "Planejamento", href: `/planejamento/${id}` },
+  { rotulo: "Contrato e medições", href: contratoId ? `/contratos/${contratoId}` : "/contratos" },
+  { rotulo: "Tarefas", href: `/tarefas?obra=${id}` },
+  { rotulo: "Problemas", href: `/problemas?obra=${id}` },
+  { rotulo: "Documentos", href: `/documentos?obra=${id}` },
+  { rotulo: "Relatório", href: `/relatorios/obra/${id}`, novaAba: true },
 ];
 
 function Dado({ rotulo, valor }: { rotulo: string; valor: React.ReactNode }) {
@@ -37,10 +40,11 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
   const aba = ABAS.find((a) => a.id === abaPedida)?.id ?? "visao";
   const { supabase } = await exigirSessaoCompleta();
 
-  const [obra, resumo, problemas] = await Promise.all([
+  const [obra, resumo, problemas, contrato] = await Promise.all([
     supabase.from("obras").select("*, empresas(razao_social, nome_fantasia), contratantes(nome)").eq("id", id).is("arquivado_em", null).maybeSingle(),
     supabase.from("v_obra_resumo").select("*").eq("obra_id", id).maybeSingle(),
     supabase.from("problemas").select("gut").eq("obra_id", id).in("status", ["aberto", "em_andamento"]),
+    supabase.from("contratos").select("id").eq("obra_id", id).is("arquivado_em", null).order("data_termino_original", { ascending: false, nullsFirst: false }).limit(1).maybeSingle(),
   ]);
   if (!obra.data) notFound();
   const o = obra.data;
@@ -79,10 +83,10 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
             {a.rotulo}
           </Link>
         ))}
-        {FUTURAS.map((f) => (
-          <span key={f.rotulo} className="whitespace-nowrap px-3 py-2 text-sm text-suave/50" title={`Disponível na Fase ${f.fase}`}>
-            {f.rotulo} <span className="text-[10px]">F{f.fase}</span>
-          </span>
+        {DENTRO_DA_OBRA(id, contrato.data?.id ?? null).map((f) => (
+          <Link key={f.rotulo} href={f.href} target={f.novaAba ? "_blank" : undefined} className="-mb-px whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm text-suave hover:text-texto">
+            {f.rotulo}
+          </Link>
         ))}
       </nav>
 
@@ -123,8 +127,7 @@ export default async function PaginaObra({ params, searchParams }: PageProps<"/o
                 }
               />
             </dl>
-            <p className="mt-3 text-xs text-suave">Contratos e medições entram na Fase 7; avanço físico, na Fase 6.</p>
-          </Cartao>
+                      </Cartao>
         </div>
       )}
 
