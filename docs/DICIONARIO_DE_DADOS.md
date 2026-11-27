@@ -387,6 +387,20 @@ Empresas pelas quais o gestor atua (executoras). Ex.: construtora contratada.
 | tipo | text | sim |  | grupo (holding), empresa operacional ou marca. |
 | empresa_mae_id | uuid |  | empresas | Empresa/grupo a que esta pertence. |
 
+## Tabela `equipe_placares`
+
+Placar oficial da equipe por semana ou mês fechado (RN-49p). Gravado uma vez, não muda.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| id | uuid | sim |  |  |
+| quadro | text | sim |  |  |
+| tipo | text | sim |  |  |
+| inicio | date | sim |  |  |
+| fim | date | sim |  | Primeiro dia depois do período (exclusivo). |
+| dados | jsonb | sim |  | Números do período como apareciam na tela Equipe no fechamento. |
+| fechado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `eventos`
 
 | Coluna | Tipo | Obrigatória | Referência | Descrição |
@@ -822,6 +836,7 @@ Criação, conclusão real e prazo original do cartão, lidos do histórico do T
 | criado_no_trello | timestamp with time zone |  |  |  |
 | concluido_em | timestamp with time zone |  |  |  |
 | concluido_por_id | uuid |  | trello_membros | Membro que marcou o item como concluído no Trello. Quem recebe o crédito na tela Equipe. |
+| primeiro_concluido_em | timestamp with time zone |  |  | Primeira vez que o item foi visto marcado. É a data que conta no placar (RN-49p). |
 
 ## Tabela `trello_comentarios`
 

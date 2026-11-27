@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { GraficoSemanas } from "@/components/grafico-semanas";
 import { FolhaRelatorio, NumerosRelatorio, SecaoRelatorio } from "@/components/relatorio";
 import { SEM_RESPONSAVEL, quadroEquipeDe } from "@/lib/equipe";
-import { carregarCartoesEquipe, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
-import { dataHora } from "@/lib/formato";
+import { painelDaEquipe } from "@/lib/equipe-dados";
+import { dataHora, hojeSP } from "@/lib/formato";
+import { lerJanela, rotuloDaJanela } from "@/lib/placar";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
 export const metadata: Metadata = { title: "KPI da equipe" };
@@ -14,14 +15,15 @@ const dias = (d: number | null) => (d === null ? "—" : `${quantidade(d)} dias`
 
 export default async function RelatorioEquipe({ searchParams }: PageProps<"/relatorios/equipe">) {
   const params = await searchParams;
-  const periodo = periodoDe(params.periodo);
+  const janela = lerJanela(params.periodo, params.ref, hojeSP());
   const quadro = quadroEquipeDe(params.quadro);
   const { supabase } = await exigirSessaoCompleta();
-  const { cartoes, ultimaSync } = await carregarCartoesEquipe(supabase, quadro);
-  const p = montarPainelEquipe(cartoes, periodo.dias);
+  const painel = await painelDaEquipe(supabase, quadro, janela);
+  const p = { ...painel.resumo, parados: painel.parados, semanas: painel.semanas, evolucaoPessoa: (nome: string) => painel.resumo.evolucaoPessoa[nome] ?? null };
+  const situacao = painel.situacao === "oficial" ? "placar oficial" : painel.situacao === "todos" ? "todo o período" : "parcial";
 
   return (
-    <FolhaRelatorio titulo="KPI da equipe" subtitulo={`${quadro} · ${periodo.rotulo}`} fonte={`Trello, sincronizado em ${dataHora(ultimaSync)}`} geradoEm={dataHora(new Date().toISOString())}>
+    <FolhaRelatorio titulo="KPI da equipe" subtitulo={`${quadro} · ${rotuloDaJanela(janela)} · ${situacao}`} fonte={painel.fechadoEm ? `Placar fechado em ${dataHora(painel.fechadoEm)}` : `Trello, sincronizado em ${dataHora(painel.ultimaSync)}`} geradoEm={dataHora(new Date().toISOString())}>
       <NumerosRelatorio
         itens={[
           ["Tarefas resolvidas", quantidade(p.total?.resolvidas ?? 0)],
@@ -49,7 +51,7 @@ export default async function RelatorioEquipe({ searchParams }: PageProps<"/rela
                 <td className="py-1">{l.nome}</td>
                 <td className="py-1 text-right font-semibold tabular-nums">{quantidade(l.resolvidas)}</td>
                 <td className="py-1 text-right tabular-nums">{dias(l.diasPorTarefa)}</td>
-                <td className="py-1 text-right tabular-nums">{comSinal(p.evolucaoPessoa(l.nome, l.resolvidas))}</td>
+                <td className="py-1 text-right tabular-nums">{comSinal(p.evolucaoPessoa(l.nome))}</td>
               </tr>
             ))}
           </tbody>

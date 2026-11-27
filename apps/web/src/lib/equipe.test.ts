@@ -265,6 +265,7 @@ describe("tarefas que entraram", () => {
     const lista = [cartao({ criado_em: "2026-09-01T12:00:00Z" }), cartao({ itens: [pendente({ criado_em: "2026-11-01T12:00:00Z" }), pendente({ criado_em: "2026-11-02T12:00:00Z" })] })];
     expect(tarefasQueEntraram(lista, "2026-10-01")).toBe(2);
     expect(tarefasQueEntraram(lista)).toBe(3);
+    expect(tarefasQueEntraram(lista, undefined, undefined, "2026-10-01")).toBe(1);
   });
 });
 

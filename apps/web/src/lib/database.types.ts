@@ -1353,6 +1353,36 @@ export type Database = {
           },
         ]
       }
+      equipe_placares: {
+        Row: {
+          dados: Json
+          fechado_em: string
+          fim: string
+          id: string
+          inicio: string
+          quadro: string
+          tipo: string
+        }
+        Insert: {
+          dados: Json
+          fechado_em?: string
+          fim: string
+          id?: string
+          inicio: string
+          quadro: string
+          tipo: string
+        }
+        Update: {
+          dados?: Json
+          fechado_em?: string
+          fim?: string
+          id?: string
+          inicio?: string
+          quadro?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       eventos: {
         Row: {
           atualizado_em: string
@@ -2860,6 +2890,7 @@ export type Database = {
           membro_id: string | null
           nome: string
           posicao: number
+          primeiro_concluido_em: string | null
           tarefa_id: string
         }
         Insert: {
@@ -2875,6 +2906,7 @@ export type Database = {
           membro_id?: string | null
           nome: string
           posicao?: number
+          primeiro_concluido_em?: string | null
           tarefa_id: string
         }
         Update: {
@@ -2890,6 +2922,7 @@ export type Database = {
           membro_id?: string | null
           nome?: string
           posicao?: number
+          primeiro_concluido_em?: string | null
           tarefa_id?: string
         }
         Relationships: [

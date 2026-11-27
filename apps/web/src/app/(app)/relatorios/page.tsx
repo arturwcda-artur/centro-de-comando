@@ -2,12 +2,21 @@ import type { Metadata } from "next";
 import { Download, FileText } from "lucide-react";
 import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
-import { PERIODOS } from "@/lib/equipe-dados";
+import { hojeSP } from "@/lib/formato";
+import { janelaAnterior, janelaDe, linkDaJanela, rotuloDaJanela } from "@/lib/placar";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
 export const metadata: Metadata = { title: "Relatórios" };
 
 const LINK = "inline-flex h-9 items-center gap-2 rounded-lg border border-borda px-3 text-sm hover:bg-superficie-2";
+
+/** Semana e mês em andamento (parciais) e os anteriores (placar oficial, quando fechado). */
+function periodosDoRelatorio() {
+  const hoje = hojeSP();
+  const semana = janelaDe("semana", hoje);
+  const mes = janelaDe("mes", hoje);
+  return [semana, janelaAnterior(semana)!, mes, janelaAnterior(mes)!];
+}
 
 export default async function PaginaRelatorios() {
   const { supabase } = await exigirSessaoCompleta();
@@ -29,9 +38,9 @@ export default async function PaginaRelatorios() {
       <Cartao titulo="KPI da equipe">
         <p className="mb-3 text-sm text-suave">PDF de 1 página com tarefas resolvidas, tempo, evolução e cartões parados.</p>
         <div className="flex flex-wrap gap-2">
-          {PERIODOS.map((p) => (
-            <Link key={p.valor} href={`/relatorios/equipe?periodo=${p.valor}`} target="_blank" className={LINK}>
-              <FileText className="size-4" aria-hidden="true" /> {p.rotulo}
+          {periodosDoRelatorio().map((j) => (
+            <Link key={linkDaJanela(j)} href={`/relatorios/equipe?${linkDaJanela(j)}`} target="_blank" className={LINK}>
+              <FileText className="size-4" aria-hidden="true" /> {rotuloDaJanela(j)}
             </Link>
           ))}
         </div>
