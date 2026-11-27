@@ -1,5 +1,6 @@
 import "server-only";
 import { hojeSP, somarDias } from "@/lib/formato";
+import { lerGatilhos, type Gatilhos } from "@/lib/gatilhos";
 import { avaliarProntidao, OBRAS_PILOTO, pendencias, type DadosProntidao, type ItemProntidao } from "@/lib/prontidao";
 import type { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -8,10 +9,16 @@ type Cliente = Awaited<ReturnType<typeof criarClienteServidor>>;
 /** ART no nome do arquivo, sem pegar "parte", "arte" etc. */
 const PADRAO_ART = "(^|[^a-z])art([^a-z]|$)";
 
+/** Gatilhos do gestor (RN-49u); sem a tabela, valem os da Doutrina. */
+export async function carregarGatilhos(supabase: Cliente): Promise<Gatilhos> {
+  const { data } = await supabase.from("gatilhos").select("chave, ativo, limite");
+  return lerGatilhos(data);
+}
+
 /** Lê o que a ficha confere para uma obra e devolve os itens avaliados. */
-export async function carregarProntidao(supabase: Cliente, obraId: string): Promise<ItemProntidao[] | null> {
-  const dados = await carregarDadosProntidao(supabase, obraId);
-  return dados ? avaliarProntidao(dados) : null;
+export async function carregarProntidao(supabase: Cliente, obraId: string, gatilhos?: Gatilhos): Promise<ItemProntidao[] | null> {
+  const [dados, g] = await Promise.all([carregarDadosProntidao(supabase, obraId), gatilhos ?? carregarGatilhos(supabase)]);
+  return dados ? avaliarProntidao(dados, g) : null;
 }
 
 /** Os dados brutos da ficha de uma obra (a Sala de Situação usa as datas). */
@@ -26,7 +33,7 @@ export async function carregarDadosProntidao(supabase: Cliente, obraId: string):
     supabase.from("documentos").select("id", { count: "exact", head: true }).eq("obra_id", obraId).eq("categoria", "equipe_efetivo").is("arquivado_em", null),
     supabase.from("documentos").select("id", { count: "exact", head: true }).eq("obra_id", obraId).filter("titulo", "imatch", PADRAO_ART).is("arquivado_em", null),
     supabase.from("documentos").select("id", { count: "exact", head: true }).eq("obra_id", obraId).eq("categoria", "revisar").is("arquivado_em", null),
-    supabase.from("problemas").select("id", { count: "exact", head: true }).eq("obra_id", obraId).in("status", ["aberto", "em_andamento"]).gte("gut", 64),
+    supabase.from("problemas").select("gut").eq("obra_id", obraId).in("status", ["aberto", "em_andamento"]),
   ]);
   if (!obra.data) return null;
 
@@ -36,7 +43,7 @@ export async function carregarDadosProntidao(supabase: Cliente, obraId: string):
     const lista = atividades ?? [];
     const abertasVencidas = lista.filter((a) => !a.resumo && a.fim_previsto && a.fim_previsto.slice(0, 10) < hoje && (a.percentual ?? 0) < 100);
     const termino = lista.reduce<string | null>((m, a) => (a.fim_previsto && (!m || a.fim_previsto > m) ? a.fim_previsto : m), null);
-    vigente = { atualizado: versao.data.atualizado_em_origem, termino: termino?.slice(0, 10) ?? null, atrasadas: abertasVencidas.length, atrasadasCriticas: abertasVencidas.filter((a) => a.critica).length };
+    vigente = { atualizado: versao.data.atualizado_em_origem, termino: termino?.slice(0, 10) ?? null, vencidas: abertasVencidas.map((a) => ({ fim: a.fim_previsto!.slice(0, 10), critica: !!a.critica })) };
   }
 
   // Contrato principal: o de término mais longe. Aditivos aprovados com prazo estendem o término.
@@ -52,7 +59,7 @@ export async function carregarDadosProntidao(supabase: Cliente, obraId: string):
     vigente,
     medicoes: lista.flatMap((c) => c.medicoes.map((m) => ({ numero: m.numero != null ? String(m.numero) : null, periodoFim: m.periodo_fim, situacao: m.situacao, dataEnvio: m.data_envio }))),
     documentos: { ultimoDiario: diario.data?.data_documento ?? null, equipe: equipe.count ?? 0, art: art.count ?? 0, revisar: revisar.count ?? 0 },
-    problemasCriticos: problemas.count ?? 0,
+    problemasAbertos: (problemas.data ?? []).map((p) => p.gut ?? 0),
   };
   return dados;
 }
@@ -62,9 +69,9 @@ const JA_NOS_ALERTAS = new Set(["prazo-contratual", "problemas"]);
 
 /** Pendências das obras piloto para a Mesa (Doutrina: cada falta vira item). */
 export async function pendenciasDasObrasPiloto(supabase: Cliente) {
-  const { data: obras } = await supabase.from("obras").select("id, codigo").in("codigo", OBRAS_PILOTO).is("arquivado_em", null);
+  const [{ data: obras }, g] = await Promise.all([supabase.from("obras").select("id, codigo").in("codigo", OBRAS_PILOTO).is("arquivado_em", null), carregarGatilhos(supabase)]);
   const porObra = await Promise.all(
-    (obras ?? []).map(async (o) => ((await carregarProntidao(supabase, o.id)) ?? []).filter((i) => !JA_NOS_ALERTAS.has(i.chave)).map((i) => ({ ...i, obraId: o.id }))),
+    (obras ?? []).map(async (o) => ((await carregarProntidao(supabase, o.id, g)) ?? []).filter((i) => !JA_NOS_ALERTAS.has(i.chave)).map((i) => ({ ...i, obraId: o.id }))),
   );
   return pendencias(porObra.flat()) as (ItemProntidao & { obraId: string })[];
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { avaliarProntidao, datasDeReferencia, mesQueDeveTerMedicao, pendencias, resumoPorArea, type DadosProntidao } from "./prontidao";
+import { lerGatilhos } from "./gatilhos";
 
 // Retrato da PRF Recanto em 27/11/2026
 const prf: DadosProntidao = {
@@ -8,10 +9,10 @@ const prf: DadosProntidao = {
   contrato: { numero: "1/2026", termino: "2027-03-30" },
   aditivos: [{ numero: "01/2026", situacao: "em_analise", tipo: "acrescimo", desde: "2026-11-04" }],
   arquivos: [{ papel: "vigente", erro: false }, { papel: "linha_base", erro: false }],
-  vigente: { atualizado: "2026-11-23", termino: "2027-09-29", atrasadas: 10, atrasadasCriticas: 0 },
+  vigente: { atualizado: "2026-11-23", termino: "2027-09-29", vencidas: Array.from({ length: 10 }, () => ({ fim: "2026-11-20", critica: false })) },
   medicoes: [{ numero: "1", periodoFim: "2026-04-15", situacao: "aprovada", dataEnvio: null }],
   documentos: { ultimoDiario: null, equipe: 0, art: 0, revisar: 1 },
-  problemasCriticos: 0,
+  problemasAbertos: [40, 18],
 };
 const item = (d: DadosProntidao, chave: string) => avaliarProntidao(d).find((i) => i.chave === chave);
 
@@ -68,5 +69,23 @@ describe("contrato sem término", () => {
     const itens = avaliarProntidao({ ...prf, contrato: { numero: "49/2025", termino: null } });
     expect(itens.find((i) => i.chave === "contrato-termino")?.situacao).toBe("atencao");
     expect(itens.find((i) => i.chave === "prazo-contratual")).toBeUndefined();
+  });
+});
+
+describe("gatilhos na ficha (RN-49u)", () => {
+  it("gatilho desligado deixa o item como Atenção e fora da Mesa", () => {
+    const g = lerGatilhos([{ chave: "medicao_do_mes", ativo: false, limite: 5 }]);
+    const i = avaliarProntidao(prf, g).find((x) => x.chave === "medicao-mes")!;
+    expect(i.situacao).toBe("atencao");
+    expect(i.detalhe).toContain("gatilho desligado");
+  });
+  it("limites do gestor: tolerância de prazo e GUT", () => {
+    expect(avaliarProntidao(prf, lerGatilhos([{ chave: "prazo_contratual", ativo: true, limite: 200 }])).find((x) => x.chave === "prazo-contratual")?.situacao).toBe("ok");
+    expect(avaliarProntidao(prf, lerGatilhos([{ chave: "problema_critico", ativo: true, limite: 40 }])).find((x) => x.chave === "problemas")?.situacao).toBe("falta");
+  });
+  it("caminho crítico com tolerância em dias", () => {
+    const d = { ...prf, vigente: { ...prf.vigente!, vencidas: [{ fim: "2026-11-25", critica: true }] } };
+    expect(avaliarProntidao(d).find((x) => x.chave === "atrasadas")?.situacao).toBe("falta");
+    expect(avaliarProntidao(d, lerGatilhos([{ chave: "caminho_critico", ativo: true, limite: 5 }])).find((x) => x.chave === "atrasadas")?.situacao).toBe("atencao");
   });
 });

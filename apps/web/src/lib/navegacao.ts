@@ -26,6 +26,7 @@ export type Modulo = {
 
 export const MODULOS: Modulo[] = [
   { slug: "", href: "/", titulo: "Mesa do Gestor", descricao: "Só o que precisa da sua direção", icone: "painel", fase: 3, grupo: "Visão geral" },
+  { slug: "ordens", href: "/ordens", titulo: "Controle de ordens", descricao: "O que você delegou ou assumiu foi feito?", icone: "tarefas", fase: 3, grupo: "Visão geral" },
   { slug: "painel", href: "/painel", titulo: "Painel executivo", descricao: "Visão executiva consolidada das obras", icone: "painel", fase: 3, grupo: "Visão geral" },
   { slug: "meu-dia", href: "/meu-dia", titulo: "Meu dia", descricao: "Prioridades, compromissos e pendências do dia", icone: "dia", fase: 5, grupo: "Visão geral" },
   { slug: "alertas", href: "/alertas", titulo: "Alertas", descricao: "O que precisa de atenção agora", icone: "alertas", fase: 10, grupo: "Visão geral" },
@@ -39,6 +40,7 @@ export const MODULOS: Modulo[] = [
   { slug: "documentos", href: "/documentos", titulo: "Documentos", descricao: "Biblioteca documental por obra", icone: "documentos", fase: 8, grupo: "Controle" },
   { slug: "relatorios", href: "/relatorios", titulo: "Relatórios", descricao: "Relatórios executivos em Excel e PDF", icone: "relatorios", fase: 8, grupo: "Controle" },
   { slug: "cadastros", href: "/cadastros", titulo: "Cadastros", descricao: "Empresas, contratantes, pessoas e fornecedores", icone: "cadastros", fase: 4, grupo: "Sistema" },
+  { slug: "gatilhos", href: "/gatilhos", titulo: "Gatilhos", descricao: "O que toca o alarme e com que limite", icone: "alertas", fase: 3, grupo: "Sistema" },
   { slug: "integracoes", href: "/integracoes", titulo: "Integrações", descricao: "Trello, Google, MS Project, Excel", icone: "integracoes", fase: 5, grupo: "Sistema" },
 ];
 

@@ -77,3 +77,11 @@ describe("ficha de prontidão na Mesa (RN-49r)", () => {
     expect(m.alertas[0]).toMatchObject({ titulo: "Medição do mês: falta a medição de 10/2026.", empresaId: "L7", area: "financeiro", gravidade: 3, href: "/obras/o1#prontidao" });
   });
 });
+
+describe("ordens na Mesa (RN-49t)", () => {
+  it("ordem concluída pede conferência em APROVAR; vencida há menos dias que o gatilho não é cobrada", () => {
+    const m = montarMesa({ ...base, ordensConcluidas: [{ id: "o9", titulo: "Pedir cotação", obra_id: "o1", responsavel: "João" }], tarefasDelegadas: [{ id: "v1", titulo: "v1", obra_id: "o1", prazo: "2026-11-25", responsavel: "João", atualizado_em: "2026-11-25T10:00:00Z" }] }, todos);
+    expect(m.aprovar.map((i) => i.chave)).toEqual(["conferir:o9"]);
+    expect(m.cobrar).toHaveLength(0);
+  });
+});

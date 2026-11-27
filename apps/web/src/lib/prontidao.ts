@@ -1,8 +1,9 @@
 /**
  * Ficha de prontidão da obra (Doutrina do Centro de Comando, RN-49r): o que precisa existir e estar
  * atualizado para a obra em execução, conferido sozinho com os dados do sistema. Mostra o que falta
- * e o que venceu. Sem banco, para poder testar.
+ * e o que venceu. Os limites vêm dos gatilhos do gestor (RN-49u). Sem banco, para poder testar.
  */
+import { GATILHOS_PADRAO, type ChaveGatilho, type Gatilhos } from "@/lib/gatilhos";
 
 /** Piloto da ficha (27/11/2026). As faltas destas obras sobem para a Mesa. */
 export const OBRAS_PILOTO = ["PRF-RECANTO"];
@@ -17,28 +18,33 @@ export type DadosProntidao = {
   contrato: { numero: string | null; termino: string | null } | null;
   aditivos: { numero: string | null; situacao: string; tipo: string; desde: string }[];
   arquivos: { papel: string; erro: boolean }[];
-  vigente: { atualizado: string | null; termino: string | null; atrasadas: number; atrasadasCriticas: number } | null;
+  /** `vencidas`: atividades sem concluir com fim previsto antes de hoje. */
+  vigente: { atualizado: string | null; termino: string | null; vencidas: { fim: string; critica: boolean }[] } | null;
   medicoes: { numero: string | null; periodoFim: string | null; situacao: string; dataEnvio: string | null }[];
   documentos: { ultimoDiario: string | null; equipe: number; art: number; revisar: number };
-  problemasCriticos: number;
+  /** GUT dos problemas em aberto. */
+  problemasAbertos: number[];
 };
-
-/** Validade de cada informação (Doutrina: Sala de Situação). */
-export const VALIDADE = { cronogramaDias: 7, diarioDias: 4, aditivoDias: 30 };
 
 const br = (iso: string | null) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
 const diasEntre = (de: string, ate: string) => Math.round((Date.parse(ate.slice(0, 10)) - Date.parse(de.slice(0, 10))) / 864e5);
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
-/** Último mês fechado que já precisa ter medição: o anterior, ou o retrasado até o dia 5. */
-export function mesQueDeveTerMedicao(hoje: string): string {
+/** Último mês fechado que já precisa ter medição: o anterior, ou o retrasado até o dia de tolerância. */
+export function mesQueDeveTerMedicao(hoje: string, diaLimite = 5): string {
   const [a, m, d] = hoje.split("-").map(Number);
-  const voltar = d <= 5 ? 2 : 1;
+  const voltar = d <= diaLimite ? 2 : 1;
   const total = a * 12 + (m - 1) - voltar;
   return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`;
 }
 
-export function avaliarProntidao(d: DadosProntidao): ItemProntidao[] {
+/** Gatilho de cada item: desligado, o item fica como Atenção (visível, mas fora da Mesa). */
+function gatilhoDoItem(chave: string): ChaveGatilho | null {
+  if (chave.startsWith("aditivo:")) return "aditivo_em_analise";
+  return ({ "cronograma-atualizado": "cronograma_desatualizado", "prazo-contratual": "prazo_contratual", atrasadas: "caminho_critico", "medicao-mes": "medicao_do_mes", diario: "diario_sem_registro", problemas: "problema_critico" } as Record<string, ChaveGatilho>)[chave] ?? null;
+}
+
+export function avaliarProntidao(d: DadosProntidao, g: Gatilhos = GATILHOS_PADRAO): ItemProntidao[] {
   const itens: ItemProntidao[] = [];
   const add = (chave: string, area: Area, titulo: string, situacao: Situacao, detalhe: string) => itens.push({ chave, area, titulo, situacao, detalhe });
   const emExecucao = d.situacaoObra === "andamento";
@@ -49,7 +55,7 @@ export function avaliarProntidao(d: DadosProntidao): ItemProntidao[] {
   if (d.contrato && !d.contrato.termino) add("contrato-termino", "Contrato", "Término do contrato cadastrado", "atencao", "Sem data de término: o prazo do cronograma não pode ser conferido contra o contrato.");
   for (const a of d.aditivos.filter((x) => x.situacao === "em_analise")) {
     const dias = diasEntre(a.desde, d.hoje);
-    add(`aditivo:${a.numero}`, "Contrato", `Aditivo ${a.numero ?? ""} em análise`.replace("  ", " "), dias > VALIDADE.aditivoDias ? "vencido" : "atencao", `Em análise há ${plural(dias, "dia", "dias")} (${a.tipo}).`);
+    add(`aditivo:${a.numero}`, "Contrato", `Aditivo ${a.numero ?? ""} em análise`.replace("  ", " "), dias > g.aditivo_em_analise.limite ? "vencido" : "atencao", `Em análise há ${plural(dias, "dia", "dias")} (${a.tipo}).`);
   }
 
   // Prazo
@@ -61,18 +67,22 @@ export function avaliarProntidao(d: DadosProntidao): ItemProntidao[] {
   if (d.vigente) {
     const idade = d.vigente.atualizado ? diasEntre(d.vigente.atualizado, d.hoje) : null;
     if (emExecucao)
-      add("cronograma-atualizado", "Prazo", "Cronograma atualizado na semana", idade !== null && idade <= VALIDADE.cronogramaDias ? "ok" : "vencido", idade === null ? "Sem data de alteração do arquivo." : `Arquivo alterado em ${br(d.vigente.atualizado)} (há ${plural(idade, "dia", "dias")}).`);
-    if (d.contrato?.termino && d.vigente.termino && d.vigente.termino > d.contrato.termino) {
+      add("cronograma-atualizado", "Prazo", "Cronograma atualizado na semana", idade !== null && idade <= g.cronograma_desatualizado.limite ? "ok" : "vencido", idade === null ? "Sem data de alteração do arquivo." : `Arquivo alterado em ${br(d.vigente.atualizado)} (há ${plural(idade, "dia", "dias")}).`);
+    if (d.contrato?.termino && d.vigente.termino) {
       const dias = diasEntre(d.contrato.termino, d.vigente.termino);
-      add("prazo-contratual", "Prazo", "Cronograma dentro do prazo do contrato", "falta", `O cronograma vigente termina em ${br(d.vigente.termino)}, ${plural(dias, "dia", "dias")} depois do contrato (${br(d.contrato.termino)}). Precisa de aditivo de prazo ou replanejamento.`);
-    } else if (d.contrato?.termino && d.vigente.termino) add("prazo-contratual", "Prazo", "Cronograma dentro do prazo do contrato", "ok", `Termina em ${br(d.vigente.termino)}; contrato até ${br(d.contrato.termino)}.`);
-    if (d.vigente.atrasadasCriticas > 0) add("atrasadas", "Prazo", "Atividades do caminho crítico em dia", "falta", `${plural(d.vigente.atrasadasCriticas, "atividade crítica passou", "atividades críticas passaram")} do fim previsto sem concluir.`);
-    else if (d.vigente.atrasadas > 0) add("atrasadas", "Prazo", "Atividades em dia", "atencao", `${plural(d.vigente.atrasadas, "atividade passou", "atividades passaram")} do fim previsto sem concluir (fora do caminho crítico).`);
+      if (dias > g.prazo_contratual.limite)
+        add("prazo-contratual", "Prazo", "Cronograma dentro do prazo do contrato", "falta", `O cronograma vigente termina em ${br(d.vigente.termino)}, ${plural(dias, "dia", "dias")} depois do contrato (${br(d.contrato.termino)}). Precisa de aditivo de prazo ou replanejamento.`);
+      else add("prazo-contratual", "Prazo", "Cronograma dentro do prazo do contrato", "ok", `Termina em ${br(d.vigente.termino)}; contrato até ${br(d.contrato.termino)}.`);
+    }
+    const tolerancia = g.caminho_critico.limite;
+    const criticas = d.vigente.vencidas.filter((v) => v.critica && diasEntre(v.fim, d.hoje) > tolerancia).length;
+    if (criticas > 0) add("atrasadas", "Prazo", "Atividades do caminho crítico em dia", "falta", `${plural(criticas, "atividade crítica passou", "atividades críticas passaram")} do fim previsto sem concluir.`);
+    else if (d.vigente.vencidas.length > 0) add("atrasadas", "Prazo", "Atividades em dia", "atencao", `${plural(d.vigente.vencidas.length, "atividade passou", "atividades passaram")} do fim previsto sem concluir.`);
   }
 
   // Medição
   if (emExecucao && d.contrato) {
-    const mes = mesQueDeveTerMedicao(d.hoje);
+    const mes = mesQueDeveTerMedicao(d.hoje, g.medicao_do_mes.limite);
     const ultima = d.medicoes.filter((m) => m.periodoFim).sort((a, b) => b.periodoFim!.localeCompare(a.periodoFim!))[0];
     const emDia = !!ultima && ultima.periodoFim!.slice(0, 7) >= mes;
     add("medicao-mes", "Medição", "Medição do mês", emDia ? "ok" : "falta", ultima ? `Última medição (nº ${ultima.numero ?? "—"}) cobre até ${br(ultima.periodoFim)}; ${emDia ? "em dia" : `falta a medição de ${mes.split("-").reverse().join("/")}`}.` : "Nenhuma medição cadastrada.");
@@ -83,16 +93,22 @@ export function avaliarProntidao(d: DadosProntidao): ItemProntidao[] {
   // Documentação: pelo índice das pastas da obra; "não encontrado" pede conferência, não é falta certa
   if (emExecucao) {
     const idadeDiario = d.documentos.ultimoDiario ? diasEntre(d.documentos.ultimoDiario, d.hoje) : null;
-    add("diario", "Documentação", "Diário de obra em dia", idadeDiario === null ? "atencao" : idadeDiario <= VALIDADE.diarioDias ? "ok" : "vencido", idadeDiario === null ? "Nenhum diário encontrado nas pastas da obra (14 Diário)." : `Último registro em ${br(d.documentos.ultimoDiario)} (há ${plural(idadeDiario, "dia", "dias")}).`);
+    add("diario", "Documentação", "Diário de obra em dia", idadeDiario === null ? "atencao" : idadeDiario <= g.diario_sem_registro.limite ? "ok" : "vencido", idadeDiario === null ? "Nenhum diário encontrado nas pastas da obra (14 Diário)." : `Último registro em ${br(d.documentos.ultimoDiario)} (há ${plural(idadeDiario, "dia", "dias")}).`);
     add("equipe", "Documentação", "Equipe e efetivo registrados", d.documentos.equipe ? "ok" : "atencao", d.documentos.equipe ? `${plural(d.documentos.equipe, "documento", "documentos")} em 13 Equipe/Efetivo.` : "Nada encontrado em 13 Equipe/Efetivo.");
     add("art", "Documentação", "ART de execução", d.documentos.art ? "ok" : "atencao", d.documentos.art ? `${plural(d.documentos.art, "documento", "documentos")} com ART no nome.` : "Nenhum documento com ART no nome nas pastas da obra.");
   }
   if (d.documentos.revisar) add("revisar", "Documentação", "Pasta 99 REVISAR vazia", "atencao", `${plural(d.documentos.revisar, "documento espera", "documentos esperam")} classificação.`);
 
   // Problemas
-  add("problemas", "Problemas", "Problemas críticos com decisão", d.problemasCriticos ? "falta" : "ok", d.problemasCriticos ? `${plural(d.problemasCriticos, "problema", "problemas")} com GUT ≥ 64 em aberto.` : "Nenhum problema crítico em aberto.");
+  const gut = g.problema_critico.limite;
+  const criticos = d.problemasAbertos.filter((x) => x >= gut).length;
+  add("problemas", "Problemas", "Problemas críticos com decisão", criticos ? "falta" : "ok", criticos ? `${plural(criticos, "problema", "problemas")} com GUT ≥ ${gut} em aberto.` : `Nenhum problema com GUT ≥ ${gut} em aberto.`);
 
-  return itens;
+  // Gatilho desligado: o item continua na ficha, mas não toca o alarme
+  return itens.map((i) => {
+    const chave = gatilhoDoItem(i.chave);
+    return chave && !g[chave].ativo && (i.situacao === "falta" || i.situacao === "vencido") ? { ...i, situacao: "atencao", detalhe: `${i.detalhe} (gatilho desligado)` } : i;
+  });
 }
 
 /** O que sobe para a Mesa: só falta e vencido, que pedem decisão ou atualização. */

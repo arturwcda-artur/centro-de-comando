@@ -442,6 +442,21 @@ Placar oficial da equipe por semana ou mês fechado (RN-49p). Gravado uma vez, n
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
 
+## Tabela `gatilhos`
+
+O que toca o alarme, escolhido pelo gestor (RN-49u). Desligado: o item continua na ficha, sem ir para a Mesa.
+
+| Coluna | Tipo | Obrigatória | Referência | Descrição |
+|---|---|---|---|---|
+| chave | text | sim |  |  |
+| titulo | text | sim |  |  |
+| ativo | boolean | sim |  |  |
+| limite | integer | sim |  |  |
+| unidade | text | sim |  |  |
+| ordem | integer | sim |  |  |
+| criado_em | timestamp with time zone | sim |  |  |
+| atualizado_em | timestamp with time zone | sim |  |  |
+
 ## Tabela `importacao_obras`
 
 Propostas de obras lidas das pastas locais. Só viram obras após aprovação do proprietário.
@@ -804,6 +819,9 @@ Problemas das obras, priorizados por G × U × T. Cada um tem ações 5W2H em ta
 | atualizado_em | timestamp with time zone | sim |  |  |
 | problema_id | uuid |  | problemas | Problema que esta ação 5W2H resolve. |
 | trello_cartao_id | text |  |  | Cartão espelho no quadro pessoal "tarefas" do Trello (só tarefas criadas no sistema). A tarefa continua sendo editada aqui. |
+| ordem_tipo | text |  |  | Ordem do gestor: delegada à equipe (Delegar) ou comigo (Fazer eu). Nula = não é ordem (RN-49t). |
+| ordem_em | timestamp with time zone |  |  | Quando a ordem foi dada. |
+| ordem_conferida_em | timestamp with time zone |  |  | Quando o gestor conferiu o resultado da ordem concluída. |
 
 ## Tabela `trello_cartao_datas`
 

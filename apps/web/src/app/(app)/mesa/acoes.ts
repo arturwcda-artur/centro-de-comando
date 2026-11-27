@@ -108,7 +108,7 @@ export async function delegarParaEquipe(id: string, _: EstadoFormulario, fd: For
   const categoria = `${nomeQuadro} › ${novo.lista}`;
   const { error: erroLigar } = await supabase
     .from("tarefas")
-    .update({ fonte: "trello", id_externo: novo.id, categoria: categoria.slice(0, 100), status_sync: "sincronizado", trello_cartao_id: null })
+    .update({ fonte: "trello", id_externo: novo.id, categoria: categoria.slice(0, 100), status_sync: "sincronizado", trello_cartao_id: null, ordem_tipo: "delegada", ordem_em: new Date().toISOString() })
     .eq("id", t.id);
   if (erroLigar) return { erro: `Cartão criado no Trello, mas a tarefa não foi ligada a ele: ${mensagemDoBanco(erroLigar)}` };
   await supabase.from("tarefa_membros").upsert({ tarefa_id: t.id, membro_id: membro.id });

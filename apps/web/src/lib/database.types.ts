@@ -1523,6 +1523,39 @@ export type Database = {
         }
         Relationships: []
       }
+      gatilhos: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          chave: string
+          criado_em: string
+          limite: number
+          ordem: number
+          titulo: string
+          unidade: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          chave: string
+          criado_em?: string
+          limite: number
+          ordem?: number
+          titulo: string
+          unidade: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          chave?: string
+          criado_em?: string
+          limite?: number
+          ordem?: number
+          titulo?: string
+          unidade?: string
+        }
+        Relationships: []
+      }
       importacao_obras: {
         Row: {
           atualizado_em: string
@@ -2706,6 +2739,9 @@ export type Database = {
           importado_em: string | null
           importancia: number
           obra_id: string | null
+          ordem_conferida_em: string | null
+          ordem_em: string | null
+          ordem_tipo: string | null
           prazo: string | null
           problema_id: string | null
           responsavel_id: string | null
@@ -2734,6 +2770,9 @@ export type Database = {
           importado_em?: string | null
           importancia?: number
           obra_id?: string | null
+          ordem_conferida_em?: string | null
+          ordem_em?: string | null
+          ordem_tipo?: string | null
           prazo?: string | null
           problema_id?: string | null
           responsavel_id?: string | null
@@ -2762,6 +2801,9 @@ export type Database = {
           importado_em?: string | null
           importancia?: number
           obra_id?: string | null
+          ordem_conferida_em?: string | null
+          ordem_em?: string | null
+          ordem_tipo?: string | null
           prazo?: string | null
           problema_id?: string | null
           responsavel_id?: string | null

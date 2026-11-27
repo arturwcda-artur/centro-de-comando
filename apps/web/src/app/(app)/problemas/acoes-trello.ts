@@ -63,7 +63,7 @@ export async function criarCartaoDaAcao(problemaId: string, acaoId: string, _: E
   // A ação passa a ser o espelho do cartão: a sincronização atualiza esta mesma linha
   const { error: e2 } = await supabase
     .from("tarefas")
-    .update({ fonte: "trello", id_externo: novo.id, titulo: dados.titulo, prazo: dados.prazo, categoria: `${nomeQuadro} › ${novo.lista}`.slice(0, 100), status_sync: "sincronizado", trello_cartao_id: null })
+    .update({ fonte: "trello", id_externo: novo.id, titulo: dados.titulo, prazo: dados.prazo, categoria: `${nomeQuadro} › ${novo.lista}`.slice(0, 100), status_sync: "sincronizado", trello_cartao_id: null, ordem_tipo: "delegada", ordem_em: new Date().toISOString() })
     .eq("id", acaoId);
   if (e2) return { erro: `Cartão criado no Trello, mas a ação não foi ligada a ele: ${mensagemDoBanco(e2)}` };
   if (membro) {
