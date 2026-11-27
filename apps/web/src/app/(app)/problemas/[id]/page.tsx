@@ -148,12 +148,12 @@ export default async function PaginaProblema({ params }: { params: Promise<{ id:
                       ))}
                   </dl>
                   {!feita && a.fonte === "manual" && (
-                    <Link href={`/problemas/${id}/acoes/${a.id}/trello`} className="mt-2 inline-block text-xs font-medium text-marca hover:underline">
-                      Criar cartão no Trello →
+                    <Link href={`/tarefas/${a.id}`} className="mt-2 inline-block text-xs font-medium text-marca hover:underline">
+                      Fazer eu · Delegar · Adiar · Não se aplica →
                     </Link>
                   )}
                   {noTrello && <p className="mt-2 text-xs text-suave">Cartão no Trello: a ação fica concluída quando a equipe concluir o cartão.</p>}
-                  {!feita && (
+                  {!feita && a.fonte !== "manual" && (
                     <details className="mt-2">
                       <summary className="cursor-pointer text-xs text-marca">Criar lembrete na agenda</summary>
                       <div className="mt-2">
