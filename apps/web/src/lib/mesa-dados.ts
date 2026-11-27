@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { carregarAlertas } from "@/lib/alertas-dados";
 import { hojeSP } from "@/lib/formato";
+import { pendenciasDasObrasPiloto } from "@/lib/prontidao-dados";
 import { montarMesa, type Area, type Caixa, type FiltroMesa, type ItemMesa } from "@/lib/mesa";
 
 type Cliente = SupabaseClient<Database>;
@@ -22,7 +23,7 @@ export function lerFiltroMesa(p: Record<string, string | string[] | undefined>, 
 
 export async function carregarMesa(supabase: Cliente, p: Record<string, string | string[] | undefined>) {
   const hoje = hojeSP();
-  const [empresas, obras, decisoes, medicoes, aditivos, tarefas, vencimentos, riscos, alertas] = await Promise.all([
+  const [empresas, obras, decisoes, medicoes, aditivos, tarefas, vencimentos, riscos, alertas, prontidao] = await Promise.all([
     supabase.from("empresas").select("id, razao_social, nome_fantasia, tipo, empresa_mae_id").is("arquivado_em", null).order("razao_social"),
     supabase.from("obras").select("id, nome, empresa_id").is("arquivado_em", null).order("nome"),
     supabase.from("decisoes").select("id, tipo, problema, area, obra_id, empresa_id, recomendacao, prazo, adiar_ate, pessoas:responsavel_id(nome)").eq("status", "pendente"),
@@ -32,6 +33,7 @@ export async function carregarMesa(supabase: Cliente, p: Record<string, string |
     supabase.from("v_vencimentos").select("registro_id, tipo, descricao, obra_id, data").gte("data", hoje),
     supabase.from("v_riscos_criticos").select("id, descricao, obra_id"),
     carregarAlertas(supabase),
+    pendenciasDasObrasPiloto(supabase).catch(() => []),
   ]);
   const falhou = [empresas, obras, decisoes, medicoes, aditivos, tarefas, vencimentos, riscos].find((r) => r.error);
 
@@ -51,6 +53,7 @@ export async function carregarMesa(supabase: Cliente, p: Record<string, string |
     vencimentos: vencimentos.data ?? [],
     riscosCriticos: (riscos.data ?? []).map((r) => ({ id: r.id as string, titulo: (r.descricao as string) ?? "Risco", obra_id: r.obra_id as string | null })),
     alertas,
+    prontidao,
   }, filtro);
 
   return {
