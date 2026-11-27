@@ -282,6 +282,13 @@ Arquivos do MS Project acompanhados pelo agente local.
 | tarefa_id | uuid |  | tarefas | Tarefa em cuja conclusão a decisão foi tomada. |
 | afeta_planejamento | boolean | sim |  | Ressalva: a decisão altera o planejamento (cronograma) da obra e precisa ser avaliada nele. |
 | tarefa_planejamento_id | uuid |  | tarefas | Tarefa "Atualizar o planejamento" criada pela ressalva (RN-49m). |
+| tipo | text | sim |  |  |
+| area | text |  |  |  |
+| empresa_id | uuid |  | empresas |  |
+| recomendacao | text |  |  |  |
+| principio | text |  |  |  |
+| impacto | text |  |  |  |
+| adiar_ate | date |  |  |  |
 
 ## Tabela `dependencias`
 
@@ -377,6 +384,8 @@ Empresas pelas quais o gestor atua (executoras). Ex.: construtora contratada.
 | arquivado_em | timestamp with time zone |  |  |  |
 | criado_em | timestamp with time zone | sim |  |  |
 | atualizado_em | timestamp with time zone | sim |  |  |
+| tipo | text | sim |  | grupo (holding), empresa operacional ou marca. |
+| empresa_mae_id | uuid |  | empresas | Empresa/grupo a que esta pertence. |
 
 ## Tabela `eventos`
 
