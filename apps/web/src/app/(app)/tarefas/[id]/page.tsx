@@ -107,7 +107,7 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
       )}
       {t.trello_cartao_id && (
         <p className="text-xs text-suave">
-          Espelhada no quadro tarefas do Trello ·{" "}
+          Teve cartão no quadro tarefas do Trello até 27/11/2026 (espelho desligado) ·{" "}
           <a href={`https://trello.com/c/${t.trello_cartao_id}`} target="_blank" rel="noopener noreferrer" className="hover:text-texto hover:underline">
             ver cartão
           </a>

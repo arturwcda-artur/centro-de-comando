@@ -11,7 +11,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { aplicar, executarConector, somar } from './motor.js';
 import * as trello from './trello.js';
-import { sincronizarQuadroPessoal } from './espelho.js';
 import { conferirRevisoes } from './conferencia.js';
 import * as google from './google-ical.js';
 import * as agenda from './google.js';
@@ -34,18 +33,6 @@ async function cartoesEspelho(supabase) {
   const { data, error } = await supabase.from('tarefas').select('trello_cartao_id').not('trello_cartao_id', 'is', null).limit(10000);
   if (error) throw new Error(`leitura dos cartões espelho: ${error.message}`);
   return new Set(data.map((t) => t.trello_cartao_id));
-}
-
-/** Quadro pessoal "tarefas" (RN-49l): só grava no Trello com a gravação autorizada pelo proprietário. */
-async function quadroPessoal(supabase) {
-  const { data: conector } = await supabase.from('conectores').select('modo, escrita_autorizada_em').eq('ferramenta', 'trello').maybeSingle();
-  if (conector?.modo !== 'leitura_escrita' || !conector.escrita_autorizada_em) return '; quadro tarefas: gravação não autorizada';
-  try {
-    const p = await sincronizarQuadroPessoal(supabase, { chave: env.TRELLO_API_KEY, token: env.TRELLO_TOKEN });
-    return `; quadro tarefas: ${p.criados} cartões criados, ${p.levados} atualizados, ${p.trazidos} conclusões trazidas`;
-  } catch (e) {
-    return `; quadro tarefas: ${e instanceof Error ? e.message : 'falha'}`;
-  }
 }
 
 async function principal() {
@@ -74,8 +61,7 @@ async function principal() {
         const canceladas = await trello.cancelarAusentes(supabase, registros.map((x) => x.id_externo));
         const d = detalhes ? await trello.aplicarDetalhes(supabase, detalhes) : null;
         const extra = d ? `; quadros da equipe: ${d.membros} membros, ${d.comentarios} comentários, ${d.itens} itens de checklist, ${d.criacoes} cartões e checklists criados` : '';
-        const pessoal = await quadroPessoal(supabase);
-        return { ...r, mensagem: `${quadros} quadros, ${registros.length} cartões, ${canceladas} arquivados/excluídos marcados como cancelados${extra}${pessoal}` };
+        return { ...r, mensagem: `${quadros} quadros, ${registros.length} cartões, ${canceladas} arquivados/excluídos marcados como cancelados${extra}` };
       }),
     );
   } else console.log('Trello: sem segredos, ignorado.');

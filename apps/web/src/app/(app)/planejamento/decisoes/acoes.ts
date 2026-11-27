@@ -2,7 +2,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { calcular, carregarAvaliacao, mudancaDe } from "@/lib/cerebro-dados";
-import { espelharNoTrello } from "@/lib/espelho-trello";
 import { dataCivil, hojeSP } from "@/lib/formato";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
@@ -19,13 +18,12 @@ function revalidar(decisaoId: string) {
 
 /**
  * A tarefa "Atualizar o planejamento" da decisão (RN-49m) recebe o resultado: com a rota quando
- * aprovada; concluída quando a decisão não altera o planejamento. O cartão no Trello acompanha.
+ * aprovada; concluída quando a decisão não altera o planejamento.
  */
 async function atualizarTarefa(
   supabase: Cliente,
   d: { id: string; obra_id: string | null; tarefa_planejamento_id: string | null; decisao: string | null },
   campos: { titulo: string; descricao: string; concluir: boolean },
-  comentario: string,
 ) {
   const registro = {
     titulo: campos.titulo.slice(0, 300),
@@ -46,7 +44,6 @@ async function atualizarTarefa(
     id = data.id;
     await supabase.from("decisoes").update({ tarefa_planejamento_id: id }).eq("id", d.id);
   }
-  if (id) await espelharNoTrello(supabase, [id], comentario);
   return null;
 }
 
@@ -99,7 +96,6 @@ export async function aprovarAvaliacao(decisaoId: string, _: EstadoFormulario, f
       descricao: `Decisão de ${dataCivil(dados.decisao.data_decisao)}: ${dados.decisao.decisao ?? ""}\n\nAlteração aprovada em ${dataCivil(hojeSP())}. Rota:\n${rota}`,
       concluir: false,
     },
-    `Alteração do planejamento aprovada. Rota:\n${rota}`,
   );
   if (falha) return { erro: `Avaliação aprovada, mas a tarefa de atualizar o cronograma não foi ajustada: ${falha}` };
   revalidar(decisaoId);
@@ -139,7 +135,6 @@ export async function naoAlterar(decisaoId: string): Promise<void> {
       descricao: `Decisão de ${dataCivil(dados.decisao.data_decisao)}: ${dados.decisao.decisao ?? ""}\n\nAvaliada em ${dataCivil(hojeSP())}: não altera o planejamento.`,
       concluir: true,
     },
-    "Avaliado: a decisão não altera o planejamento.",
   );
   revalidar(decisaoId);
 }
