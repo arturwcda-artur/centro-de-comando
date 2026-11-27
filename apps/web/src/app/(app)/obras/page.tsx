@@ -5,6 +5,7 @@ import { Cartao, EstadoVazio, Etiqueta } from "@/components/ui";
 import { SITUACOES_OBRA, rotuloSituacao } from "@/lib/dominio";
 import { brl, dataCivil, pct } from "@/lib/formato";
 import { exigirSessaoCompleta } from "@/lib/sessao";
+import { SalaDeSituacao } from "./sala";
 
 export const metadata: Metadata = { title: "Obras" };
 
@@ -57,6 +58,8 @@ export default async function PaginaObras({ searchParams }: PageProps<"/obras">)
           </Link>
         ))}
       </nav>
+
+      {lista.length > 0 && <SalaDeSituacao obras={lista.filter((o) => o.obra_id && o.codigo).map((o) => ({ id: o.obra_id!, codigo: o.codigo!, situacao: o.situacao ?? "" }))} />}
 
       {lista.length === 0 ? (
         <EstadoVazio>

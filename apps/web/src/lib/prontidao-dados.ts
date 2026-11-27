@@ -10,6 +10,12 @@ const PADRAO_ART = "(^|[^a-z])art([^a-z]|$)";
 
 /** Lê o que a ficha confere para uma obra e devolve os itens avaliados. */
 export async function carregarProntidao(supabase: Cliente, obraId: string): Promise<ItemProntidao[] | null> {
+  const dados = await carregarDadosProntidao(supabase, obraId);
+  return dados ? avaliarProntidao(dados) : null;
+}
+
+/** Os dados brutos da ficha de uma obra (a Sala de Situação usa as datas). */
+export async function carregarDadosProntidao(supabase: Cliente, obraId: string): Promise<DadosProntidao | null> {
   const hoje = hojeSP();
   const [obra, contratos, arquivos, versao, diario, equipe, art, revisar, problemas] = await Promise.all([
     supabase.from("obras").select("situacao").eq("id", obraId).maybeSingle(),
@@ -48,7 +54,7 @@ export async function carregarProntidao(supabase: Cliente, obraId: string): Prom
     documentos: { ultimoDiario: diario.data?.data_documento ?? null, equipe: equipe.count ?? 0, art: art.count ?? 0, revisar: revisar.count ?? 0 },
     problemasCriticos: problemas.count ?? 0,
   };
-  return avaliarProntidao(dados);
+  return dados;
 }
 
 /** Itens que os Alertas da Mesa já mostram (RN-83): ficam na ficha, mas não se repetem na Mesa. */

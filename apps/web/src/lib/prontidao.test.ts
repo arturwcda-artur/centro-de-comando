@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { avaliarProntidao, mesQueDeveTerMedicao, pendencias, type DadosProntidao } from "./prontidao";
+import { avaliarProntidao, datasDeReferencia, mesQueDeveTerMedicao, pendencias, resumoPorArea, type DadosProntidao } from "./prontidao";
 
 // Retrato da PRF Recanto em 27/11/2026
 const prf: DadosProntidao = {
@@ -49,5 +49,24 @@ describe("ficha de prontidão (RN-49r)", () => {
     expect(parada).not.toContain("medicao-mes");
     expect(parada).not.toContain("diario");
     expect(parada).not.toContain("cronograma-atualizado");
+  });
+});
+
+describe("Sala de Situação", () => {
+  it("cada área fica com a pior situação; área sem item fica vazia", () => {
+    const r = resumoPorArea(avaliarProntidao(prf));
+    expect(r).toEqual({ Contrato: "atencao", Prazo: "falta", Medição: "falta", Documentação: "atencao", Problemas: "ok" });
+    expect(resumoPorArea([]).Prazo).toBeNull();
+  });
+  it("data de referência por área", () => {
+    expect(datasDeReferencia(prf)).toEqual({ Contrato: "2026-11-04", Prazo: "2026-11-23", Medição: "2026-04-15", Documentação: null, Problemas: null });
+  });
+});
+
+describe("contrato sem término", () => {
+  it("pede para cadastrar a data, porque o prazo não pode ser conferido", () => {
+    const itens = avaliarProntidao({ ...prf, contrato: { numero: "49/2025", termino: null } });
+    expect(itens.find((i) => i.chave === "contrato-termino")?.situacao).toBe("atencao");
+    expect(itens.find((i) => i.chave === "prazo-contratual")).toBeUndefined();
   });
 });
