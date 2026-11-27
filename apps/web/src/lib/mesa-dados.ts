@@ -28,7 +28,7 @@ export async function carregarMesa(supabase: Cliente, p: Record<string, string |
     supabase.from("decisoes").select("id, tipo, problema, area, obra_id, empresa_id, recomendacao, prazo, adiar_ate, pessoas:responsavel_id(nome)").eq("status", "pendente"),
     supabase.from("medicoes").select("id, contrato_id, numero, situacao, periodo_fim, contratos(obra_id)").in("situacao", ["elaborada", "enviada"]),
     supabase.from("aditivos").select("id, contrato_id, numero, contratos(obra_id)").eq("situacao", "em_analise"),
-    supabase.from("tarefas").select("id, titulo, obra_id, prazo, atualizado_em, pessoas:responsavel_id(nome, eh_usuario)").is("concluida_em", null).not("responsavel_id", "is", null),
+    supabase.from("tarefas").select("id, titulo, obra_id, prazo, atualizado_em, pessoas:responsavel_id(nome, eh_usuario)").is("concluida_em", null).not("status", "in", "(concluida,cancelada)").not("responsavel_id", "is", null),
     supabase.from("v_vencimentos").select("registro_id, tipo, descricao, obra_id, data").gte("data", hoje),
     supabase.from("v_riscos_criticos").select("id, descricao, obra_id"),
     carregarAlertas(supabase),
