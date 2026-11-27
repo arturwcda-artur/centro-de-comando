@@ -9,6 +9,7 @@ import { dataCivil, dataHora } from "@/lib/formato";
 import { carregarOpcoes, UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { concluirComDecisao, salvarTarefa } from "../acoes";
+import { ComandoDaTarefa } from "./comando";
 import { FormularioConclusao } from "./formulario-conclusao";
 import { DetalhesTrello } from "./detalhes-trello";
 import { FormularioTarefa } from "../formulario-tarefa";
@@ -72,6 +73,7 @@ export default async function PaginaTarefa({ params }: PageProps<"/tarefas/[id]"
         </Cartao>
       ) : (
         <>
+          {podeConcluir(t) && <ComandoDaTarefa tarefa={t} />}
           {podeConcluir(t) && (
             <Cartao titulo="Concluir com saída / decisão">
               <FormularioConclusao acao={concluirComDecisao.bind(null, id)} />
