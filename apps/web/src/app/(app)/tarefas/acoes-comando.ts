@@ -8,6 +8,7 @@ import { adiamentoValido, descricaoNaoSeAplica } from "@/lib/mesa-acoes";
 import { UUID } from "@/lib/obras";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 import { delegarSchema, mensagemDoBanco, naoSeAplicaSchema, validar, type EstadoFormulario } from "@/lib/validacao";
+import { atualizarSituacaoDoProblema } from "@/lib/problemas-situacao";
 import { criarLembreteDeAcao } from "../agenda/acoes";
 
 /**
@@ -24,6 +25,14 @@ async function tarefaAberta(supabase: Cliente, id: string) {
   if (data.fonte !== "manual") return { erro: "Esta tarefa já é um cartão no Trello." } as const;
   if (data.status === "concluida" || data.status === "cancelada") return { erro: "Esta tarefa já foi encerrada." } as const;
   return { tarefa: data } as const;
+}
+
+/** Ação 5W2H: a situação do problema acompanha (RN-49h). */
+async function acompanharProblema(supabase: Cliente, problemaId: string | null) {
+  if (!problemaId) return;
+  await atualizarSituacaoDoProblema(supabase, problemaId);
+  revalidatePath(`/problemas/${problemaId}`);
+  revalidatePath("/problemas");
 }
 
 function revalidar(id: string) {
@@ -107,6 +116,7 @@ export async function delegarTarefa(id: string, _: EstadoFormulario, fd: FormDat
   if (error) return { erro: `Cartão criado no Trello, mas a tarefa não foi ligada a ele: ${mensagemDoBanco(error)}` };
   await supabase.from("tarefa_membros").upsert({ tarefa_id: id, membro_id: membro.id });
   if (r.tarefa.problema_id) await supabase.from("acoes_detalhes").upsert({ tarefa_id: id, quem: membro.nome });
+  await acompanharProblema(supabase, r.tarefa.problema_id);
 
   revalidar(id);
   redirect(`/tarefas/${id}`);
@@ -122,6 +132,7 @@ export async function adiarTarefa(id: string, _: EstadoFormulario, fd: FormData)
   if ("erro" in r) return { erro: r.erro };
   const { error } = await supabase.from("tarefas").update({ prazo: data }).eq("id", id);
   if (error) return { erro: mensagemDoBanco(error) };
+  await acompanharProblema(supabase, r.tarefa.problema_id);
   revalidar(id);
   return { ok: true, mensagem: `Adiada para ${data.split("-").reverse().join("/")}.` };
 }
@@ -139,6 +150,7 @@ export async function naoSeAplicaTarefa(id: string, _: EstadoFormulario, fd: For
     .update({ status: "cancelada", aguardando_pessoa_id: null, descricao: descricaoNaoSeAplica(r.tarefa.descricao, dados.motivo, hojeSP()) })
     .eq("id", id);
   if (error) return { erro: mensagemDoBanco(error) };
+  await acompanharProblema(supabase, r.tarefa.problema_id);
   revalidar(id);
   redirect(`/tarefas/${id}`);
 }
