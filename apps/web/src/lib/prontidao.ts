@@ -46,6 +46,7 @@ export function avaliarProntidao(d: DadosProntidao): ItemProntidao[] {
   // Contrato
   if (!d.contrato) add("contrato", "Contrato", "Contrato cadastrado", "falta", "Nenhum contrato cadastrado para a obra.");
   else add("contrato", "Contrato", "Contrato cadastrado", "ok", `Contrato ${d.contrato.numero ?? ""}, término ${br(d.contrato.termino)}.`.replace("  ", " "));
+  if (d.contrato && !d.contrato.termino) add("contrato-termino", "Contrato", "Término do contrato cadastrado", "atencao", "Sem data de término: o prazo do cronograma não pode ser conferido contra o contrato.");
   for (const a of d.aditivos.filter((x) => x.situacao === "em_analise")) {
     const dias = diasEntre(a.desde, d.hoje);
     add(`aditivo:${a.numero}`, "Contrato", `Aditivo ${a.numero ?? ""} em análise`.replace("  ", " "), dias > VALIDADE.aditivoDias ? "vencido" : "atencao", `Em análise há ${plural(dias, "dia", "dias")} (${a.tipo}).`);
@@ -96,3 +97,25 @@ export function avaliarProntidao(d: DadosProntidao): ItemProntidao[] {
 
 /** O que sobe para a Mesa: só falta e vencido, que pedem decisão ou atualização. */
 export const pendencias = (itens: ItemProntidao[]) => itens.filter((i) => i.situacao === "falta" || i.situacao === "vencido");
+
+export const AREAS: Area[] = ["Contrato", "Prazo", "Medição", "Documentação", "Problemas"];
+const PESO: Record<Situacao, number> = { ok: 0, atencao: 1, vencido: 2, falta: 3 };
+
+/** Sala de Situação: a pior situação de cada área (nula quando a ficha não confere nada nela). */
+export function resumoPorArea(itens: ItemProntidao[]): Record<Area, Situacao | null> {
+  const r = Object.fromEntries(AREAS.map((a) => [a, null])) as Record<Area, Situacao | null>;
+  for (const i of itens) if (r[i.area] === null || PESO[i.situacao] > PESO[r[i.area]!]) r[i.area] = i.situacao;
+  return r;
+}
+
+/** Data da informação mais recente de cada área, para a Sala mostrar ao lado da cor. */
+export function datasDeReferencia(d: DadosProntidao): Record<Area, string | null> {
+  const maisNova = (datas: (string | null | undefined)[]) => datas.filter((x): x is string => !!x).map((x) => x.slice(0, 10)).sort().at(-1) ?? null;
+  return {
+    Contrato: maisNova(d.aditivos.map((a) => a.desde)),
+    Prazo: d.vigente?.atualizado?.slice(0, 10) ?? null,
+    Medição: maisNova(d.medicoes.map((m) => m.periodoFim)),
+    Documentação: d.documentos.ultimoDiario?.slice(0, 10) ?? null,
+    Problemas: null,
+  };
+}
