@@ -244,9 +244,9 @@ export function fluxoPorSemana(cartoes: CartaoEquipe[], hoje: string, semanas = 
   return [...linhas.values()];
 }
 
-/** Tarefas que entraram a partir da data. Sem data, conta todas. */
-export function tarefasQueEntraram(cartoes: CartaoEquipe[], desde?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU): number {
-  return tarefasDaEquipe(cartoes, porQuemMarcou).filter((t) => !desde || (t.criada_em ?? "") >= desde).length;
+/** Tarefas que entraram a partir da data (e antes de `ate`, se houver). Sem data, conta todas. */
+export function tarefasQueEntraram(cartoes: CartaoEquipe[], desde?: string, porQuemMarcou = CREDITO_POR_QUEM_MARCOU, ate?: string): number {
+  return tarefasDaEquipe(cartoes, porQuemMarcou).filter((t) => (!desde || (t.criada_em ?? "") >= desde) && (!ate || (t.criada_em ?? "") < ate)).length;
 }
 
 export type PosicaoEvolucao = { posicao: number | null; nome: string; anterior: number; atual: number; evolucao: number };

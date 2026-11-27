@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Cartao, EstadoVazio } from "@/components/ui";
 import { GraficoSemanas } from "@/components/grafico-semanas";
 import { DIAS_PARADA, QUADRO_EQUIPE, QUADROS_EQUIPE, SEM_RESPONSAVEL, quadroEquipeDe, type Geracao, type LinhaEquipe, type PosicaoEvolucao, type Resolvida } from "@/lib/equipe";
-import { PERIODOS, carregarCartoesEquipe, carregarGeracaoEquipe, montarGeracao, montarPainelEquipe, periodoDe } from "@/lib/equipe-dados";
+import { painelDaEquipe, type Situacao } from "@/lib/equipe-dados";
+import { dataCivil, dataHora, hojeSP, somarDias } from "@/lib/formato";
+import { FOLGA_FECHAMENTO, janelaAnterior, janelaDe, lerJanela, linkDaJanela, rotuloDaJanela, type Janela } from "@/lib/placar";
 import { exigirSessaoCompleta } from "@/lib/sessao";
 
 export const metadata: Metadata = { title: "Equipe" };
@@ -68,9 +70,9 @@ const composicao = (lista: Resolvida[] = []) => {
 const dataCurta = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" }) : "—");
 const LIMITE_LISTA = 60;
 
-function RankingEvolucao({ linhas, periodo, atual, antes }: { linhas: PosicaoEvolucao[]; periodo: string; atual: Map<string, Resolvida[]>; antes: Map<string, Resolvida[]> | null }) {
-  const nomeAntes = periodo === "7" ? "Na semana anterior" : "No mês anterior";
-  const nomeAgora = periodo === "7" ? "Nesta semana" : "Neste mês";
+function RankingEvolucao({ linhas, semana, atual, antes }: { linhas: PosicaoEvolucao[]; semana: boolean; atual: Record<string, Resolvida[]>; antes: Record<string, Resolvida[]> | null }) {
+  const nomeAntes = semana ? "Na semana anterior" : "No mês anterior";
+  const nomeAgora = semana ? "Nesta semana" : "Neste mês";
   return (
     <div className="space-y-4">
     <div className="overflow-x-auto">
@@ -79,8 +81,8 @@ function RankingEvolucao({ linhas, periodo, atual, antes }: { linhas: PosicaoEvo
           <tr>
             <th className="w-10 py-2 font-medium">#</th>
             <th className="py-2 font-medium">Responsável</th>
-            <th className={CABECALHO}>{periodo === "7" ? "Semana anterior" : "Mês anterior"}</th>
-            <th className={CABECALHO}>{periodo === "7" ? "Esta semana" : "Este mês"}</th>
+            <th className={CABECALHO}>{semana ? "Semana anterior" : "Mês anterior"}</th>
+            <th className={CABECALHO}>{semana ? "Esta semana" : "Este mês"}</th>
             <th className={CABECALHO}>Evolução</th>
           </tr>
         </thead>
@@ -103,7 +105,7 @@ function RankingEvolucao({ linhas, periodo, atual, antes }: { linhas: PosicaoEvo
       <div className="space-y-2">
         <p className="text-xs font-medium text-suave">O que explica a evolução de cada um</p>
         {linhas.map((l) => {
-          const lista = atual.get(l.nome) ?? [];
+          const lista = atual[l.nome] ?? [];
           return (
             <details key={l.nome} className="rounded-lg border border-borda px-3 py-2 text-sm">
               <summary className="cursor-pointer">
@@ -111,7 +113,7 @@ function RankingEvolucao({ linhas, periodo, atual, antes }: { linhas: PosicaoEvo
               </summary>
               <div className="mt-2 space-y-2">
                 <p className="text-xs text-suave">
-                  {nomeAntes}: {composicao(antes?.get(l.nome))}. {nomeAgora}: {composicao(lista)}.
+                  {nomeAntes}: {composicao(antes?.[l.nome])}. {nomeAgora}: {composicao(lista)}.
                 </p>
                 {lista.length === 0 ? (
                   <p className="text-xs text-suave">Nada resolvido {nomeAgora.toLowerCase()}.</p>
@@ -218,15 +220,30 @@ function Detalhes({ linhas }: { linhas: LinhaEquipe[] }) {
   );
 }
 
+const SITUACAO: Record<Situacao, { rotulo: string; classe: string }> = {
+  oficial: { rotulo: "Placar oficial", classe: "border-ok text-ok" },
+  parcial: { rotulo: "Parcial", classe: "border-borda text-suave" },
+  aguardando: { rotulo: "Parcial · fecha amanhã", classe: "border-borda text-suave" },
+  recalculado: { rotulo: "Calculado agora · antes do placar oficial", classe: "border-borda text-suave" },
+  todos: { rotulo: "Todo o período", classe: "border-borda text-suave" },
+};
+
 export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe">) {
-  const { periodo: bruto, quadro: quadroBruto } = await searchParams;
-  const periodo = periodoDe(bruto);
+  const { periodo: bruto, ref, quadro: quadroBruto } = await searchParams;
+  const hoje = hojeSP();
+  const janela = lerJanela(bruto, ref, hoje);
   const quadro = quadroEquipeDe(quadroBruto);
   const sufixoQuadro = quadro === QUADRO_EQUIPE ? "" : `&quadro=${encodeURIComponent(quadro)}`;
   const { supabase } = await exigirSessaoCompleta();
-  const [{ cartoes, idMembro }, dadosGeracao] = await Promise.all([carregarCartoesEquipe(supabase, quadro), carregarGeracaoEquipe(supabase, quadro)]);
-  const geracao = montarGeracao(dadosGeracao, periodo.dias);
-  const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, evolucaoPessoa, evolucaoLista, ranking, resolvidasNoPeriodo, resolvidasAntes, parados, semanas } = montarPainelEquipe(cartoes, periodo.dias);
+  const p = await painelDaEquipe(supabase, quadro, janela);
+  const { total, porLista, porResponsavel, entraram, saldo: saldoDoPeriodo, evolucaoEquipe, ranking, resolvidasNoPeriodo, resolvidasAntes } = p.resumo;
+  const evolucaoPessoa = (nome: string) => p.resumo.evolucaoPessoa[nome] ?? null;
+  const evolucaoLista = (nome: string) => p.resumo.evolucaoLista[nome] ?? null;
+  const semana = janela.tipo === "semana";
+  const mesmaJanela = (j: Janela) => j.tipo === janela.tipo && j.inicio === janela.inicio;
+  const atalhos: Janela[] = [janelaDe("semana", hoje), janelaDe("mes", hoje), { tipo: "todos", inicio: null, fim: null }];
+  const anterior = janelaAnterior(janela);
+  const situacao = SITUACAO[p.situacao];
 
   const indicadores = [
     ["Tarefas resolvidas", quantidade(total?.resolvidas ?? 0), ""],
@@ -240,14 +257,14 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Equipe</h1>
-        <p className="text-sm text-suave">Quadro {quadro}, conforme a última sincronização do Trello.</p>
+        <p className="text-sm text-suave">Quadro {quadro}, conforme a última sincronização do Trello ({dataHora(p.ultimaSync)}).</p>
       </div>
 
       <nav aria-label="Quadro" className="flex flex-wrap gap-1 border-b border-borda">
         {QUADROS_EQUIPE.map((q) => (
           <Link
             key={q}
-            href={`/equipe?periodo=${periodo.valor}${q === QUADRO_EQUIPE ? "" : `&quadro=${encodeURIComponent(q)}`}`}
+            href={`/equipe?${linkDaJanela(janela)}${q === QUADRO_EQUIPE ? "" : `&quadro=${encodeURIComponent(q)}`}`}
             aria-current={q === quadro ? "page" : undefined}
             className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm ${q === quadro ? "border-marca font-medium" : "border-transparent text-suave hover:text-texto"}`}
           >
@@ -256,18 +273,34 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
         ))}
       </nav>
 
-      <nav aria-label="Período" className="flex flex-wrap gap-2">
-        {PERIODOS.map((p) => (
+      <nav aria-label="Período" className="flex flex-wrap items-center gap-2">
+        {atalhos.map((j) => (
           <Link
-            key={p.valor}
-            href={`/equipe?periodo=${p.valor}${sufixoQuadro}`}
-            aria-current={p.valor === periodo.valor ? "page" : undefined}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${p.valor === periodo.valor ? "border-marca bg-marca-suave" : "border-borda hover:bg-superficie-2"}`}
+            key={linkDaJanela(j)}
+            href={`/equipe?${linkDaJanela(j)}${sufixoQuadro}`}
+            aria-current={mesmaJanela(j) ? "page" : undefined}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${mesmaJanela(j) ? "border-marca bg-marca-suave" : "border-borda hover:bg-superficie-2"}`}
           >
-            {p.rotulo}
+            {j.tipo === "semana" ? "Esta semana" : j.tipo === "mes" ? "Este mês" : "Todo o período"}
           </Link>
         ))}
+        {anterior && (
+          <Link href={`/equipe?${linkDaJanela(anterior)}${sufixoQuadro}`} className="rounded-lg border border-borda px-3 py-1.5 text-xs font-medium hover:bg-superficie-2">
+            ← {semana ? "Semana anterior" : "Mês anterior"}
+          </Link>
+        )}
+        <Link href={`/relatorios/equipe?${linkDaJanela(janela)}${sufixoQuadro}`} target="_blank" className="ml-auto rounded-lg border border-borda px-3 py-1.5 text-xs font-medium hover:bg-superficie-2">
+          PDF deste placar
+        </Link>
       </nav>
+
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="font-semibold">{rotuloDaJanela(janela)}</span>
+        <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${situacao.classe}`}>{situacao.rotulo}</span>
+        {p.fechadoEm && <span className="text-xs text-suave">fechado em {dataHora(p.fechadoEm)}; não muda mais</span>}
+        {p.situacao === "parcial" && janela.fim && <span className="text-xs text-suave">vira placar oficial em {dataCivil(somarDias(janela.fim, FOLGA_FECHAMENTO))}</span>}
+      </div>
+      {p.avisoPlacar && <p className="text-xs text-alerta">Placar oficial indisponível agora: {p.avisoPlacar}</p>}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {indicadores.map(([rotulo, valor, cor]) => (
@@ -279,31 +312,31 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
       </div>
 
       <Cartao titulo="Quem resolveu">
-        <Painel coluna="Responsável" linhas={porResponsavel} evolucao={evolucaoPessoa} destino={(nome) => (idMembro.has(nome) ? `/tarefas?membro=${idMembro.get(nome)}` : null)} />
+        <Painel coluna="Responsável" linhas={porResponsavel} evolucao={evolucaoPessoa} destino={(nome) => (p.idMembro.has(nome) ? `/tarefas?membro=${p.idMembro.get(nome)}` : null)} />
       </Cartao>
 
       <Cartao titulo="Quem mais evoluiu">
         {ranking ? (
-          <RankingEvolucao linhas={ranking} periodo={periodo.valor} atual={resolvidasNoPeriodo} antes={resolvidasAntes} />
+          <RankingEvolucao linhas={ranking} semana={semana} atual={resolvidasNoPeriodo} antes={resolvidasAntes} />
         ) : (
-          <EstadoVazio>{periodo.dias ? "Ainda não há resolvidas no período anterior para comparar." : "Escolha Última semana ou Último mês para comparar com o período anterior."}</EstadoVazio>
+          <EstadoVazio>{janela.tipo !== "todos" ? "Ainda não há resolvidas no período anterior para comparar." : "Escolha a semana ou o mês para comparar com o período anterior."}</EstadoVazio>
         )}
       </Cartao>
 
       <Cartao titulo="Quem gerou atividade no Trello">
-        <QuemGerou linhas={geracao.atual} evolucao={geracao.evolucao} />
+        <QuemGerou linhas={p.resumo.geracao} evolucao={(nome) => p.resumo.evolucaoGeracao[nome] ?? null} />
       </Cartao>
 
       <Cartao titulo="Entraram × resolvidas por semana">
-        <GraficoSemanas semanas={semanas} />
+        <GraficoSemanas semanas={p.semanas} />
       </Cartao>
 
-      <Cartao titulo={`Cartões parados há ${DIAS_PARADA} dias ou mais (${parados.length})`}>
-        {parados.length === 0 ? (
+      <Cartao titulo={`Cartões parados há ${DIAS_PARADA} dias ou mais (${p.parados.length})`}>
+        {p.parados.length === 0 ? (
           <EstadoVazio>Nenhum cartão parado.</EstadoVazio>
         ) : (
           <ul className="divide-y divide-borda text-sm">
-            {parados.slice(0, 10).map((c) => (
+            {p.parados.slice(0, 10).map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 py-2">
                 <span className="min-w-0">
                   <Link href={`/tarefas/${c.id}`} className="block truncate hover:text-marca hover:underline">
@@ -342,7 +375,10 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/equipe"
           <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-suave">
             <li>Tarefas resolvidas: cada item de checklist resolvido conta 1, e o cartão sem checklist concluído conta 1. Não importa em qual cartão ou lista. Cartão concluído resolve todos os seus itens.</li>
             <li>Tempo médio: da criação da tarefa até ela ser resolvida.</li>
-            <li>Evolução: tarefas resolvidas no período menos as do período anterior, de mesmo tamanho. Aparece — enquanto não há histórico.</li>
+            <li>Períodos do calendário: a semana vai de segunda a domingo e o mês é o do calendário. O período em andamento é parcial.</li>
+            <li>Placar oficial: um dia depois de a semana ou o mês terminar, o placar é gravado e não muda mais, mesmo que alguém mexa no Trello depois. É ele que vale para a disputa e para o PDF.</li>
+            <li>Item desmarcado e marcado de novo continua contando na data da primeira marcação.</li>
+            <li>Evolução: tarefas resolvidas no período menos as do período anterior (o placar oficial dele, quando existe). Aparece — enquanto não há histórico.</li>
             <li>Entraram: tarefas criadas no período. Saldo: resolvidas menos entraram. Positivo mostra que a equipe está dando conta da demanda.</li>
             <li>Parados: cartões abertos, fora os de rotina, sem nenhuma movimentação no Trello. Comentário também conta como movimentação.</li>
             <li>A ordem é por tarefas resolvidas, sem posições. Cartão aberto é carga de trabalho, não falha.</li>

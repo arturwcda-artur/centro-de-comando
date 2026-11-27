@@ -1,17 +1,14 @@
 import "server-only";
-import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, detalharResolvidas, fluxoPorSemana, geracaoPorPessoa, rankingEvolucao, resumirEquipe, tarefasQueEntraram, type ItemCartao, type LinhaEquipe } from "@/lib/equipe";
+import { CREDITO_POR_QUEM_MARCOU, QUADRO_EQUIPE, cartoesParados, detalharResolvidas, fluxoPorSemana, geracaoPorPessoa, rankingEvolucao, resumirEquipe, tarefasQueEntraram, type CartaoEquipe, type Geracao, type ItemCartao, type LinhaEquipe, type PosicaoEvolucao, type Resolvida } from "@/lib/equipe";
 import { hojeSP, somarDias } from "@/lib/formato";
+import { instanteSP, janelaAnterior, periodosParaFechar, podeFechar, type Janela, type TipoPeriodo } from "@/lib/placar";
+import type { Json } from "@/lib/database.types";
 import type { criarClienteServidor } from "@/lib/supabase/servidor";
 
 type Cliente = Awaited<ReturnType<typeof criarClienteServidor>>;
 
-export const PERIODOS = [
-  { valor: "30", rotulo: "Último mês", dias: 30 },
-  { valor: "7", rotulo: "Última semana", dias: 7 },
-  { valor: "todos", rotulo: "Todo o período", dias: null },
-];
-
-export const periodoDe = (valor: unknown) => PERIODOS.find((p) => p.valor === valor) ?? PERIODOS[0];
+const LOTE_CARTOES = 150;
+const PAGINA = 1000;
 
 /** Cartões do quadro com itens e membros. A tela Equipe e o relatório KPI usam esta mesma leitura. */
 export async function carregarCartoesEquipe(supabase: Cliente, quadro: string = QUADRO_EQUIPE) {
@@ -27,12 +24,25 @@ export async function carregarCartoesEquipe(supabase: Cliente, quadro: string = 
 
   const lista = tarefas.data ?? [];
   const ids = lista.map((t) => t.id);
-  const { data: itensChecklist } = ids.length
-    ? await supabase.from("trello_checklist_itens").select("tarefa_id, nome, concluido, criado_no_trello, concluido_em, atribuido:trello_membros!trello_checklist_itens_membro_id_fkey(nome), resolvedor:trello_membros!trello_checklist_itens_concluido_por_id_fkey(nome)").in("tarefa_id", ids).limit(5000)
-    : { data: [] };
+  // Em páginas: o servidor devolve no máximo 1.000 linhas por consulta e cortaria a conta em silêncio
+  const itensChecklist = [];
+  for (let i = 0; i < ids.length; i += LOTE_CARTOES) {
+    const lote = ids.slice(i, i + LOTE_CARTOES);
+    for (let de = 0; ; de += PAGINA) {
+      const { data, error } = await supabase
+        .from("trello_checklist_itens")
+        .select("id, tarefa_id, nome, concluido, criado_no_trello, concluido_em, primeiro_concluido_em, atribuido:trello_membros!trello_checklist_itens_membro_id_fkey(nome), resolvedor:trello_membros!trello_checklist_itens_concluido_por_id_fkey(nome)")
+        .in("tarefa_id", lote)
+        .order("id")
+        .range(de, de + PAGINA - 1);
+      if (error) throw new Error(`itens de checklist: ${error.message}`);
+      itensChecklist.push(...data);
+      if (data.length < PAGINA) break;
+    }
+  }
   const itensDoCartao = new Map<string, ItemCartao[]>();
-  for (const i of itensChecklist ?? []) {
-    const item = { nome: i.nome, concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.concluido_em, resolvido_por: i.resolvedor?.nome ?? null, responsaveis: i.atribuido ? [i.atribuido.nome] : [] };
+  for (const i of itensChecklist) {
+    const item = { nome: i.nome, concluido: i.concluido, criado_em: i.criado_no_trello, concluido_em: i.primeiro_concluido_em ?? i.concluido_em, resolvido_por: i.resolvedor?.nome ?? null, responsaveis: i.atribuido ? [i.atribuido.nome] : [] };
     itensDoCartao.set(i.tarefa_id, [...(itensDoCartao.get(i.tarefa_id) ?? []), item]);
   }
   const cartoes = lista.map((t) => ({
@@ -67,40 +77,120 @@ export async function carregarGeracaoEquipe(supabase: Cliente, quadro: string = 
   };
 }
 
-/** Quem gerou atividade no período e no período anterior, para mostrar a evolução. */
-export function montarGeracao(dados: Awaited<ReturnType<typeof carregarGeracaoEquipe>>, dias: number | null) {
-  const hoje = hojeSP();
-  const desde = dias ? somarDias(hoje, -dias) : undefined;
-  const atual = geracaoPorPessoa(dados.criacoes, dados.comentarios, desde);
-  const anterior = dias && desde ? geracaoPorPessoa(dados.criacoes, dados.comentarios, somarDias(hoje, -2 * dias), desde) : null;
-  const temHistorico = (anterior ?? []).some((l) => l.total > 0);
-  return { atual, evolucao: (nome: string, total: number) => (temHistorico ? total - (anterior?.find((l) => l.nome === nome)?.total ?? 0) : null) };
-}
 
-/** Todos os números do painel, para um período. */
-export function montarPainelEquipe(cartoes: Awaited<ReturnType<typeof carregarCartoesEquipe>>["cartoes"], dias: number | null) {
-  const hoje = hojeSP();
-  const desde = dias ? somarDias(hoje, -dias) : undefined;
-  const { total, porLista, porResponsavel } = resumirEquipe(cartoes, hoje, desde);
+type DadosGeracao = Awaited<ReturnType<typeof carregarGeracaoEquipe>>;
 
-  // Comparação com o período anterior, de mesmo tamanho. Sem entregas nele, ainda não há histórico
-  const anterior = dias && desde ? resumirEquipe(cartoes, hoje, somarDias(hoje, -2 * dias), CREDITO_POR_QUEM_MARCOU, desde) : null;
+/** Números de um período. É o que fica gravado no placar oficial (RN-49p). */
+export type ResumoPlacar = {
+  total: LinhaEquipe | null;
+  porLista: LinhaEquipe[];
+  porResponsavel: LinhaEquipe[];
+  entraram: number;
+  saldo: number;
+  evolucaoEquipe: number | null;
+  evolucaoPessoa: Record<string, number | null>;
+  evolucaoLista: Record<string, number | null>;
+  ranking: PosicaoEvolucao[] | null;
+  resolvidasNoPeriodo: Record<string, Resolvida[]>;
+  resolvidasAntes: Record<string, Resolvida[]> | null;
+  geracao: Geracao[];
+  evolucaoGeracao: Record<string, number | null>;
+};
+
+/**
+ * Calcula o período. A comparação é com o placar oficial do período anterior, se houver;
+ * senão, com o período anterior calculado agora.
+ */
+export function calcularPlacar(cartoes: CartaoEquipe[], geracaoDados: DadosGeracao, janela: Janela, anteriorOficial: ResumoPlacar | null, hoje: string): ResumoPlacar {
+  const desde = instanteSP(janela.inicio);
+  const ate = instanteSP(janela.fim);
+  const atual = resumirEquipe(cartoes, hoje, desde, CREDITO_POR_QUEM_MARCOU, ate);
+  const ant = janelaAnterior(janela);
+  const [dAnt, aAnt] = [instanteSP(ant?.inicio ?? null), instanteSP(ant?.fim ?? null)];
+  const anterior = anteriorOficial ?? (ant ? { ...resumirEquipe(cartoes, hoje, dAnt, CREDITO_POR_QUEM_MARCOU, aAnt), resolvidasNoPeriodo: Object.fromEntries(detalharResolvidas(cartoes, dAnt, aAnt)), geracao: geracaoPorPessoa(geracaoDados.criacoes, geracaoDados.comentarios, dAnt, aAnt) } : null);
   const temHistorico = (anterior?.total?.resolvidas ?? 0) > 0;
-  const variacao = (linhas: LinhaEquipe[] | undefined) => (nome: string, atual: number) => (temHistorico ? atual - (linhas?.find((l) => l.nome === nome)?.resolvidas ?? 0) : null);
-  const entraram = tarefasQueEntraram(cartoes, desde);
+  const variacao = (agora: LinhaEquipe[], antes: LinhaEquipe[] | undefined) =>
+    Object.fromEntries(agora.map((l) => [l.nome, temHistorico ? l.resolvidas - (antes?.find((a) => a.nome === l.nome)?.resolvidas ?? 0) : null]));
+  const entraram = tarefasQueEntraram(cartoes, desde, CREDITO_POR_QUEM_MARCOU, ate);
+  const geracao = geracaoPorPessoa(geracaoDados.criacoes, geracaoDados.comentarios, desde, ate);
+  const temHistoricoGeracao = (anterior?.geracao ?? []).some((l) => l.total > 0);
 
   return {
-    total,
-    porLista,
-    porResponsavel,
+    total: atual.total,
+    porLista: atual.porLista,
+    porResponsavel: atual.porResponsavel,
     entraram,
-    saldo: (total?.resolvidas ?? 0) - entraram,
-    evolucaoEquipe: temHistorico ? (total?.resolvidas ?? 0) - (anterior?.total?.resolvidas ?? 0) : null,
-    evolucaoPessoa: variacao(anterior?.porResponsavel),
-    evolucaoLista: variacao(anterior?.porLista),
-    ranking: temHistorico && anterior ? rankingEvolucao(porResponsavel, anterior.porResponsavel) : null,
-    resolvidasNoPeriodo: detalharResolvidas(cartoes, desde),
-    resolvidasAntes: dias && desde ? detalharResolvidas(cartoes, somarDias(hoje, -2 * dias), desde) : null,
+    saldo: (atual.total?.resolvidas ?? 0) - entraram,
+    evolucaoEquipe: temHistorico ? (atual.total?.resolvidas ?? 0) - (anterior?.total?.resolvidas ?? 0) : null,
+    evolucaoPessoa: variacao(atual.porResponsavel, anterior?.porResponsavel),
+    evolucaoLista: variacao(atual.porLista, anterior?.porLista),
+    ranking: temHistorico && anterior ? rankingEvolucao(atual.porResponsavel, anterior.porResponsavel) : null,
+    resolvidasNoPeriodo: Object.fromEntries(detalharResolvidas(cartoes, desde, ate)),
+    resolvidasAntes: anterior ? anterior.resolvidasNoPeriodo : null,
+    geracao,
+    evolucaoGeracao: Object.fromEntries(geracao.map((l) => [l.nome, temHistoricoGeracao ? l.total - (anterior?.geracao.find((a) => a.nome === l.nome)?.total ?? 0) : null])),
+  };
+}
+
+type PlacarGravado = { tipo: TipoPeriodo; inicio: string; fim: string; fechado_em: string; dados: ResumoPlacar };
+
+async function lerPlacares(supabase: Cliente, quadro: string): Promise<PlacarGravado[]> {
+  const { data, error } = await supabase.from("equipe_placares").select("tipo, inicio, fim, fechado_em, dados").eq("quadro", quadro).order("inicio");
+  if (error) throw new Error(`placares: ${error.message}`);
+  return (data ?? []).map((p) => ({ ...p, tipo: p.tipo as TipoPeriodo, dados: p.dados as unknown as ResumoPlacar }));
+}
+
+/** Grava o placar oficial de cada semana e mês já fechados que ainda não têm placar. Nunca regrava. */
+async function fecharPendentes(supabase: Cliente, quadro: string, cartoes: CartaoEquipe[], geracaoDados: DadosGeracao, gravados: PlacarGravado[], hoje: string) {
+  const novos: PlacarGravado[] = [];
+  for (const tipo of ["mes", "semana"] as const) {
+    const doTipo = new Map(gravados.filter((p) => p.tipo === tipo).map((p) => [p.inicio, p.dados]));
+    for (const j of periodosParaFechar(tipo, hoje)) {
+      if (doTipo.has(j.inicio!)) continue;
+      const anterior = doTipo.get(janelaAnterior(j)?.inicio ?? "") ?? null;
+      // "Hoje" do placar é o último dia do período, para vencidas e prazos ficarem como estavam no fechamento
+      const dados = calcularPlacar(cartoes, geracaoDados, j, anterior, somarDias(j.fim!, -1));
+      const { error } = await supabase
+        .from("equipe_placares")
+        .upsert({ quadro, tipo, inicio: j.inicio!, fim: j.fim!, dados: dados as unknown as Json }, { onConflict: "quadro,tipo,inicio", ignoreDuplicates: true });
+      if (error) throw new Error(`fechamento do placar: ${error.message}`);
+      doTipo.set(j.inicio!, dados);
+      novos.push({ tipo, inicio: j.inicio!, fim: j.fim!, fechado_em: new Date().toISOString(), dados });
+    }
+  }
+  return novos;
+}
+
+export type Situacao = "oficial" | "parcial" | "aguardando" | "recalculado" | "todos";
+
+/**
+ * Tudo o que a tela Equipe e o relatório da equipe mostram para um período.
+ * Período fechado mostra o placar gravado; o em andamento é calculado na hora (parcial).
+ */
+export async function painelDaEquipe(supabase: Cliente, quadro: string, janela: Janela) {
+  const hoje = hojeSP();
+  const [{ cartoes, idMembro, ultimaSync }, geracaoDados] = await Promise.all([carregarCartoesEquipe(supabase, quadro), carregarGeracaoEquipe(supabase, quadro)]);
+  let gravados: PlacarGravado[] = [];
+  let avisoPlacar: string | null = null;
+  try {
+    gravados = await lerPlacares(supabase, quadro);
+    gravados = [...gravados, ...(await fecharPendentes(supabase, quadro, cartoes, geracaoDados, gravados, hoje))];
+  } catch (e) {
+    avisoPlacar = e instanceof Error ? e.message : "Não foi possível ler o placar oficial.";
+  }
+  const gravado = janela.tipo === "todos" ? undefined : gravados.find((p) => p.tipo === janela.tipo && p.inicio === janela.inicio);
+  const anteriorOficial = janela.tipo === "todos" ? null : (gravados.find((p) => p.tipo === janela.tipo && p.inicio === janelaAnterior(janela)?.inicio)?.dados ?? null);
+  const situacao: Situacao = janela.tipo === "todos" ? "todos" : gravado ? "oficial" : !janela.fim || hoje < janela.fim ? "parcial" : podeFechar(janela, hoje) ? "recalculado" : "aguardando";
+
+  return {
+    janela,
+    situacao,
+    fechadoEm: gravado?.fechado_em ?? null,
+    resumo: gravado?.dados ?? calcularPlacar(cartoes, geracaoDados, janela, anteriorOficial, hoje),
+    oficiais: gravados.map((p) => ({ tipo: p.tipo, inicio: p.inicio, fim: p.fim })).reverse(),
+    avisoPlacar,
+    idMembro,
+    ultimaSync,
     parados: cartoesParados(cartoes, new Date()),
     semanas: fluxoPorSemana(cartoes, hoje),
   };
